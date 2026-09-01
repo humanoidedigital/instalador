@@ -1,72 +1,87 @@
-# Fase 0 — como colocar de pé
+# Banco de dados do CRM
 
-Código pronto e testado. Falta só o projeto Supabase existir.
+Um banco atende todos os clientes. O isolamento é garantido pelo próprio
+Postgres (RLS), não por separação física — e é verificado por teste.
 
-## 1. Criar o projeto
+## Instalar
 
-Em [supabase.com](https://supabase.com), projeto novo, região **South America (São Paulo)** —
-latência importa num inbox de conversa.
-
-## 2. Aplicar a estrutura
-
-```bash
-# com a CLI da Supabase
-supabase link --project-ref SEU_REF
-supabase db push
-
-# ou direto, com a connection string do painel
-psql "$DATABASE_URL" -f supabase/migrations/20260901120000_init.sql
-psql "$DATABASE_URL" -f supabase/migrations/20260901130000_ingestao.sql
-psql "$DATABASE_URL" -f supabase/seed.sql
-```
-
-`seed.sql` cria a função `app.semear_org()`. Chame-a uma vez por organização:
+1. Crie um projeto no [Supabase](https://supabase.com), região **South America (São Paulo)**.
+2. Abra o **SQL Editor**, cole o conteúdo de [`INSTALAR.sql`](INSTALAR.sql) e execute.
+3. Crie sua agência e o primeiro cliente:
 
 ```sql
-insert into orgs (nome, slug) values ('Sua operação', 'sua-operacao') returning id;
-select app.semear_org('<id devolvido acima>');
+insert into agencies (nome, slug)
+values ('Nome da sua agência', 'sua-agencia')
+returning id;
+
+select app.criar_cliente('<id devolvido acima>', 'Nome do Cliente', 'slug-do-cliente');
 ```
 
-Isso já entrega funil, sete etapas e seis motivos de perda. Renomeie as etapas à
-vontade no admin — a coluna `categoria` é o que mantém os relatórios funcionando.
+O cliente já nasce com funil, sete etapas e seis motivos de perda. Renomeie as
+etapas à vontade: a coluna `categoria` é o que mantém os relatórios funcionando
+mesmo com nomes trocados.
 
-## 3. Publicar as funções
+**Nenhuma credencial precisa sair da sua máquina.** A chave `service_role` do
+Supabase ignora toda a RLS — nunca a cole em chat, e-mail ou repositório.
 
-```bash
-supabase functions deploy ingest-form
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY=...
-```
+## Quem enxerga o quê
 
-## 4. Apontar o subdomínio
-
-`t.seudominio.com.br` → a Edge Function. **Não é opcional**: é o que faz o
-rastreamento sobreviver no Safari. Ver `docs/crm/03-captura-web.md`.
-
-## 5. Instalar a captura no site
-
-- Todo site e LP: `packages/tracker/crm.js` com a `site_key` do registro em `sites`.
-- WordPress: `packages/wordpress-plugin/crm-lead-bridge.php`, configurado em
-  Ajustes › CRM Lead Bridge. Rodar os dois juntos é seguro — o CRM deduplica.
-
-## O que está testado
-
-| O quê | Como |
+| Papel | Alcance |
 |---|---|
-| Estrutura completa | `psql -f` limpo em PostgreSQL 16 |
-| Normalização de telefone e e-mail | 36 casos automatizados |
-| Ingestão, dedupe, fusão e distribuição | Cenário de ponta a ponta em banco real |
+| `agencia` | Todos os clientes da agência dele |
+| `admin` | A organização dele inteira |
+| `gestor` | Ele e os times que gerencia |
+| `vendedor` | Os próprios leads, mais a fila de leads sem dono |
+
+Lead sem dono (`owner_id is null`) é visível para todos da organização de
+propósito: é dessa fila que o vendedor puxa trabalho.
+
+## Atualizar depois
+
+`INSTALAR.sql` é só para a primeira vez. Mudanças posteriores entram como
+migrations novas em `migrations/`, aplicadas na ordem do nome do arquivo.
+
+## Testes
 
 ```bash
-# testes da normalização
+# normalização de telefone, e-mail e hashes de Meta/Google
 node --experimental-strip-types supabase/functions/_shared/identidade.test.ts
+
+# isolamento entre clientes — roda como usuário real, não superusuário
+createdb crmtest
+psql -d crmtest -f supabase/INSTALAR.sql
+psql -d crmtest -f supabase/tests/rls_isolamento.sql
 ```
 
-Casos que o teste de ponta a ponta cobre: o mesmo cliente chegando pela landing
-page com o nono dígito e pelo WhatsApp sem ele vira **um** contato e **um** deal,
-o `gclid` do primeiro dia continua ligado à negociação, e a distribuição
-alterna entre os vendedores.
+O teste de isolamento **precisa** rodar sob o papel `authenticated`. Superusuário
+ignora RLS e faria qualquer teste passar — foi exatamente essa a armadilha que
+levou à criação deste arquivo.
+
+O que ele verifica:
+
+| Verificação |
+|---|
+| Vendedor de um cliente vê apenas os deals dele |
+| Vendedor de um cliente não alcança nenhum contato de outro |
+| Usuário de agência vê os clientes dele, e só |
+| Agência concorrente não alcança nada da sua |
+| Sessão sem login não vê nada |
+| Vendedor é impedido de gravar na organização de outro cliente |
+| Cliente novo nasce com o funil completo |
+
+## Captura de leads no site
+
+- Todo site e landing page: [`packages/tracker/crm.js`](../packages/tracker/crm.js),
+  com a `site_key` do registro em `sites`.
+- WordPress: [`packages/wordpress-plugin/`](../packages/wordpress-plugin/),
+  configurado em Ajustes › CRM Lead Bridge.
+
+Rodar os dois juntos é seguro — a ingestão deduplica.
+
+O subdomínio de rastreamento (`t.seudominio.com.br`) **não é opcional**: é o que
+faz a atribuição sobreviver no Safari. Ver [`docs/crm/03-captura-web.md`](../docs/crm/03-captura-web.md).
 
 ## Ainda não construído
 
-`ingest-uazapi`, `ingest-waba`, `ingest-leadgen`, `push-dispatch` e o worker de
-conversões. Ordem e critérios de aceite em `docs/crm/07-roadmap.md`.
+`ingest-uazapi`, `ingest-waba`, `ingest-leadgen`, `push-dispatch` e o worker do
+outbox de conversões. Ordem e critérios em [`docs/crm/07-roadmap.md`](../docs/crm/07-roadmap.md).

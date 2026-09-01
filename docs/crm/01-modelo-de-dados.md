@@ -106,12 +106,33 @@ cresce para milhões de linhas.
 
 ## RLS em três camadas
 
-1. **Isolamento de org** — todas as tabelas, sem exceção: `org_id = app.current_org_id()`.
-2. **Escopo por dono** — `deals`, `conversations`, `tasks`, `contacts`: `owner_id IN (select app.visible_owner_ids())`.
-   - `admin` → todos da org · `gestor` → seu time · `vendedor` → só ele
+1. **Isolamento de org** — todas as tabelas, sem exceção:
+   `org_id IN (select app.orgs_visiveis())`.
+2. **Escopo por dono** — `deals`, `conversations`, `tasks`, `contacts`:
+   `owner_id IN (select app.visible_owner_ids())`.
+   - `agencia` → todos os clientes da agência · `admin` → toda a org ·
+     `gestor` → seu time · `vendedor` → só ele
    - `owner_id IS NULL` é visível para todos: é a **fila de leads sem dono**, de onde o vendedor puxa trabalho.
 3. **Escrita restrita** — tabelas de configuração (`pipelines`, `channels`, `conversion_destinations`,
    `costs`) só aceitam escrita de `admin`.
+
+### A camada de agência
+
+Um banco atende vários clientes. `agencies` fica acima de `orgs`, e
+`app.orgs_visiveis()` é o único ponto que decide alcance: devolve todos os
+clientes da agência para quem tem papel `agencia`, e apenas a própria
+organização para todo o resto. Toda policy consulta essa função — não existe
+regra de visibilidade escrita à mão em tabela nenhuma.
+
+`app.current_org_id()` continua existindo e devolve `null` para usuário de
+agência: é ela que decide em qual organização uma linha nova nasce, e o
+usuário de agência precisa escolher o cliente na interface antes de criar
+qualquer coisa.
+
+> **Cuidado que já custou um bug:** dentro de `app.visible_owner_ids()` a
+> pergunta é sobre o papel de **quem consulta**, não do dono da linha.
+> Comparar `p.role` em vez de `app.current_role()` fazia o usuário de agência
+> não enxergar deal nenhum.
 
 Mensagens e itens de deal não repetem a regra: usam `EXISTS` sobre a tabela pai, herdando a policy dela.
 Uma regra escrita uma vez.
@@ -134,3 +155,6 @@ su postgres -c "psql -v ON_ERROR_STOP=1 -d crmspec -f docs/crm/schema.sql"
 Resultado: DDL completo aplica sem erro em PostgreSQL 16. Teste funcional confirmou que mover um deal
 entre etapas grava `deal_stage_events` com duração, enfileira a conversão correta no outbox, e que uma
 ida-e-volta entre etapas **não** duplica o evento.
+
+O isolamento entre clientes tem suíte própria em `supabase/tests/rls_isolamento.sql`, executada sob o
+papel `authenticated` — **não** como superusuário, que ignora RLS e faria qualquer teste passar.
