@@ -205,7 +205,56 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------
--- 5. Onboarding de cliente novo em uma chamada
+-- 5. Funil padrão de um cliente novo
+--
+-- Precisa existir ANTES de app.criar_cliente(), que a chama, e antes da
+-- migration de permissões, que revoga o acesso a ela.
+-- ---------------------------------------------------------------------
+create or replace function app.semear_org(p_org_id uuid)
+  returns void
+  language plpgsql
+  security definer
+  set search_path = public, pg_temp
+as $$
+declare
+  v_pipeline_id uuid;
+begin
+  -- Não semeia duas vezes: rodar de novo é seguro.
+  if exists (select 1 from pipelines where org_id = p_org_id and deleted_at is null) then
+    return;
+  end if;
+
+  insert into pipelines (org_id, nome, padrao, ordem)
+  values (p_org_id, 'Comercial', true, 0)
+  returning id into v_pipeline_id;
+
+  -- A coluna `categoria` liga o nome livre da etapa ao vocabulário fixo das
+  -- métricas. Renomear "Qualificado" para "Contato feito" não quebra nada;
+  -- mudar a categoria, sim.
+  insert into stages (org_id, pipeline_id, nome, ordem, categoria, is_won, is_lost, sla_horas) values
+    (p_org_id, v_pipeline_id, 'Novo lead',        1, 'lead',       false, false, 1),
+    (p_org_id, v_pipeline_id, 'Em contato',       2, 'mql',        false, false, 24),
+    (p_org_id, v_pipeline_id, 'Qualificado',      3, 'sql',        false, false, 48),
+    (p_org_id, v_pipeline_id, 'Reunião agendada', 4, 'reuniao',    false, false, null),
+    (p_org_id, v_pipeline_id, 'Orçamento enviado',5, 'orcamento',  false, false, 72),
+    (p_org_id, v_pipeline_id, 'Ganho',            6, 'fechamento', true,  false, null),
+    (p_org_id, v_pipeline_id, 'Perdido',          7, 'fechamento', false, true,  null);
+
+  insert into loss_reasons (org_id, nome) values
+    (p_org_id, 'Preço acima do orçamento'),
+    (p_org_id, 'Sem retorno / sumiu'),
+    (p_org_id, 'Fechou com concorrente'),
+    (p_org_id, 'Fora do perfil'),
+    (p_org_id, 'Sem verba no momento'),
+    (p_org_id, 'Comprou depois / recontatar');
+end;
+$$;
+
+comment on function app.semear_org(uuid) is
+  'Cria funil, etapas e motivos de perda padrão para uma org nova. Idempotente.';
+
+-- ---------------------------------------------------------------------
+-- 6. Onboarding de cliente novo em uma chamada
 -- ---------------------------------------------------------------------
 create or replace function app.criar_cliente(
   p_agency_id uuid,
@@ -232,7 +281,7 @@ comment on function app.criar_cliente(uuid, text, text) is
   'Cria um cliente já com funil e etapas prontos. Devolve o org_id.';
 
 -- ---------------------------------------------------------------------
--- 6. Visão consolidada: uma linha por cliente
+-- 7. Visão consolidada: uma linha por cliente
 --
 -- security_invoker = true é obrigatório. Sem ele a view roda com os
 -- privilégios do dono e ignora a RLS — o usuário de um cliente leria os

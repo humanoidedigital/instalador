@@ -67,7 +67,21 @@ O que ele verifica:
 | Agência concorrente não alcança nada da sua |
 | Sessão sem login não vê nada |
 | Vendedor é impedido de gravar na organização de outro cliente |
+| Usuário comum não consegue executar `ingerir_lead` |
+| Usuário comum não lê `webhook_deliveries` |
 | Cliente novo nasce com o funil completo |
+
+### Por que as funções privilegiadas são fechadas
+
+`ingerir_lead`, `app.criar_cliente`, `app.fundir_contatos` e `app.semear_org`
+são `SECURITY DEFINER`: rodam com os privilégios do dono do banco e **ignoram a
+RLS** por construção. O Postgres, por padrão, concede execução a `PUBLIC` em
+função nova — o que deixaria qualquer usuário logado passar o `org_id` de outro
+cliente e escrever na base dele.
+
+A migration 0004 revoga esse acesso e o devolve só ao `service_role`, usado
+pelas Edge Functions. A RLS não protegeria contra isso; a defesa é privilégio
+de execução.
 
 ## Captura de leads no site
 

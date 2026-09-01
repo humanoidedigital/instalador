@@ -27,6 +27,8 @@
 -- =====================================================================
 
 
+
+
 -- #####################################################################
 -- ## 20260901120000_init.sql
 -- #####################################################################
@@ -1776,76 +1778,11 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------
--- 5. Onboarding de cliente novo em uma chamada
--- ---------------------------------------------------------------------
-create or replace function app.criar_cliente(
-  p_agency_id uuid,
-  p_nome      text,
-  p_slug      text
-) returns uuid
-  language plpgsql security definer set search_path = public, pg_temp
-as $$
-declare
-  v_org_id uuid;
-begin
-  insert into orgs (nome, slug, agency_id)
-  values (p_nome, p_slug, p_agency_id)
-  returning id into v_org_id;
-
-  -- Definida em supabase/seed.sql: funil, sete etapas e motivos de perda.
-  perform app.semear_org(v_org_id);
-
-  return v_org_id;
-end;
-$$;
-
-comment on function app.criar_cliente(uuid, text, text) is
-  'Cria um cliente já com funil e etapas prontos. Devolve o org_id.';
-
--- ---------------------------------------------------------------------
--- 6. Visão consolidada: uma linha por cliente
+-- 5. Funil padrão de um cliente novo
 --
--- security_invoker = true é obrigatório. Sem ele a view roda com os
--- privilégios do dono e ignora a RLS — o usuário de um cliente leria os
--- números de todos os outros.
+-- Precisa existir ANTES de app.criar_cliente(), que a chama, e antes da
+-- migration de permissões, que revoga o acesso a ela.
 -- ---------------------------------------------------------------------
-create or replace view v_agencia_resumo with (security_invoker = true) as
-  select
-    o.id                                   as org_id,
-    o.nome                                 as cliente,
-    o.agency_id,
-    count(distinct d.id) filter (where d.status = 'aberto')                as deals_abertos,
-    coalesce(sum(d.valor) filter (where d.status = 'aberto'), 0)           as valor_em_aberto,
-    count(distinct d.id) filter (
-      where d.status = 'ganho' and d.closed_at >= date_trunc('month', now())
-    )                                                                     as ganhos_no_mes,
-    count(distinct d.id) filter (
-      where d.created_at >= date_trunc('month', now())
-    )                                                                     as leads_no_mes,
-    count(distinct c.id) filter (
-      where c.status <> 'fechada' and c.assigned_to is null
-    )                                                                     as conversas_sem_dono
-  from orgs o
-  left join deals d         on d.org_id = o.id and d.deleted_at is null
-  left join conversations c on c.org_id = o.id and c.deleted_at is null
-  where o.deleted_at is null
-  group by o.id, o.nome, o.agency_id;
-
--- #####################################################################
--- ## seed.sql
--- #####################################################################
-
--- =====================================================================
--- Semente: funil padrão de uma nova organização.
---
--- Não é um script de uma vez só: `app.semear_org()` é chamada toda vez que
--- uma org nasce, para que ela já comece com funil, etapas e motivos de perda
--- utilizáveis. O gestor renomeia depois; a `categoria` é o que mantém os
--- relatórios funcionando mesmo com nomes trocados.
---
--- Aplicar:  psql "$DATABASE_URL" -f supabase/seed.sql
--- =====================================================================
-
 create or replace function app.semear_org(p_org_id uuid)
   returns void
   language plpgsql
@@ -1890,9 +1827,181 @@ comment on function app.semear_org(uuid) is
   'Cria funil, etapas e motivos de perda padrão para uma org nova. Idempotente.';
 
 -- ---------------------------------------------------------------------
--- Ambiente local: uma org de demonstração para desenvolver contra dados
--- reais de estrutura. NÃO roda em produção — ver a guarda abaixo.
+-- 6. Onboarding de cliente novo em uma chamada
 -- ---------------------------------------------------------------------
+create or replace function app.criar_cliente(
+  p_agency_id uuid,
+  p_nome      text,
+  p_slug      text
+) returns uuid
+  language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  v_org_id uuid;
+begin
+  insert into orgs (nome, slug, agency_id)
+  values (p_nome, p_slug, p_agency_id)
+  returning id into v_org_id;
+
+  -- Definida em supabase/seed.sql: funil, sete etapas e motivos de perda.
+  perform app.semear_org(v_org_id);
+
+  return v_org_id;
+end;
+$$;
+
+comment on function app.criar_cliente(uuid, text, text) is
+  'Cria um cliente já com funil e etapas prontos. Devolve o org_id.';
+
+-- ---------------------------------------------------------------------
+-- 7. Visão consolidada: uma linha por cliente
+--
+-- security_invoker = true é obrigatório. Sem ele a view roda com os
+-- privilégios do dono e ignora a RLS — o usuário de um cliente leria os
+-- números de todos os outros.
+-- ---------------------------------------------------------------------
+create or replace view v_agencia_resumo with (security_invoker = true) as
+  select
+    o.id                                   as org_id,
+    o.nome                                 as cliente,
+    o.agency_id,
+    count(distinct d.id) filter (where d.status = 'aberto')                as deals_abertos,
+    coalesce(sum(d.valor) filter (where d.status = 'aberto'), 0)           as valor_em_aberto,
+    count(distinct d.id) filter (
+      where d.status = 'ganho' and d.closed_at >= date_trunc('month', now())
+    )                                                                     as ganhos_no_mes,
+    count(distinct d.id) filter (
+      where d.created_at >= date_trunc('month', now())
+    )                                                                     as leads_no_mes,
+    count(distinct c.id) filter (
+      where c.status <> 'fechada' and c.assigned_to is null
+    )                                                                     as conversas_sem_dono
+  from orgs o
+  left join deals d         on d.org_id = o.id and d.deleted_at is null
+  left join conversations c on c.org_id = o.id and c.deleted_at is null
+  where o.deleted_at is null
+  group by o.id, o.nome, o.agency_id;
+
+-- #####################################################################
+-- ## 20260901150000_permissoes.sql
+-- #####################################################################
+
+-- =====================================================================
+-- 0004 · Fechar quem pode executar as funções privilegiadas
+--
+-- Toda função SECURITY DEFINER roda com os privilégios do dono do banco e
+-- IGNORA a RLS. E o Postgres, por padrão, concede EXECUTE a PUBLIC em função
+-- nova. As duas coisas juntas abrem um buraco:
+--
+--   ingerir_lead(p_org_id, ...)      -> usuário do cliente A passaria o
+--                                       org_id do cliente B e injetaria leads lá
+--   app.fundir_contatos(a, b)        -> fundiria contatos de clientes distintos,
+--                                       misturando as bases
+--   app.criar_cliente(agency, ...)   -> criaria clientes em qualquer agência
+--   app.semear_org(org)              -> mexeria no funil de qualquer cliente
+--
+-- A RLS não protege contra isso: essas funções passam por cima dela por
+-- construção. A defesa é privilégio de execução.
+--
+-- Regra: função que ESCREVE com privilégio elevado é exclusiva do
+-- `service_role` (as Edge Functions). Função que só RESPONDE quem-vê-o-quê
+-- precisa continuar executável pelo usuário comum, senão as próprias policies
+-- param de funcionar.
+-- =====================================================================
+
+do $permissoes$
+declare
+  v_privilegiadas text[] := array[
+    'public.ingerir_lead(uuid,uuid,uuid,lead_source,jsonb,jsonb,jsonb,text,boolean)',
+    'app.criar_cliente(uuid,text,text)',
+    'app.fundir_contatos(uuid,uuid,text)',
+    'app.semear_org(uuid)'
+  ];
+  -- Helpers de leitura usados dentro das policies. Sem EXECUTE para o usuário
+  -- comum, toda consulta com RLS falharia.
+  v_helpers text[] := array[
+    'app.orgs_visiveis()',
+    'app.visible_owner_ids()',
+    'app.current_org_id()',
+    'app.current_role()',
+    'app.is_admin()',
+    'app.is_gestor()'
+  ];
+  f text;
+  r text;
+begin
+  foreach f in array v_privilegiadas loop
+    execute format('revoke all on function %s from public', f);
+    foreach r in array array['anon','authenticated'] loop
+      if exists (select 1 from pg_roles where rolname = r) then
+        execute format('revoke all on function %s from %I', f, r);
+      end if;
+    end loop;
+    if exists (select 1 from pg_roles where rolname = 'service_role') then
+      execute format('grant execute on function %s to service_role', f);
+    end if;
+  end loop;
+
+  foreach f in array v_helpers loop
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+      execute format('grant execute on function %s to authenticated', f);
+    end if;
+  end loop;
+end
+$permissoes$;
+
+-- ---------------------------------------------------------------------
+-- Privilégios de tabela
+--
+-- No Supabase o PostgREST acessa o banco como `authenticated` (ou `anon`).
+-- A RLS decide quais LINHAS, mas o privilégio de tabela decide se a consulta
+-- chega a rodar. `anon` fica de fora de propósito: o formulário público entra
+-- por Edge Function com service_role, nunca direto pelo PostgREST.
+-- ---------------------------------------------------------------------
+do $tabelas$
+begin
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    grant usage on schema public, app to authenticated;
+    grant select, insert, update, delete on all tables in schema public to authenticated;
+    grant usage, select on all sequences in schema public to authenticated;
+    alter default privileges in schema public
+      grant select, insert, update, delete on tables to authenticated;
+  end if;
+
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    grant usage on schema public, app to service_role;
+    grant all on all tables in schema public to service_role;
+    grant usage, select on all sequences in schema public to service_role;
+  end if;
+end
+$tabelas$;
+
+-- `webhook_deliveries` é tabela de infraestrutura: guarda o payload cru de
+-- todo webhook, inclusive dados de outros clientes antes de serem separados.
+-- Não tem policy de leitura e não deve ser alcançável pelo usuário final.
+do $infra$
+begin
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    revoke all on table webhook_deliveries from authenticated;
+  end if;
+end
+$infra$;
+
+-- #####################################################################
+-- ## seed.sql
+-- #####################################################################
+
+-- =====================================================================
+-- Semente
+--
+-- `app.semear_org()` NÃO mora aqui: é função de esquema e vive na migration
+-- 0003, antes de `app.criar_cliente()`, que a chama. Deixá-la neste arquivo
+-- quebrava a ordem — a migration de permissões tentava blindar uma função
+-- que ainda não existia.
+--
+-- Aqui fica só o que é dado: a org de demonstração do ambiente local.
+-- =====================================================================
+
 do $demo$
 declare
   v_org uuid := '00000000-0000-4000-8000-000000000001';

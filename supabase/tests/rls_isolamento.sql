@@ -70,9 +70,9 @@ begin
 end
 $papel$;
 
-grant usage on schema public, app, auth to authenticated;
-grant select, insert, update on all tables in schema public to authenticated;
-grant execute on all functions in schema app to authenticated;
+-- Os privilégios reais vêm da migration 0004. Aqui só garantimos o acesso
+-- ao schema auth, que no Supabase já vem concedido.
+grant usage on schema auth to authenticated;
 
 -- ---------------------------------------------------------------------
 -- Ferramenta de asserção
@@ -107,6 +107,7 @@ do $assercoes$
 declare
   v_org_b uuid;
   v_bloqueado boolean := false;
+  v_fn_bloqueada boolean := false;
 begin
   perform pg_temp.checar('vendedor do A vê apenas o deal dele', 'Lead do A',
     pg_temp.como('11111111-0000-4000-8000-00000000000a',
@@ -167,6 +168,30 @@ begin
 
   perform pg_temp.checar('vendedor do A é impedido de gravar na org do B',
     'bloqueado', case when v_bloqueado then 'bloqueado' else 'GRAVOU (falha grave)' end);
+
+  -- FUNÇÃO PRIVILEGIADA
+  -- ingerir_lead é SECURITY DEFINER: passa por cima da RLS por construção.
+  -- Se o usuário comum puder chamá-la, ele injeta lead em qualquer cliente
+  -- só trocando o org_id. A defesa não é RLS, é privilégio de execução.
+  begin
+    perform set_config('role', 'authenticated', true);
+    perform set_config('request.jwt.claim.sub', '11111111-0000-4000-8000-00000000000a', true);
+    execute format(
+      'select ingerir_lead(%L, null, null, %L, %L::jsonb, %L::jsonb)',
+      v_org_b, 'site', '[{"tipo":"email","valor":"x@y.com"}]', '{"nome":"injetado"}');
+    v_fn_bloqueada := false;
+  exception when others then
+    v_fn_bloqueada := true;
+  end;
+  perform set_config('role', 'none', true);
+
+  perform pg_temp.checar('usuário comum não executa ingerir_lead',
+    'bloqueado', case when v_fn_bloqueada then 'bloqueado' else 'EXECUTOU (falha grave)' end);
+
+  perform pg_temp.checar('usuário comum não lê webhook_deliveries', 'bloqueado',
+    pg_temp.como('11111111-0000-4000-8000-00000000000a',
+      $q$select case when has_table_privilege('authenticated','webhook_deliveries','select')
+                     then 'LE (falha grave)' else 'bloqueado' end$q$));
 
   perform pg_temp.checar('nenhuma linha de invasão ficou no banco', '0',
     (select count(*)::text from contacts where nome = 'invasao'));
