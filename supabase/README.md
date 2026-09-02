@@ -83,6 +83,39 @@ A migration 0004 revoga esse acesso e o devolve só ao `service_role`, usado
 pelas Edge Functions. A RLS não protegeria contra isso; a defesa é privilégio
 de execução.
 
+## Campos por nicho
+
+O núcleo é fixo: nome, telefone, e-mail, dono, etapa, valor, datas, origem, UTMs
+e histórico do funil são colunas tipadas, iguais em todo nicho. Só os campos de
+qualificação variam, e eles são **declarados como dado**:
+
+```sql
+select app.definir_campos('<org_id>', $$[
+  {"chave":"benefit_type","rotulo":"Tipo de benefício","tipo":"escolha",
+   "opcoes":["aposentado","pensionista","militar","ativa"],"mostrar_no_funil":true},
+  {"chave":"valor_ir_mensal","rotulo":"IR mensal","tipo":"moeda"}
+]$$::jsonb);
+```
+
+Cliente novo, ou nicho inteiramente novo, entra **sem uma linha de DDL**.
+A ficha do vendedor e os filtros do funil se montam lendo `v_ficha_campos`.
+
+Campo não declarado, tipo errado ou opção inválida são **recusados com mensagem
+clara** na ingestão — nunca gravados tortos em silêncio. É o que faz o contrato
+valer quando alguém mexer num prompt daqui a seis meses.
+
+### Desempenho, medido
+
+100 mil contatos, filtro por campo de nicho presente em 0,1% das linhas:
+
+| Montagem | Tempo | Plano |
+|---|---|---|
+| `custom jsonb` + índice GIN | **0,13 ms** | Bitmap Index Scan |
+| Coluna tipada + índice btree | **0,07 ms** | Index Only Scan |
+
+A coluna é ~2× mais rápida, e as duas são sub-milissegundo. A diferença é de
+0,06 ms — não paga o custo de uma tabela por cliente.
+
 ## Captura de leads no site
 
 - Todo site e landing page: [`packages/tracker/crm.js`](../packages/tracker/crm.js),
