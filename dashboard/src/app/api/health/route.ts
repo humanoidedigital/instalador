@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { loadClients } from "@/lib/clients";
+import { crmCredentials, loadClients } from "@/lib/clients";
 import { selectAdsProvider, selectCrmProvider } from "@/lib/providers";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export async function GET() {
     status: "ok",
     uptimeSeconds: Math.round(process.uptime()),
     clients: clients.length,
-    clientsWithCrm: clients.filter((client) => !!client.ghlLocationId).length,
+    clientsWithCrm: clients.filter((client) => crmCredentials(client).configured).length,
     providers: {
       ads: { id: ads.provider.id, demo: ads.demo },
       crm: { id: crm.provider.id, demo: crm.demo },

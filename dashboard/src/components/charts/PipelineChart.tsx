@@ -12,15 +12,15 @@ export function PipelineChart({ stages, currency }: { stages: PipelineStage[]; c
 
   return (
     <ChartCard
-      title="Pipeline por estágio"
-      description="Oportunidades abertas no CRM, na ordem dos estágios."
+      title="Negociações por etapa"
+      description="Negociações no CRM, na ordem das etapas do funil."
       table={{
-        columns: ["Estágio", "Oportunidades", "Valor"],
+        columns: ["Etapa", "Negociações", "Valor"],
         rows: stages.map((stage) => [stage.stage, formatNumber(stage.count), formatCurrency(stage.value, currency)]),
       }}
     >
       {stages.length === 0 ? (
-        <EmptyState message="Sem oportunidades no CRM para este período." />
+        <EmptyState message="Sem negociações no CRM para este período." />
       ) : (
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={stages} layout="vertical" margin={{ top: 0, right: 44, bottom: 0, left: 0 }}>
@@ -35,7 +35,7 @@ export function PipelineChart({ stages, currency }: { stages: PipelineStage[]; c
                 />
               }
             />
-            <Bar dataKey="count" name="Oportunidades" fill={SERIES.google} radius={[0, 4, 4, 0]} barSize={18}>
+            <Bar dataKey="count" name="Negociações" fill={SERIES.google} radius={[0, 4, 4, 0]} barSize={18}>
               <LabelList
                 dataKey="count"
                 position="right"

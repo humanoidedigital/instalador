@@ -277,16 +277,18 @@ get_windsor_api_key() {
   read -p "> " windsor_api_key
 }
 
-get_ghl_api_token() {
+get_rd_crm_token() {
 
   print_banner
-  printf "${WHITE} 💻 Cole o Private Integration Token do GoHighLevel.${GRAY_LIGHT}"
+  printf "${WHITE} 💻 Cole o token da API do RD Station CRM.${GRAY_LIGHT}"
   printf "\n"
-  printf "${WHITE}    Settings > Private Integrations (escopos: opportunities.readonly,${GRAY_LIGHT}"
+  printf "${WHITE}    Pegue em: RD Station CRM > Configurações > Integrações > API.${GRAY_LIGHT}"
   printf "\n"
-  printf "${WHITE}    contacts.readonly, locations.readonly) — deixe vazio para configurar depois:${GRAY_LIGHT}"
+  printf "${WHITE}    Se cada cliente tem uma conta de CRM, cole aqui a principal e${GRAY_LIGHT}"
+  printf "\n"
+  printf "${WHITE}    cadastre as demais depois no .env — deixe vazio para configurar depois:${GRAY_LIGHT}"
   printf "\n\n"
-  read -p "> " ghl_api_token
+  read -p "> " rd_crm_token
 }
 
 inquiry_dashboard() {
@@ -301,5 +303,5 @@ inquiry_dashboard() {
   get_dashboard_port
   get_dashboard_password
   get_windsor_api_key
-  get_ghl_api_token
+  get_rd_crm_token
 }

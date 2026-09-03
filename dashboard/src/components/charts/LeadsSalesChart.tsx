@@ -11,7 +11,7 @@ export function LeadsSalesChart({ series }: { series: TimeseriesPoint[] }) {
   return (
     <ChartCard
       title="Leads e vendas por dia"
-      description="Contagem de oportunidades criadas e ganhas no CRM."
+      description="Contagem de negociações criadas e ganhas no CRM."
       legend={[
         { label: "Leads no CRM", color: SERIES.leads },
         { label: "Vendas ganhas", color: SERIES.sales },

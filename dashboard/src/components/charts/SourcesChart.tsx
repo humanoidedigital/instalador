@@ -22,7 +22,7 @@ export function SourcesChart({ sources, currency }: { sources: SourceRow[]; curr
   return (
     <ChartCard
       title="Origem dos leads"
-      description="Leads do CRM agrupados por utm_source / fonte de atribuição."
+      description="Leads do CRM agrupados por utm_source ou pela fonte da negociação."
       legend={Object.entries(CHANNEL_LABELS).map(([channel, label]) => ({
         label,
         color: CHANNEL_COLOR[channel],

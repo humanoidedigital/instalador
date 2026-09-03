@@ -50,7 +50,7 @@ function emptyTotals(): Totals {
   };
 }
 
-/** Oportunidade que passou da triagem inicial — o "lead qualificado" do funil. */
+/** Negociação que passou da triagem inicial — o "lead qualificado" do funil. */
 function isQualified(opportunity: CrmOpportunity): boolean {
   return opportunity.status === "won" || opportunity.stageOrder >= 2;
 }
@@ -121,18 +121,18 @@ export function buildKpis(current: Totals, previous: Totals, client: ClientConfi
     }),
     kpi("crmLeads", "Leads no CRM", current.crmLeads, previous.crmLeads, "number", true, {
       goal: client.goals.monthlyLeads ?? null,
-      hint: "Oportunidades criadas no GoHighLevel no período.",
+      hint: "Negociações criadas no CRM no período.",
     }),
     kpi("cpl", "CPL", cpl, previousCpl, "currency", false, {
       goal: client.goals.cpl ?? null,
-      hint: "Investimento dividido pelos leads do CRM (ou pelos leads das plataformas, se o CRM não estiver conectado).",
+      hint: "Investimento dividido pelos leads do CRM (ou pelas conversões das plataformas, se o CRM não estiver conectado).",
     }),
-    kpi("opportunities", "Oportunidades qualificadas", current.opportunities, previous.opportunities, "number", true, {
-      hint: "Oportunidades que avançaram além da triagem inicial no pipeline.",
+    kpi("opportunities", "Negociações qualificadas", current.opportunities, previous.opportunities, "number", true, {
+      hint: "Negociações que avançaram além da triagem inicial no funil.",
     }),
     kpi("won", "Vendas ganhas", current.won, previous.won, "number", true),
     kpi("revenue", "Receita", revenue, previousRevenue, "currency", true, {
-      hint: "Soma do valor das oportunidades ganhas no CRM. Sem receita no CRM, usa o valor de conversão reportado pelas plataformas.",
+      hint: "Soma do valor das negociações ganhas no CRM. Sem receita no CRM, usa o valor de conversão reportado pelas plataformas.",
     }),
     kpi("roas", "ROAS", safeDivide(revenue, current.spend), safeDivide(previousRevenue, previous.spend), "decimal", true, {
       goal: client.goals.roas ?? null,
@@ -500,7 +500,7 @@ export function buildInsights(
       severity: "warning",
       title: "Nenhum lead do CRM no período",
       detail:
-        "Houve investimento mas o CRM não registrou oportunidades. Verifique o locationId do cliente e a integração dos formulários com o GoHighLevel.",
+        "Houve investimento mas o CRM não registrou negociações. Verifique o token do cliente e se os formulários estão criando negociação no CRM.",
     });
   }
 

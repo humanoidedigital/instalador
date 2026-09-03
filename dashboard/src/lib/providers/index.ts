@@ -1,7 +1,9 @@
 import type { AdsProvider, CrmProvider } from "@/lib/types";
+import { loadClients } from "@/lib/clients";
 import { windsorAdsProvider } from "./ads/windsor";
 import { fetchGoogleNative } from "./ads/google-native";
 import { fetchMetaNative } from "./ads/meta-native";
+import { rdstationProvider } from "./crm/rdstation";
 import { gohighlevelProvider } from "./crm/gohighlevel";
 import { demoAdsProvider, demoCrmProvider } from "./demo";
 
@@ -57,19 +59,39 @@ export function selectAdsProvider(): ProviderSelection<AdsProvider> {
 }
 
 export function selectCrmProvider(): ProviderSelection<CrmProvider> {
-  const configured = (process.env.CRM_PROVIDER || "gohighlevel").toLowerCase();
+  const configured = (process.env.CRM_PROVIDER || "rdstation").toLowerCase();
 
   if (configured === "demo") {
     return { provider: demoCrmProvider, warnings: [], demo: true };
   }
 
-  if (!process.env.GHL_API_TOKEN) {
+  if (configured === "gohighlevel") {
+    if (!process.env.GHL_API_TOKEN) {
+      return {
+        provider: demoCrmProvider,
+        warnings: ["GHL_API_TOKEN não configurado — CRM exibindo dados de demonstração."],
+        demo: true,
+      };
+    }
+    return { provider: gohighlevelProvider, warnings: [], demo: false };
+  }
+
+  // O token pode ser global (RD_CRM_TOKEN) ou por cliente, via rdCrmTokenEnv no
+  // clients.json — por isso a checagem aqui é só pelo caso "nenhum token".
+  const hasAnyToken =
+    !!process.env.RD_CRM_TOKEN ||
+    loadClients().some((client) => client.rdCrmTokenEnv && process.env[client.rdCrmTokenEnv]);
+
+  if (!hasAnyToken) {
     return {
       provider: demoCrmProvider,
-      warnings: ["GHL_API_TOKEN não configurado — CRM exibindo dados de demonstração."],
+      warnings: [
+        "Nenhum token do RD Station CRM configurado — CRM exibindo dados de demonstração. " +
+          "Defina RD_CRM_TOKEN no .env (ou um token por cliente via rdCrmTokenEnv).",
+      ],
       demo: true,
     };
   }
 
-  return { provider: gohighlevelProvider, warnings: [], demo: false };
+  return { provider: rdstationProvider, warnings: [], demo: false };
 }

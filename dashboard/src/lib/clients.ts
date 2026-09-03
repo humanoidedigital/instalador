@@ -18,10 +18,30 @@ export interface ClientConfig {
   currency: string;
   metaAccountIds: string[];
   googleAccountIds: string[];
-  /** locationId do GoHighLevel. Vazio = cliente sem CRM conectado. */
+  /**
+   * Nome da variável de ambiente que guarda o token do RD Station CRM deste
+   * cliente (ex.: "RD_CRM_TOKEN_ISENTEI"). O token em si nunca fica neste
+   * arquivo, que vai para o git — fica só no .env.
+   * Vazio = usa o RD_CRM_TOKEN global.
+   */
+  rdCrmTokenEnv: string;
+  /**
+   * Funis do CRM que pertencem a este cliente. Use quando vários clientes
+   * dividem a mesma conta do RD Station CRM. Vazio = considera todos.
+   */
+  rdCrmPipelines: string[];
+  /** locationId do GoHighLevel, para quem usa CRM_PROVIDER=gohighlevel. */
   ghlLocationId: string;
   goals: ClientGoals;
   active?: boolean;
+}
+
+export interface CrmCredentials {
+  token?: string;
+  locationId?: string;
+  pipelines: string[];
+  /** Falso quando o cliente não tem credencial de CRM configurada. */
+  configured: boolean;
 }
 
 const CONFIG_PATH =
@@ -36,6 +56,8 @@ function normalize(raw: Partial<ClientConfig>, index: number): ClientConfig {
     currency: raw.currency || "BRL",
     metaAccountIds: (raw.metaAccountIds || []).map(String),
     googleAccountIds: (raw.googleAccountIds || []).map(String),
+    rdCrmTokenEnv: raw.rdCrmTokenEnv ? String(raw.rdCrmTokenEnv) : "",
+    rdCrmPipelines: (raw.rdCrmPipelines || []).map(String),
     ghlLocationId: raw.ghlLocationId ? String(raw.ghlLocationId) : "",
     goals: raw.goals || {},
     active: raw.active !== false,
@@ -70,6 +92,8 @@ export function consolidatedClient(clients: ClientConfig[]): ClientConfig {
     currency: clients[0]?.currency || "BRL",
     metaAccountIds: clients.flatMap((client) => client.metaAccountIds),
     googleAccountIds: clients.flatMap((client) => client.googleAccountIds),
+    rdCrmTokenEnv: "",
+    rdCrmPipelines: [],
     ghlLocationId: "",
     goals: {
       monthlyBudget: sumGoal(clients, "monthlyBudget"),
@@ -93,11 +117,29 @@ export function getClient(clientId: string | null | undefined): ClientConfig | n
   return clients.find((client) => client.id === clientId) || null;
 }
 
+/**
+ * Credenciais de CRM do cliente. O token sai sempre do ambiente — o
+ * clients.json guarda apenas o NOME da variável.
+ */
+export function crmCredentials(client: ClientConfig): CrmCredentials {
+  const token = (client.rdCrmTokenEnv && process.env[client.rdCrmTokenEnv]) || process.env.RD_CRM_TOKEN;
+  return {
+    token: token || undefined,
+    locationId: client.ghlLocationId || undefined,
+    pipelines: client.rdCrmPipelines || [],
+    configured: !!token || !!client.ghlLocationId,
+  };
+}
+
 /** Lista para o seletor: agência primeiro, depois os clientes. */
 export function clientOptions(): { id: string; name: string; hasCrm: boolean }[] {
   const clients = loadClients();
   return [
-    { id: "__all__", name: "Todos os clientes", hasCrm: clients.some((c) => !!c.ghlLocationId) },
-    ...clients.map((client) => ({ id: client.id, name: client.name, hasCrm: !!client.ghlLocationId })),
+    { id: "__all__", name: "Todos os clientes", hasCrm: clients.some((client) => crmCredentials(client).configured) },
+    ...clients.map((client) => ({
+      id: client.id,
+      name: client.name,
+      hasCrm: crmCredentials(client).configured,
+    })),
   ];
 }

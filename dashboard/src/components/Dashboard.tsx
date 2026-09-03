@@ -283,7 +283,7 @@ export function Dashboard({ clients }: { clients: ClientOption[] }) {
             <ChannelBreakdown channels={data.channels} currency={currency} />
           </Section>
 
-          <Section title="CRM" description="Pipeline e origem das oportunidades no GoHighLevel.">
+          <Section title="CRM" description="Funil e origem das negociações no RD Station CRM.">
             <div className="grid gap-3 xl:grid-cols-2">
               <PipelineChart stages={data.pipeline} currency={currency} />
               <SourcesChart sources={data.sources} currency={currency} />

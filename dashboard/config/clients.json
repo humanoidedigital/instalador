@@ -1,77 +1,153 @@
 {
-  "_comment": "Mapa de clientes -> contas de anúncio e location do GoHighLevel. Editável em produção sem rebuild: o app relê o arquivo quando ele muda. metaAccountIds = ID da conta de anúncios (sem 'act_'). googleAccountIds = ID do cliente Google Ads (com ou sem hifens). ghlLocationId = ID da subconta (location) no GoHighLevel.",
+  "_comment": "Mapa de clientes -> contas de anúncio e conta do CRM. Editável em produção sem rebuild: o app relê o arquivo quando ele muda. metaAccountIds = ID da conta de anúncios (sem 'act_'). googleAccountIds = ID do cliente Google Ads (com ou sem hifens). rdCrmTokenEnv = NOME da variável de ambiente que guarda o token do RD Station CRM deste cliente (o token fica só no .env, nunca neste arquivo, que vai para o git). rdCrmPipelines = nomes dos funis do cliente, quando vários clientes dividem a mesma conta de CRM; vazio = todos.",
   "clients": [
     {
       "id": "isentei",
       "name": "Isentei",
       "currency": "BRL",
-      "metaAccountIds": ["710457422909643"],
-      "googleAccountIds": ["185-232-8929"],
-      "ghlLocationId": "",
-      "goals": { "cpl": 25, "roas": 4, "monthlyBudget": 15000, "monthlyLeads": 600 }
+      "metaAccountIds": [
+        "710457422909643"
+      ],
+      "googleAccountIds": [
+        "185-232-8929"
+      ],
+      "rdCrmTokenEnv": "RD_CRM_TOKEN_ISENTEI",
+      "rdCrmPipelines": [],
+      "goals": {
+        "cpl": 25,
+        "roas": 4,
+        "monthlyBudget": 15000,
+        "monthlyLeads": 600
+      }
     },
     {
       "id": "isentoo",
       "name": "Isentoo",
       "currency": "BRL",
-      "metaAccountIds": ["27061548773460823", "1415913303175094"],
-      "googleAccountIds": ["341-106-3133"],
-      "ghlLocationId": "",
-      "goals": { "cpl": 25, "roas": 4, "monthlyBudget": 12000, "monthlyLeads": 480 }
+      "metaAccountIds": [
+        "27061548773460823",
+        "1415913303175094"
+      ],
+      "googleAccountIds": [
+        "341-106-3133"
+      ],
+      "rdCrmTokenEnv": "RD_CRM_TOKEN_ISENTOO",
+      "rdCrmPipelines": [],
+      "goals": {
+        "cpl": 25,
+        "roas": 4,
+        "monthlyBudget": 12000,
+        "monthlyLeads": 480
+      }
     },
     {
       "id": "isenteja",
       "name": "IsenteJá",
       "currency": "BRL",
-      "metaAccountIds": ["980939147446402", "1624702918777962"],
-      "googleAccountIds": ["469-030-5572"],
-      "ghlLocationId": "",
-      "goals": { "cpl": 30, "roas": 3.5, "monthlyBudget": 10000, "monthlyLeads": 330 }
+      "metaAccountIds": [
+        "980939147446402",
+        "1624702918777962"
+      ],
+      "googleAccountIds": [
+        "469-030-5572"
+      ],
+      "rdCrmTokenEnv": "RD_CRM_TOKEN_ISENTEJA",
+      "rdCrmPipelines": [],
+      "goals": {
+        "cpl": 30,
+        "roas": 3.5,
+        "monthlyBudget": 10000,
+        "monthlyLeads": 330
+      }
     },
     {
       "id": "duran",
       "name": "C.A Duran / Duran Esquadrias",
       "currency": "BRL",
-      "metaAccountIds": ["2191285658000812"],
-      "googleAccountIds": ["224-517-3915"],
-      "ghlLocationId": "",
-      "goals": { "cpl": 60, "roas": 6, "monthlyBudget": 8000, "monthlyLeads": 130 }
+      "metaAccountIds": [
+        "2191285658000812"
+      ],
+      "googleAccountIds": [
+        "224-517-3915"
+      ],
+      "rdCrmTokenEnv": "RD_CRM_TOKEN_DURAN",
+      "rdCrmPipelines": [],
+      "goals": {
+        "cpl": 60,
+        "roas": 6,
+        "monthlyBudget": 8000,
+        "monthlyLeads": 130
+      }
     },
     {
       "id": "multimarmore",
       "name": "Multi Mármore",
       "currency": "BRL",
-      "metaAccountIds": ["1115284540487292"],
-      "googleAccountIds": ["152-973-2535"],
-      "ghlLocationId": "",
-      "goals": { "cpl": 55, "roas": 6, "monthlyBudget": 7000, "monthlyLeads": 125 }
+      "metaAccountIds": [
+        "1115284540487292"
+      ],
+      "googleAccountIds": [
+        "152-973-2535"
+      ],
+      "rdCrmTokenEnv": "RD_CRM_TOKEN_MULTIMARMORE",
+      "rdCrmPipelines": [],
+      "goals": {
+        "cpl": 55,
+        "roas": 6,
+        "monthlyBudget": 7000,
+        "monthlyLeads": 125
+      }
     },
     {
       "id": "dua",
       "name": "Dua Arquitetura",
       "currency": "BRL",
-      "metaAccountIds": ["1165027472057394"],
+      "metaAccountIds": [
+        "1165027472057394"
+      ],
       "googleAccountIds": [],
-      "ghlLocationId": "",
-      "goals": { "cpl": 80, "roas": 8, "monthlyBudget": 5000, "monthlyLeads": 60 }
+      "rdCrmTokenEnv": "RD_CRM_TOKEN_DUA",
+      "rdCrmPipelines": [],
+      "goals": {
+        "cpl": 80,
+        "roas": 8,
+        "monthlyBudget": 5000,
+        "monthlyLeads": 60
+      }
     },
     {
       "id": "univerplast",
       "name": "Univerplast",
       "currency": "BRL",
       "metaAccountIds": [],
-      "googleAccountIds": ["372-789-8154"],
-      "ghlLocationId": "",
-      "goals": { "cpl": 70, "roas": 5, "monthlyBudget": 6000, "monthlyLeads": 85 }
+      "googleAccountIds": [
+        "372-789-8154"
+      ],
+      "rdCrmTokenEnv": "RD_CRM_TOKEN_UNIVERPLAST",
+      "rdCrmPipelines": [],
+      "goals": {
+        "cpl": 70,
+        "roas": 5,
+        "monthlyBudget": 6000,
+        "monthlyLeads": 85
+      }
     },
     {
       "id": "novachef",
       "name": "Nova Chef",
       "currency": "BRL",
-      "metaAccountIds": ["643923611418824"],
+      "metaAccountIds": [
+        "643923611418824"
+      ],
       "googleAccountIds": [],
-      "ghlLocationId": "",
-      "goals": { "cpl": 45, "roas": 5, "monthlyBudget": 4000, "monthlyLeads": 90 }
+      "rdCrmTokenEnv": "RD_CRM_TOKEN_NOVACHEF",
+      "rdCrmPipelines": [],
+      "goals": {
+        "cpl": 45,
+        "roas": 5,
+        "monthlyBudget": 4000,
+        "monthlyLeads": 90
+      }
     }
   ]
 }

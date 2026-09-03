@@ -12,7 +12,7 @@ export default function Page() {
         <h1 className="text-xl font-semibold">Nenhum cliente configurado</h1>
         <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
           Edite <code>config/clients.json</code> na raiz do dashboard e cadastre pelo menos um cliente com as contas de
-          Meta Ads, Google Ads e o <code>ghlLocationId</code> do GoHighLevel.
+          Meta Ads, Google Ads e o <code>rdCrmTokenEnv</code> do RD Station CRM.
         </p>
       </main>
     );

@@ -51,7 +51,11 @@ export interface FetchOptions {
   range: DateRange;
   /** IDs das contas de anúncio do cliente selecionado. */
   accountIds: string[];
-  /** locationId do GoHighLevel do cliente selecionado. */
+  /** Token da conta de CRM do cliente selecionado (RD Station CRM). */
+  crmToken?: string;
+  /** Funis do CRM que pertencem a este cliente. Vazio = todos. */
+  pipelines?: string[];
+  /** locationId do GoHighLevel, quando CRM_PROVIDER=gohighlevel. */
   locationId?: string;
   signal?: AbortSignal;
 }

@@ -11,7 +11,7 @@ cd && cd ./install && sudo ./install_instancia
 
 ---
 
-## DASHBOARD DE MARKETING (Google Ads + Meta Ads + CRM)
+## DASHBOARD DE MARKETING (Google Ads + Meta Ads + RD Station CRM)
 
 Painel com KPIs, funil, pipeline e performance por campanha, com seletor de
 cliente. Roda no mesmo VPS, em processo próprio no PM2, sem mexer na instalação

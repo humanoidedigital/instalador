@@ -97,12 +97,22 @@ GOOGLE_ADS_API_VERSION=v18
 META_ACCESS_TOKEN=
 META_API_VERSION=v21.0
 
-CRM_PROVIDER=gohighlevel
-GHL_API_TOKEN=${ghl_api_token}
-GHL_API_VERSION=2021-07-28
-GHL_API_BASE=https://services.leadconnectorhq.com
-GHL_MAX_PAGES=30
-GHL_WON_STAGES=
+CRM_PROVIDER=rdstation
+
+# Token da conta do RD Station CRM (Configurações > Integrações > API).
+# Uma conta por cliente? Crie uma variável por cliente aqui embaixo, no formato
+# RD_CRM_TOKEN_<CLIENTE>, e aponte o NOME dela no campo rdCrmTokenEnv de
+# config/clients.json. O token nunca vai para o clients.json.
+RD_CRM_TOKEN=${rd_crm_token}
+
+RD_CRM_API_VERSION=v1
+RD_CRM_API_BASE=https://crm.rdstation.com/api/v1
+RD_CRM_V2_API_BASE=https://api.rd.services/crm/v2
+RD_CRM_PAGE_SIZE=200
+RD_CRM_MAX_PAGES=30
+RD_WON_STAGES=
+RD_UTM_SOURCE_FIELD=utm_source
+RD_UTM_CAMPAIGN_FIELD=utm_campaign
 [-]EOF
   chmod 600 /home/deploy/${dashboard_name}/.env
 EOF
