@@ -42,9 +42,9 @@ function ThemeToggle() {
       aria-label="Aparência"
       className="control no-print"
     >
-      <option value="system">Aparência: sistema</option>
-      <option value="light">Aparência: clara</option>
-      <option value="dark">Aparência: escura</option>
+      <option value="system">Tema: auto</option>
+      <option value="light">Tema: claro</option>
+      <option value="dark">Tema: escuro</option>
     </select>
   );
 }
@@ -67,7 +67,7 @@ export function Filters({
   const isCustom = state.preset === "custom";
 
   return (
-    <div className="mb-5 flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <select
         value={state.clientId}
         onChange={(event) => onChange({ ...state, clientId: event.target.value })}
@@ -116,15 +116,28 @@ export function Filters({
         </>
       ) : null}
 
-      <button type="button" onClick={onRefresh} className="control no-print" disabled={loading}>
+      {/* Ação primária destacada; as secundárias ficam com peso de controle. */}
+      <button
+        type="button"
+        onClick={onRefresh}
+        className="control no-print font-medium"
+        disabled={loading}
+        style={{
+          background: "var(--series-1)",
+          borderColor: "var(--series-1)",
+          color: "#ffffff",
+          opacity: loading ? 0.7 : 1,
+        }}
+      >
         {loading ? "Atualizando…" : "Atualizar dados"}
       </button>
 
-      <button type="button" onClick={onExport} className="control no-print">
-        Exportar CSV
-      </button>
-
-      <ThemeToggle />
+      <div className="ml-auto flex flex-wrap items-center gap-2">
+        <button type="button" onClick={onExport} className="control no-print">
+          Exportar CSV
+        </button>
+        <ThemeToggle />
+      </div>
     </div>
   );
 }

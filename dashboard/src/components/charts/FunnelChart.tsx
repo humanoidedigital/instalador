@@ -6,9 +6,14 @@ import { ChartCard } from "../ui";
 import { ORDINAL_BLUE } from "./theme";
 
 /**
- * Funil como barras horizontais proporcionais ao primeiro estágio, com a taxa
- * de passagem escrita ao lado — a razão entre cliques e vendas é grande demais
- * para ser lida só pelo comprimento.
+ * Funil em barras horizontais.
+ *
+ * A barra mede a TAXA DE PASSAGEM da etapa anterior, não o volume absoluto:
+ * entre cliques e vendas há três ordens de grandeza, e uma escala linear no
+ * volume deixaria as três últimas barras invisíveis — que era exatamente o
+ * problema. O volume aparece como número, e a conversão acumulada desde a
+ * primeira etapa vai na legenda de cada linha, para não perder a noção de
+ * afunilamento total.
  */
 export function FunnelChartCard({ stages }: { stages: FunnelStage[] }) {
   const top = stages[0]?.value || 0;
@@ -16,41 +21,51 @@ export function FunnelChartCard({ stages }: { stages: FunnelStage[] }) {
   return (
     <ChartCard
       title="Funil do período"
-      description="Do clique no anúncio até a venda registrada no CRM."
+      description="Cada barra mostra a taxa de passagem da etapa anterior."
       table={{
-        columns: ["Etapa", "Volume", "Conversão da etapa anterior"],
+        columns: ["Etapa", "Volume", "Da etapa anterior", "Do total de cliques"],
         rows: stages.map((stage) => [
           stage.stage,
           formatNumber(stage.value),
           stage.stepRate === null ? "—" : formatPercent(stage.stepRate),
+          top > 0 ? formatPercent(stage.value / top) : "—",
         ]),
       }}
     >
-      <ul className="space-y-3 py-1">
+      <ul className="flex h-full flex-col justify-center gap-4 py-1">
         {stages.map((stage, index) => {
-          const width = top > 0 ? Math.max((stage.value / top) * 100, stage.value > 0 ? 3 : 0.6) : 0.6;
+          // Primeira etapa é a base: 100%. As demais, a fração que passou.
+          const rate = index === 0 ? 1 : stage.stepRate ?? 0;
+          const width = Math.max(Math.min(rate, 1) * 100, stage.value > 0 ? 2 : 0.5);
+          const cumulative = top > 0 ? stage.value / top : null;
+
           return (
             <li key={stage.stage}>
-              <div className="mb-1 flex items-baseline justify-between gap-3 text-xs">
-                <span style={{ color: "var(--text-secondary)" }}>{stage.stage}</span>
-                <span className="tnum font-semibold" style={{ color: "var(--text-primary)" }}>
+              <div className="mb-1 flex items-baseline justify-between gap-3">
+                <span className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>
+                  {stage.stage}
+                </span>
+                <span className="tnum text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                   {formatNumber(stage.value)}
-                  {stage.stepRate !== null ? (
-                    <span className="ml-2 font-normal" style={{ color: "var(--text-muted)" }}>
-                      {formatPercent(stage.stepRate)} da etapa anterior
-                    </span>
-                  ) : null}
                 </span>
               </div>
-              <div className="h-3 w-full rounded-full" style={{ background: "var(--surface-2)" }}>
+
+              <div className="h-2.5 w-full rounded-full" style={{ background: "var(--surface-2)" }}>
                 <div
-                  className="h-3 rounded-full"
+                  className="h-2.5 rounded-full"
                   style={{
                     width: `${width}%`,
                     background: ORDINAL_BLUE[Math.min(index, ORDINAL_BLUE.length - 1)],
                   }}
                 />
               </div>
+
+              <p className="mt-1 text-[11px]" style={{ color: "var(--text-muted)" }}>
+                {index === 0
+                  ? "base do funil"
+                  : `${formatPercent(rate)} da etapa anterior`}
+                {index > 0 && cumulative !== null ? ` · ${formatPercent(cumulative, 2)} dos cliques` : ""}
+              </p>
             </li>
           );
         })}

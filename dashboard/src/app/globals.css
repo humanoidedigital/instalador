@@ -153,8 +153,40 @@ a:focus-visible {
   scrollbar-width: thin;
 }
 
+/* Linhas de tabela: alvo de leitura horizontal longa precisa de realce. */
+.data-row:hover {
+  background: var(--surface-2);
+}
+
+/* Cabeçalho fixo dentro do container rolável da tabela. */
+.sticky-head th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-1);
+}
+
+/*
+  O painel é impresso e enviado como relatório: controles somem, nada de
+  posicionamento fixo e nenhum card partido entre duas páginas.
+*/
 @media print {
   .no-print {
     display: none !important;
+  }
+
+  .filters-bar,
+  .sticky-head th {
+    position: static !important;
+  }
+
+  .card {
+    box-shadow: none;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  section {
+    break-inside: avoid-page;
   }
 }

@@ -1,11 +1,11 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { PipelineStage } from "@/lib/types";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { ChartCard, EmptyState } from "../ui";
 import { ChartTooltip } from "./Tooltip";
-import { AXIS_PROPS, GRID_PROPS, SERIES } from "./theme";
+import { AXIS_PROPS } from "./theme";
 
 export function PipelineChart({ stages, currency }: { stages: PipelineStage[]; currency: string }) {
   const height = Math.max(200, stages.length * 42);
@@ -24,8 +24,8 @@ export function PipelineChart({ stages, currency }: { stages: PipelineStage[]; c
       ) : (
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={stages} layout="vertical" margin={{ top: 0, right: 44, bottom: 0, left: 0 }}>
-            <CartesianGrid {...GRID_PROPS} horizontal={false} vertical />
-            <XAxis type="number" allowDecimals={false} {...AXIS_PROPS} />
+            {/* Sem eixo X: cada barra já carrega o próprio número à direita. */}
+            <XAxis type="number" hide />
             <YAxis type="category" dataKey="stage" width={140} {...AXIS_PROPS} />
             <Tooltip
               cursor={{ fill: "color-mix(in srgb, var(--text-primary) 6%, transparent)" }}
@@ -35,7 +35,9 @@ export function PipelineChart({ stages, currency }: { stages: PipelineStage[]; c
                 />
               }
             />
-            <Bar dataKey="count" name="Negociações" fill={SERIES.google} radius={[0, 4, 4, 0]} barSize={18}>
+            {/* Azul sequencial: a barra mede etapa do funil, não canal — laranja
+                já significa Google Ads em todo o resto do relatório. */}
+            <Bar dataKey="count" name="Negociações" fill="var(--seq-450)" radius={[0, 4, 4, 0]} barSize={18}>
               <LabelList
                 dataKey="count"
                 position="right"

@@ -24,7 +24,9 @@ export function KpiCard({ kpi, currency, size = "lg" }: { kpi: Kpi; currency: st
   const goal = goalProgress(kpi);
 
   return (
-    <div className="card p-4" title={kpi.hint}>
+    // flex-col + mt-auto na meta: cards da mesma linha crescem juntos e a barra
+    // fica ancorada no rodapé, em vez de deixar um vazio no meio do card.
+    <div className="card flex h-full flex-col p-4" title={kpi.hint}>
       <p className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
         {kpi.label}
       </p>
@@ -43,7 +45,7 @@ export function KpiCard({ kpi, currency, size = "lg" }: { kpi: Kpi; currency: st
         </span>
       </div>
       {goal ? (
-        <div className="mt-2">
+        <div className="mt-auto pt-3">
           <div className="h-1.5 w-full rounded-full" style={{ background: "var(--surface-2)" }}>
             <div
               className="h-1.5 rounded-full"
@@ -57,18 +59,36 @@ export function KpiCard({ kpi, currency, size = "lg" }: { kpi: Kpi; currency: st
             {goal.label} ({formatKpi(kpi.goal as number, kpi.format, currency)})
           </p>
         </div>
+      ) : size === "lg" ? (
+        // Só no bloco principal: lá convivem cards com e sem meta, e a linha
+        // mantém todos com a mesma âncora. No bloco secundário nenhum tem meta,
+        // então repetir o aviso nove vezes seria só ruído.
+        <p className="mt-auto pt-3 text-[11px]" style={{ color: "var(--text-muted)" }}>
+          Meta não definida
+        </p>
       ) : null}
     </div>
   );
 }
 
-export function KpiGrid({ kpis, currency, size = "lg" }: { kpis: Kpi[]; currency: string; size?: "lg" | "sm" }) {
+export function KpiGrid({
+  kpis,
+  currency,
+  size = "lg",
+  columns = 4,
+}: {
+  kpis: Kpi[];
+  currency: string;
+  size?: "lg" | "sm";
+  /** Colunas no breakpoint largo. 3 evita a última linha com um card órfão. */
+  columns?: 3 | 4;
+}) {
   return (
     <div
-      className={`grid gap-3 ${
+      className={`grid gap-4 ${
         size === "lg"
           ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-          : "grid-cols-2 md:grid-cols-4 xl:grid-cols-4"
+          : `grid-cols-2 md:grid-cols-3 ${columns === 3 ? "xl:grid-cols-3" : "xl:grid-cols-4"}`
       }`}
     >
       {kpis.map((kpi) => (

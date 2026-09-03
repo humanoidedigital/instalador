@@ -15,7 +15,7 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="mb-6">
+    <section className="mb-8">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>
@@ -124,7 +124,7 @@ export function DataTable({ columns, rows }: { columns: string[]; rows: (string 
   return (
     <div className="scroll-x max-h-[320px] overflow-y-auto">
       <table className="w-full text-left text-xs">
-        <thead className="sticky top-0" style={{ background: "var(--surface-1)" }}>
+        <thead className="sticky-head">
           <tr>
             {columns.map((column, index) => (
               <th
@@ -140,7 +140,7 @@ export function DataTable({ columns, rows }: { columns: string[]; rows: (string 
         </thead>
         <tbody>
           {rows.map((row, rowIndex) => (
-            <tr key={rowIndex}>
+            <tr key={rowIndex} className="data-row">
               {row.map((cell, cellIndex) => (
                 <td
                   key={cellIndex}

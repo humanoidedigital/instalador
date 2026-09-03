@@ -24,7 +24,7 @@ export function ChannelBreakdown({ channels, currency }: { channels: ChannelSumm
   const totalSpend = channels.reduce((total, channel) => total + channel.spend, 0);
 
   return (
-    <div className="grid gap-3 md:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-2">
       {channels.map((channel) => {
         const share = totalSpend > 0 ? channel.spend / totalSpend : 0;
         return (

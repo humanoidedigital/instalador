@@ -1,12 +1,12 @@
 "use client";
 
-import { Bar, BarChart, Cell, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { SourceRow } from "@/lib/types";
 import { CHANNEL_LABELS } from "@/lib/channel";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/format";
 import { ChartCard, EmptyState } from "../ui";
 import { ChartTooltip } from "./Tooltip";
-import { AXIS_PROPS, GRID_PROPS, SERIES } from "./theme";
+import { AXIS_PROPS, SERIES } from "./theme";
 
 const CHANNEL_COLOR: Record<string, string> = {
   meta: SERIES.meta,
@@ -23,10 +23,10 @@ export function SourcesChart({ sources, currency }: { sources: SourceRow[]; curr
     <ChartCard
       title="Origem dos leads"
       description="Leads do CRM agrupados por utm_source ou pela fonte da negociação."
-      legend={Object.entries(CHANNEL_LABELS).map(([channel, label]) => ({
-        label,
-        color: CHANNEL_COLOR[channel],
-      }))}
+      legend={Object.entries(CHANNEL_LABELS)
+        // Só os canais presentes: legenda de item inexistente é ruído.
+        .filter(([channel]) => top.some((source) => source.channel === channel))
+        .map(([channel, label]) => ({ label, color: CHANNEL_COLOR[channel] }))}
       table={{
         columns: ["Origem", "Canal", "Leads", "Vendas", "Conversão", "Receita"],
         rows: sources.map((source) => [
@@ -44,8 +44,8 @@ export function SourcesChart({ sources, currency }: { sources: SourceRow[]; curr
       ) : (
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={top} layout="vertical" margin={{ top: 0, right: 44, bottom: 0, left: 0 }}>
-            <CartesianGrid {...GRID_PROPS} horizontal={false} vertical />
-            <XAxis type="number" allowDecimals={false} {...AXIS_PROPS} />
+            {/* Sem eixo X: cada barra já carrega o próprio número à direita. */}
+            <XAxis type="number" hide />
             <YAxis type="category" dataKey="source" width={120} {...AXIS_PROPS} />
             <Tooltip
               cursor={{ fill: "color-mix(in srgb, var(--text-primary) 6%, transparent)" }}

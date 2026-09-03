@@ -27,6 +27,11 @@ function daysAgo(days: number): string {
   return date.toISOString().slice(0, 10);
 }
 
+function formatRange(range: { from: string; to: string }): string {
+  const br = (iso: string) => iso.split("-").reverse().join("/");
+  return `${br(range.from)} – ${br(range.to)}`;
+}
+
 function buildQuery(state: FilterState, refresh: boolean): string {
   const params = new URLSearchParams({ client: state.clientId });
   if (state.preset === "custom") {
@@ -194,38 +199,57 @@ export function Dashboard({ clients }: { clients: ClientOption[] }) {
 
   return (
     <main className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-6">
-      <header className="mb-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <header className="mb-4 flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div>
           <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>
             Dashboard de Marketing
           </h1>
           {data ? (
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              {data.meta.range.from.split("-").reverse().join("/")} a {data.meta.range.to.split("-").reverse().join("/")} ·
-              comparado com {data.meta.previousRange.from.split("-").reverse().join("/")} a{" "}
-              {data.meta.previousRange.to.split("-").reverse().join("/")} · atualizado às{" "}
-              {formatDateTime(data.meta.generatedAt)}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Badge tone="accent">{data.meta.clientName}</Badge>
+              <Badge>Mídia: {data.meta.sources.ads}</Badge>
+              <Badge>CRM: {data.meta.sources.crm}</Badge>
+              {data.meta.demo ? <Badge tone="warning">Dados de demonstração</Badge> : null}
+            </div>
           ) : null}
         </div>
+
         {data ? (
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Badge tone="accent">{data.meta.clientName}</Badge>
-            <Badge>Mídia: {data.meta.sources.ads}</Badge>
-            <Badge>CRM: {data.meta.sources.crm}</Badge>
-            {data.meta.demo ? <Badge tone="warning">Dados de demonstração</Badge> : null}
-          </div>
+          <dl className="text-right text-xs" style={{ color: "var(--text-muted)" }}>
+            <div className="flex justify-end gap-2">
+              <dt>Período</dt>
+              <dd className="tnum font-medium" style={{ color: "var(--text-secondary)" }}>
+                {formatRange(data.meta.range)}
+              </dd>
+            </div>
+            <div className="mt-0.5 flex justify-end gap-2">
+              <dt>Comparado com</dt>
+              <dd className="tnum">{formatRange(data.meta.previousRange)}</dd>
+            </div>
+            <div className="mt-0.5 flex justify-end gap-2">
+              <dt>Atualizado às</dt>
+              <dd className="tnum">{formatDateTime(data.meta.generatedAt)}</dd>
+            </div>
+          </dl>
         ) : null}
       </header>
 
-      <Filters
-        clients={clients}
-        state={state}
-        onChange={setState}
-        onRefresh={() => load(state, true)}
-        onExport={handleExport}
-        loading={loading}
-      />
+      {/* Barra de filtros fixa no topo: o relatório é longo e o leitor precisa
+          saber de qual cliente e de qual período são os números que está vendo.
+          No celular ela não gruda — empilhada, comeria 18% da tela o tempo todo. */}
+      <div
+        className="filters-bar z-20 -mx-4 mb-6 px-4 py-2.5 md:sticky md:top-0 md:-mx-6 md:px-6"
+        style={{ background: "var(--surface-0)", borderBottom: "1px solid var(--border)" }}
+      >
+        <Filters
+          clients={clients}
+          state={state}
+          onChange={setState}
+          onRefresh={() => load(state, true)}
+          onExport={handleExport}
+          loading={loading}
+        />
+      </div>
 
       {error ? (
         <div
@@ -251,7 +275,7 @@ export function Dashboard({ clients }: { clients: ClientOption[] }) {
       ) : null}
 
       {!data && loading ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, index) => (
             <div key={index} className="card h-[112px] animate-pulse" />
           ))}
@@ -271,7 +295,7 @@ export function Dashboard({ clients }: { clients: ClientOption[] }) {
           ) : null}
 
           <Section title="Evolução diária">
-            <div className="grid gap-3 xl:grid-cols-2">
+            <div className="grid gap-4 xl:grid-cols-2">
               <SpendByChannelChart series={data.series} currency={currency} />
               <LeadsSalesChart series={data.series} />
               <CplChart series={data.series} currency={currency} goal={cplGoal} />
@@ -284,14 +308,14 @@ export function Dashboard({ clients }: { clients: ClientOption[] }) {
           </Section>
 
           <Section title="CRM" description="Funil e origem das negociações no RD Station CRM.">
-            <div className="grid gap-3 xl:grid-cols-2">
+            <div className="grid gap-4 xl:grid-cols-2">
               <PipelineChart stages={data.pipeline} currency={currency} />
               <SourcesChart sources={data.sources} currency={currency} />
             </div>
           </Section>
 
           <Section title="Métricas de mídia" description="Indicadores de eficiência das plataformas.">
-            <KpiGrid kpis={secondaryKpis} currency={currency} size="sm" />
+            <KpiGrid kpis={secondaryKpis} currency={currency} size="sm" columns={3} />
           </Section>
 
           <Section

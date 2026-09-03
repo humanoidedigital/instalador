@@ -82,9 +82,9 @@ export function CampaignTable({ campaigns, currency }: { campaigns: CampaignRow[
         </span>
       </div>
 
-      <div className="scroll-x">
+      <div className="scroll-x max-h-[560px] overflow-y-auto">
         <table className="w-full min-w-[760px] text-left text-xs">
-          <thead>
+          <thead className="sticky-head">
             <tr>
               {COLUMNS.map((column) => (
                 <th
@@ -109,7 +109,7 @@ export function CampaignTable({ campaigns, currency }: { campaigns: CampaignRow[
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.key}>
+              <tr key={row.key} className="data-row">
                 <td className="py-2 pr-3" style={{ borderBottom: "1px solid var(--border)" }}>
                   <span className="flex items-center gap-2">
                     <span

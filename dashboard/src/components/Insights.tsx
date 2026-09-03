@@ -14,7 +14,12 @@ export function Insights({ insights }: { insights: Insight[] }) {
   if (!insights.length) return null;
 
   return (
-    <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+    // auto-fit em vez de contagem fixa: 3, 4 ou 5 avisos preenchem a linha
+    // sem deixar um card sozinho embaixo.
+    <ul
+      className="grid gap-4"
+      style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}
+    >
       {insights.map((insight) => {
         const tone = TONE[insight.severity];
         return (
