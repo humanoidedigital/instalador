@@ -31,6 +31,16 @@ if [ ! -f ".parcelrc" ]; then
 EOF
 fi
 
+# Enable Parcel's package exports resolution (needed by recent Radix UI packages,
+# which expose subpaths such as @radix-ui/primitive/is-development only via "exports")
+echo "🔧 Enabling package exports resolution..."
+node -e "
+const fs = require('fs');
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+pkg['@parcel/resolver-default'] = Object.assign({}, pkg['@parcel/resolver-default'], { packageExports: true });
+fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+"
+
 # Clean previous build
 echo "🧹 Cleaning previous build..."
 rm -rf dist bundle.html
