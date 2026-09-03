@@ -1,0 +1,105 @@
+#!/bin/bash
+#
+# Instalador do DASHBOARD DE MARKETING (Google Ads + Meta Ads + CRM GoHighLevel).
+#
+# Pode rodar no mesmo VPS do whaticket: o dashboard sobe em processo próprio no
+# PM2, com Node 20 dedicado em /opt/node20, sem tocar no node do sistema.
+#
+# Uso:  sudo ./install_dashboard
+
+# reset shell colors
+tput init
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  PROJECT_ROOT="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$PROJECT_ROOT/$SOURCE"
+done
+PROJECT_ROOT="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+
+# required imports
+source "${PROJECT_ROOT}"/variables/manifest.sh
+source "${PROJECT_ROOT}"/utils/manifest.sh
+source "${PROJECT_ROOT}"/lib/manifest.sh
+
+# nome do processo no pm2, da pasta em /home/deploy e do site no nginx
+dashboard_name=marketing-dashboard
+
+#######################################
+# garante as dependências de sistema sem reinstalar o que já existe
+#######################################
+dashboard_dependencies() {
+  print_banner
+  printf "${WHITE} 💻 Verificando dependências do sistema...${GRAY_LIGHT}"
+  printf "\n\n"
+
+  sleep 2
+
+  sudo su - root <<EOF
+  apt -y update
+  apt install -y curl xz-utils rsync
+
+  if ! command -v nginx >/dev/null; then
+    apt install -y nginx
+    rm -f /etc/nginx/sites-enabled/default
+  fi
+
+  if ! command -v certbot >/dev/null; then
+    apt install -y snapd
+    snap install core
+    snap refresh core
+    snap install --classic certbot
+    ln -sf /snap/bin/certbot /usr/bin/certbot
+  fi
+
+  if ! id deploy >/dev/null 2>&1; then
+    useradd -m -s /bin/bash -G sudo deploy
+  fi
+EOF
+
+  sleep 2
+}
+
+#######################################
+# instala o pm2 caso ainda não exista no servidor
+#######################################
+dashboard_pm2_install() {
+  print_banner
+  printf "${WHITE} 💻 Verificando pm2...${GRAY_LIGHT}"
+  printf "\n\n"
+
+  sleep 2
+
+  sudo su - root <<EOF
+  if ! command -v pm2 >/dev/null; then
+    /opt/node20/bin/npm install -g pm2
+    ln -sf /opt/node20/bin/pm2 /usr/bin/pm2
+  fi
+  su - deploy -c "pm2 ping" >/dev/null 2>&1
+  env PATH=\$PATH:/opt/node20/bin pm2 startup systemd -u deploy --hp /home/deploy
+EOF
+
+  sleep 2
+}
+
+# interactive CLI
+inquiry_dashboard
+
+# dependências
+dashboard_dependencies
+dashboard_node20_install
+dashboard_pm2_install
+
+# aplicação
+dashboard_copy_files
+dashboard_set_env
+dashboard_node_dependencies
+dashboard_node_build
+dashboard_start_pm2
+
+# rede
+dashboard_nginx_setup
+dashboard_certbot_setup
+
+dashboard_done

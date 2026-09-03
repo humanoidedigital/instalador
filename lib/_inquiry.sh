@@ -242,3 +242,64 @@ inquiry_options() {
 }
 
 
+
+get_dashboard_url() {
+
+  print_banner
+  printf "${WHITE} 💻 Digite o domínio do DASHBOARD DE MARKETING (ex: dashboard.suaagencia.com.br):${GRAY_LIGHT}"
+  printf "\n\n"
+  read -p "> " dashboard_url
+}
+
+get_dashboard_port() {
+
+  print_banner
+  printf "${WHITE} 💻 Digite a porta do DASHBOARD; Ex: 3333 ${GRAY_LIGHT}"
+  printf "\n\n"
+  read -p "> " dashboard_port
+}
+
+get_dashboard_password() {
+
+  print_banner
+  printf "${WHITE} 💻 Crie a senha de acesso ao DASHBOARD (usuário: admin):${GRAY_LIGHT}"
+  printf "\n\n"
+  read -p "> " dashboard_password
+}
+
+get_windsor_api_key() {
+
+  print_banner
+  printf "${WHITE} 💻 Cole a API key do Windsor.ai (Google Ads + Meta Ads).${GRAY_LIGHT}"
+  printf "\n"
+  printf "${WHITE}    Pegue em https://onboard.windsor.ai — deixe vazio para configurar depois:${GRAY_LIGHT}"
+  printf "\n\n"
+  read -p "> " windsor_api_key
+}
+
+get_ghl_api_token() {
+
+  print_banner
+  printf "${WHITE} 💻 Cole o Private Integration Token do GoHighLevel.${GRAY_LIGHT}"
+  printf "\n"
+  printf "${WHITE}    Settings > Private Integrations (escopos: opportunities.readonly,${GRAY_LIGHT}"
+  printf "\n"
+  printf "${WHITE}    contacts.readonly, locations.readonly) — deixe vazio para configurar depois:${GRAY_LIGHT}"
+  printf "\n\n"
+  read -p "> " ghl_api_token
+}
+
+inquiry_dashboard() {
+
+  print_banner
+  printf "${WHITE} 💻 Bem-vindo(a) à instalação do DASHBOARD DE MARKETING!${GRAY_LIGHT}"
+  printf "\n\n"
+
+  sleep 2
+
+  get_dashboard_url
+  get_dashboard_port
+  get_dashboard_password
+  get_windsor_api_key
+  get_ghl_api_token
+}

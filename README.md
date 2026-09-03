@@ -9,3 +9,17 @@ ACESSANDO DIRETORIO DO INSTALADOR & INICIANDO INSTALAÇÕES ADICIONAIS (USAR EST
 cd && cd ./install && sudo ./install_instancia
 ```
 
+---
+
+## DASHBOARD DE MARKETING (Google Ads + Meta Ads + CRM)
+
+Painel com KPIs, funil, pipeline e performance por campanha, com seletor de
+cliente. Roda no mesmo VPS, em processo próprio no PM2, sem mexer na instalação
+do whaticket.
+
+```bash
+cd && cd ./install && sudo ./install_dashboard
+```
+
+Documentação completa (credenciais, cadastro de clientes, migração para as APIs
+nativas do Google e da Meta): [`dashboard/README.md`](dashboard/README.md).
