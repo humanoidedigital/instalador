@@ -1,5 +1,6 @@
 import type { AdDailyRow, FetchOptions } from "@/lib/types";
 import { cached, cacheTtlSeconds } from "@/lib/cache";
+import { getSecret, getSecretOr } from "@/lib/secrets";
 
 /**
  * Google Ads API nativa (REST + GAQL via searchStream).
@@ -46,7 +47,7 @@ async function accessToken(): Promise<string> {
 }
 
 function requireEnv(name: string): string {
-  const value = process.env[name];
+  const value = getSecret(name);
   if (!value) throw new Error(`${name} não configurada — necessária para ADS_PROVIDER=native.`);
   return value;
 }
@@ -83,7 +84,7 @@ interface SearchStreamRow {
 }
 
 async function fetchCustomer(customerId: string, options: FetchOptions): Promise<AdDailyRow[]> {
-  const version = process.env.GOOGLE_ADS_API_VERSION || "v18";
+  const version = getSecretOr("GOOGLE_ADS_API_VERSION", "v18");
   const digits = customerId.replace(/\D/g, "");
   const token = await accessToken();
 
@@ -92,7 +93,7 @@ async function fetchCustomer(customerId: string, options: FetchOptions): Promise
     "developer-token": requireEnv("GOOGLE_ADS_DEVELOPER_TOKEN"),
     "Content-Type": "application/json",
   };
-  const loginCustomerId = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID;
+  const loginCustomerId = getSecret("GOOGLE_ADS_LOGIN_CUSTOMER_ID");
   if (loginCustomerId) headers["login-customer-id"] = loginCustomerId.replace(/\D/g, "");
 
   const response = await fetch(

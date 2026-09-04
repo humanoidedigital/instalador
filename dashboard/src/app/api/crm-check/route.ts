@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { crmCredentials, getClient, loadClients } from "@/lib/clients";
 import { rangeFromSearchParams } from "@/lib/dates";
 import { inspectRdStation } from "@/lib/providers/crm/rdstation";
+import { getSession } from "@/lib/auth/guard";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -14,6 +15,12 @@ export const runtime = "nodejs";
  * mapeada — o jeito rápido de conferir token, funil e atribuição sem abrir o painel.
  */
 export async function GET(request: Request) {
+  // O diagnóstico revela estrutura do CRM: restrito à conta master.
+  const session = await getSession();
+  if (!session || session.role !== "master") {
+    return NextResponse.json({ error: "Acesso restrito à conta master." }, { status: 401 });
+  }
+
   const url = new URL(request.url);
   const client = getClient(url.searchParams.get("client"));
 

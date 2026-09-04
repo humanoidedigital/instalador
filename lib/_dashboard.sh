@@ -77,8 +77,6 @@ sudo su - deploy << EOF
 PORT=${dashboard_port}
 HOSTNAME=127.0.0.1
 
-DASHBOARD_USER=admin
-DASHBOARD_PASSWORD=${dashboard_password}
 DASHBOARD_TIMEZONE=America/Sao_Paulo
 CACHE_TTL_SECONDS=300
 CLIENTS_CONFIG_PATH=/home/deploy/${dashboard_name}/config/clients.json
@@ -115,6 +113,30 @@ RD_UTM_SOURCE_FIELD=utm_source
 RD_UTM_CAMPAIGN_FIELD=utm_campaign
 [-]EOF
   chmod 600 /home/deploy/${dashboard_name}/.env
+EOF
+
+  sleep 2
+}
+
+#######################################
+# grava as credenciais master como hash
+#
+# A senha nunca vai para o .env: o script scripts/set-password.mjs gera o hash
+# scrypt e grava em config/secrets.json com permissão 600.
+# Arguments:
+#   None
+#######################################
+dashboard_set_master_password() {
+  print_banner
+  printf "${WHITE} 💻 Gravando as credenciais master...${GRAY_LIGHT}"
+  printf "\n\n"
+
+  sleep 2
+
+  sudo su - deploy <<EOF
+  export PATH=/opt/node20/bin:\$PATH
+  cd /home/deploy/${dashboard_name}
+  node scripts/set-password.mjs "${dashboard_user}" "${dashboard_password}"
 EOF
 
   sleep 2
@@ -313,10 +335,9 @@ dashboard_done() {
   printf "${WHITE} 💻 Dashboard instalado!${GRAY_LIGHT}"
   printf "\n\n"
   printf "${WHITE}   Endereço:  ${dashboard_url}${GRAY_LIGHT}\n"
-  printf "${WHITE}   Usuário:   admin${GRAY_LIGHT}\n"
+  printf "${WHITE}   Usuário:   ${dashboard_user}${GRAY_LIGHT}\n"
   printf "${WHITE}   Senha:     a que você digitou nesta instalação${GRAY_LIGHT}\n\n"
-  printf "${WHITE}   Próximo passo: cadastre as contas de cada cliente em${GRAY_LIGHT}\n"
-  printf "${WHITE}   /home/deploy/${dashboard_name}/config/clients.json${GRAY_LIGHT}\n"
-  printf "${WHITE}   (inclusive o ghlLocationId do GoHighLevel) e rode:${GRAY_LIGHT}\n"
-  printf "${WHITE}   pm2 restart ${dashboard_name}${GRAY_LIGHT}\n\n"
+  printf "${WHITE}   Próximo passo: entre no painel e abra Administração para${GRAY_LIGHT}\n"
+  printf "${WHITE}   cadastrar clientes, contas de anúncio e tokens do CRM.${GRAY_LIGHT}\n"
+  printf "${WHITE}   Nada disso exige SSH nem reiniciar o servidor.${GRAY_LIGHT}\n\n"
 }

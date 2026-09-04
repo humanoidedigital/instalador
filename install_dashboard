@@ -162,6 +162,7 @@ dashboard_copy_files
 dashboard_set_env
 dashboard_node_dependencies
 dashboard_node_build
+dashboard_set_master_password
 dashboard_start_pm2
 
 # rede

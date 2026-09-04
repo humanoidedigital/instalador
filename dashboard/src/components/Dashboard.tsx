@@ -132,7 +132,7 @@ function initialState(clients: ClientOption[]): FilterState {
   };
 }
 
-export function Dashboard({ clients }: { clients: ClientOption[] }) {
+export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "master" | "viewer" }) {
   const [state, setState] = useState<FilterState>(() => initialState(clients));
   const [data, setData] = useState<DashboardPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -184,6 +184,12 @@ export function Dashboard({ clients }: { clients: ClientOption[] }) {
   );
   const cplGoal = useMemo(() => data?.kpis.find((kpi) => kpi.id === "cpl")?.goal ?? null, [data]);
 
+  async function handleLogout(event: React.FormEvent) {
+    event.preventDefault();
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
+
   function handleExport() {
     if (!data) return;
     const blob = new Blob([`﻿${toCsv(data)}`], { type: "text/csv;charset=utf-8" });
@@ -201,9 +207,23 @@ export function Dashboard({ clients }: { clients: ClientOption[] }) {
     <main className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-6">
       <header className="mb-4 flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div>
-          <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>
-            Dashboard de Marketing
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>
+              Dashboard de Marketing
+            </h1>
+            <nav className="no-print flex items-center gap-3 text-xs">
+              {role === "master" ? (
+                <a href="/admin" style={{ color: "var(--series-1)" }}>
+                  Administração
+                </a>
+              ) : null}
+              <form action="/api/auth/logout" method="post" onSubmit={handleLogout}>
+                <button type="submit" style={{ color: "var(--text-secondary)" }}>
+                  Sair
+                </button>
+              </form>
+            </nav>
+          </div>
           {data ? (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <Badge tone="accent">{data.meta.clientName}</Badge>

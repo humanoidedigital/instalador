@@ -18,7 +18,8 @@
         "roas": 4,
         "monthlyBudget": 15000,
         "monthlyLeads": 600
-      }
+      },
+      "active": true
     },
     {
       "id": "isentoo",
@@ -38,7 +39,8 @@
         "roas": 4,
         "monthlyBudget": 12000,
         "monthlyLeads": 480
-      }
+      },
+      "active": true
     },
     {
       "id": "isenteja",
@@ -58,7 +60,8 @@
         "roas": 3.5,
         "monthlyBudget": 10000,
         "monthlyLeads": 330
-      }
+      },
+      "active": true
     },
     {
       "id": "duran",
@@ -77,7 +80,8 @@
         "roas": 6,
         "monthlyBudget": 8000,
         "monthlyLeads": 130
-      }
+      },
+      "active": true
     },
     {
       "id": "multimarmore",
@@ -96,7 +100,8 @@
         "roas": 6,
         "monthlyBudget": 7000,
         "monthlyLeads": 125
-      }
+      },
+      "active": true
     },
     {
       "id": "dua",
@@ -113,7 +118,8 @@
         "roas": 8,
         "monthlyBudget": 5000,
         "monthlyLeads": 60
-      }
+      },
+      "active": true
     },
     {
       "id": "univerplast",
@@ -130,7 +136,8 @@
         "roas": 5,
         "monthlyBudget": 6000,
         "monthlyLeads": 85
-      }
+      },
+      "active": true
     },
     {
       "id": "novachef",
@@ -147,7 +154,8 @@
         "roas": 5,
         "monthlyBudget": 4000,
         "monthlyLeads": 90
-      }
+      },
+      "active": true
     }
   ]
 }

@@ -1,5 +1,6 @@
 import type { AdChannel, AdDailyRow, AdsProvider, FetchOptions } from "@/lib/types";
 import { cached, cacheTtlSeconds } from "@/lib/cache";
+import { getSecret } from "@/lib/secrets";
 
 /**
  * Provedor de mídia paga via Windsor.ai.
@@ -70,7 +71,7 @@ function isPlanWarning(value: string): boolean {
 }
 
 async function requestWindsor(channel: AdChannel, options: FetchOptions): Promise<WindsorRow[]> {
-  const apiKey = process.env.WINDSOR_API_KEY;
+  const apiKey = getSecret("WINDSOR_API_KEY");
   if (!apiKey) {
     throw new Error("WINDSOR_API_KEY não configurada — defina no .env ou use ADS_PROVIDER=demo.");
   }
@@ -83,7 +84,7 @@ async function requestWindsor(channel: AdChannel, options: FetchOptions): Promis
     _renderer: "json",
   });
 
-  if (process.env.WINDSOR_SEND_ACCOUNT_FILTER === "true" && options.accountIds.length) {
+  if (getSecret("WINDSOR_SEND_ACCOUNT_FILTER") === "true" && options.accountIds.length) {
     params.set("select_accounts", options.accountIds.join(","));
   }
 
@@ -160,7 +161,7 @@ export const windsorAdsProvider: AdsProvider = {
 
     // Quando o filtro de contas vai na query, ele faz parte da identidade do cache.
     const accountScope =
-      process.env.WINDSOR_SEND_ACCOUNT_FILTER === "true" ? [...options.accountIds].sort().join("|") : "all";
+      getSecret("WINDSOR_SEND_ACCOUNT_FILTER") === "true" ? [...options.accountIds].sort().join("|") : "all";
     const key = `windsor:${channel}:${options.range.from}:${options.range.to}:${accountScope}`;
     const rows = await cached(key, cacheTtlSeconds(), () => requestWindsor(channel, options));
 

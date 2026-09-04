@@ -1,9 +1,14 @@
+import { redirect } from "next/navigation";
 import { clientOptions } from "@/lib/clients";
+import { getSession } from "@/lib/auth/guard";
 import { Dashboard } from "@/components/Dashboard";
 
 export const dynamic = "force-dynamic";
 
-export default function Page() {
+export default async function Page() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+
   const clients = clientOptions();
 
   if (clients.length <= 1) {
@@ -18,5 +23,5 @@ export default function Page() {
     );
   }
 
-  return <Dashboard clients={clients} />;
+  return <Dashboard clients={clients} role={session.role} />;
 }

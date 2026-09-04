@@ -5,6 +5,7 @@ import { assembleDashboard } from "@/lib/metrics";
 import { selectAdsProvider, selectCrmProvider } from "@/lib/providers";
 import { cacheClear } from "@/lib/cache";
 import type { AdChannel, AdDailyRow, CrmOpportunity, CrmProvider, DateRange, FetchOptions } from "@/lib/types";
+import { getSession } from "@/lib/auth/guard";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -70,6 +71,11 @@ async function fetchCrm(
 }
 
 export async function GET(request: Request) {
+  // O relatório expõe dados de cliente: sem sessão, nem responde.
+  if (!(await getSession())) {
+    return NextResponse.json({ error: "Sessão expirada. Entre novamente." }, { status: 401 });
+  }
+
   const url = new URL(request.url);
   const clientId = url.searchParams.get("client");
   const client = getClient(clientId);

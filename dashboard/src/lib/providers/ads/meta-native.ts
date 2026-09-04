@@ -1,5 +1,6 @@
 import type { AdDailyRow, FetchOptions } from "@/lib/types";
 import { cached, cacheTtlSeconds } from "@/lib/cache";
+import { getSecret, getSecretOr } from "@/lib/secrets";
 
 /**
  * Meta Marketing API nativa (Graph API /insights, nível campanha, diário).
@@ -40,10 +41,10 @@ function sumActions(actions: InsightAction[] | undefined, match: (type: string) 
 }
 
 async function fetchAccount(accountId: string, options: FetchOptions): Promise<AdDailyRow[]> {
-  const token = process.env.META_ACCESS_TOKEN;
+  const token = getSecret("META_ACCESS_TOKEN");
   if (!token) throw new Error("META_ACCESS_TOKEN não configurado — necessário para ADS_PROVIDER=native.");
 
-  const version = process.env.META_API_VERSION || "v21.0";
+  const version = getSecretOr("META_API_VERSION", "v21.0");
   const params = new URLSearchParams({
     access_token: token,
     level: "campaign",

@@ -1,6 +1,7 @@
 import type { CrmOpportunity, CrmProvider, CrmStatus, FetchOptions } from "@/lib/types";
 import { cached, cacheTtlSeconds } from "@/lib/cache";
 import { classifyChannel } from "@/lib/channel";
+import { getSecret, getSecretOr } from "@/lib/secrets";
 
 /**
  * RD Station CRM.
@@ -17,15 +18,17 @@ import { classifyChannel } from "@/lib/channel";
  * em vez de um erro.
  */
 
-const V1_BASE = process.env.RD_CRM_API_BASE || "https://crm.rdstation.com/api/v1";
-const V2_BASE = process.env.RD_CRM_V2_API_BASE || "https://api.rd.services/crm/v2";
-const PAGE_SIZE = Number(process.env.RD_CRM_PAGE_SIZE || 200);
-const MAX_PAGES = Number(process.env.RD_CRM_MAX_PAGES || 30);
+// Lidas a cada chamada, não no import: o painel admin altera o cofre com o
+// processo no ar, e uma constante de módulo congelaria o valor antigo.
+const V1_BASE = () => getSecretOr("RD_CRM_API_BASE", "https://crm.rdstation.com/api/v1");
+const V2_BASE = () => getSecretOr("RD_CRM_V2_API_BASE", "https://api.rd.services/crm/v2");
+const PAGE_SIZE = () => Number(getSecretOr("RD_CRM_PAGE_SIZE", "200"));
+const MAX_PAGES = () => Number(getSecretOr("RD_CRM_MAX_PAGES", "30"));
 
 type Json = Record<string, unknown>;
 
 function isV2(): boolean {
-  return (process.env.RD_CRM_API_VERSION || "v1").toLowerCase() === "v2";
+  return getSecretOr("RD_CRM_API_VERSION", "v1").toLowerCase() === "v2";
 }
 
 function pick(source: Json | undefined, ...keys: string[]): unknown {
@@ -63,7 +66,7 @@ function iso(value: unknown, fallback: string): string {
 }
 
 async function request(path: string, token: string, params: URLSearchParams, signal?: AbortSignal): Promise<Json> {
-  const base = isV2() ? V2_BASE : V1_BASE;
+  const base = isV2() ? V2_BASE() : V1_BASE();
   const headers: Record<string, string> = { Accept: "application/json" };
 
   if (isV2()) headers.Authorization = `Bearer ${token}`;
@@ -96,7 +99,7 @@ function listOf(payload: Json, ...keys: string[]): Json[] {
 function hasMore(payload: Json, received: number): boolean {
   const explicit = pick(payload, "has_more", "hasMore");
   if (typeof explicit === "boolean") return explicit;
-  return received >= PAGE_SIZE;
+  return received >= PAGE_SIZE();
 }
 
 async function fetchPaged(
@@ -108,7 +111,7 @@ async function fetchPaged(
 ): Promise<Json[]> {
   const items: Json[] = [];
 
-  for (let page = 1; page <= MAX_PAGES; page += 1) {
+  for (let page = 1; page <= MAX_PAGES(); page += 1) {
     const payload = await request(path, token, build(page), signal);
     const batch = listOf(payload, listKey);
     items.push(...batch);
@@ -130,8 +133,8 @@ async function loadStages(token: string, signal?: AbortSignal) {
         (page) =>
           new URLSearchParams(
             isV2()
-              ? { "page[number]": String(page), "page[size]": String(PAGE_SIZE) }
-              : { page: String(page), limit: String(PAGE_SIZE) },
+              ? { "page[number]": String(page), "page[size]": String(PAGE_SIZE()) }
+              : { page: String(page), limit: String(PAGE_SIZE()) },
           ),
         signal,
       );
@@ -163,13 +166,13 @@ async function loadDeals(token: string, options: FetchOptions): Promise<Json[]> 
         isV2()
           ? {
               "page[number]": String(page),
-              "page[size]": String(PAGE_SIZE),
+              "page[size]": String(PAGE_SIZE()),
               "filter[created_at][gte]": options.range.from,
               "filter[created_at][lte]": options.range.to,
             }
           : {
               page: String(page),
-              limit: String(PAGE_SIZE),
+              limit: String(PAGE_SIZE()),
               created_at_period: "true",
               start_date: options.range.from,
               end_date: options.range.to,
@@ -194,7 +197,7 @@ function customField(deal: Json, label: string): string | null {
 }
 
 function statusOf(deal: Json, stageName: string): CrmStatus {
-  const wonStages = (process.env.RD_WON_STAGES || "")
+  const wonStages = getSecretOr("RD_WON_STAGES", "")
     .split(",")
     .map((name) => name.trim().toLowerCase())
     .filter(Boolean);
@@ -224,8 +227,8 @@ export function mapDeal(
   const stage = stageInfo?.stage || text(pick(stageObject, "name", "nickname"), "Sem etapa");
   const createdAt = iso(pick(deal, "created_at", "createdAt"), fallbackDate);
 
-  const utmSource = customField(deal, process.env.RD_UTM_SOURCE_FIELD || "utm_source");
-  const utmCampaign = customField(deal, process.env.RD_UTM_CAMPAIGN_FIELD || "utm_campaign");
+  const utmSource = customField(deal, getSecretOr("RD_UTM_SOURCE_FIELD", "utm_source"));
+  const utmCampaign = customField(deal, getSecretOr("RD_UTM_CAMPAIGN_FIELD", "utm_campaign"));
   const source = utmSource || text(pick(deal, "deal_source", "source"), "não identificado");
   const campaign = utmCampaign || text(pick(deal, "campaign"), "") || null;
 
@@ -249,7 +252,7 @@ export function mapDeal(
 
 /** Token do cliente: cada conta do RD Station CRM tem o seu. */
 function resolveToken(options: FetchOptions): string {
-  const token = options.crmToken || process.env.RD_CRM_TOKEN;
+  const token = options.crmToken || getSecret("RD_CRM_TOKEN");
   if (!token) {
     throw new Error(
       "Token do RD Station CRM não configurado — defina RD_CRM_TOKEN no .env ou aponte rdCrmTokenEnv no config/clients.json.",
@@ -304,7 +307,7 @@ export async function inspectRdStation(options: FetchOptions) {
 
   return {
     apiVersion: isV2() ? "v2" : "v1",
-    endpoint: `${isV2() ? V2_BASE : V1_BASE}/deals`,
+    endpoint: `${isV2() ? V2_BASE() : V1_BASE()}/deals`,
     dealsRetornados: deals.length,
     etapasCarregadas: stages.size,
     // As chaves cruas do primeiro negócio: se o mapeamento estiver errado,

@@ -259,10 +259,21 @@ get_dashboard_port() {
   read -p "> " dashboard_port
 }
 
+get_dashboard_user() {
+
+  print_banner
+  printf "${WHITE} 💻 Escolha o usuário master do DASHBOARD (ex: admin):${GRAY_LIGHT}"
+  printf "\n\n"
+  read -p "> " dashboard_user
+  dashboard_user=${dashboard_user:-admin}
+}
+
 get_dashboard_password() {
 
   print_banner
-  printf "${WHITE} 💻 Crie a senha de acesso ao DASHBOARD (usuário: admin):${GRAY_LIGHT}"
+  printf "${WHITE} 💻 Crie a senha master do DASHBOARD (mínimo 10 caracteres).${GRAY_LIGHT}"
+  printf "\n"
+  printf "${WHITE}    Ela é guardada como hash, nunca em texto puro:${GRAY_LIGHT}"
   printf "\n\n"
   read -p "> " dashboard_password
 }
@@ -301,6 +312,7 @@ inquiry_dashboard() {
 
   get_dashboard_url
   get_dashboard_port
+  get_dashboard_user
   get_dashboard_password
   get_windsor_api_key
   get_rd_crm_token

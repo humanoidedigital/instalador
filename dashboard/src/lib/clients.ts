@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { getSecret } from "./secrets";
 
 export interface ClientGoals {
   /** CPL alvo, na moeda do cliente. */
@@ -122,7 +123,7 @@ export function getClient(clientId: string | null | undefined): ClientConfig | n
  * clients.json guarda apenas o NOME da variável.
  */
 export function crmCredentials(client: ClientConfig): CrmCredentials {
-  const token = (client.rdCrmTokenEnv && process.env[client.rdCrmTokenEnv]) || process.env.RD_CRM_TOKEN;
+  const token = (client.rdCrmTokenEnv && getSecret(client.rdCrmTokenEnv)) || getSecret("RD_CRM_TOKEN");
   return {
     token: token || undefined,
     locationId: client.ghlLocationId || undefined,

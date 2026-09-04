@@ -6,6 +6,7 @@ import { fetchMetaNative } from "./ads/meta-native";
 import { rdstationProvider } from "./crm/rdstation";
 import { gohighlevelProvider } from "./crm/gohighlevel";
 import { demoAdsProvider, demoCrmProvider } from "./demo";
+import { getSecretOr, hasSecret } from "@/lib/secrets";
 
 /**
  * Seleção de provedores por ambiente. Trocar de fonte de dados é mudar uma
@@ -29,14 +30,14 @@ export interface ProviderSelection<T> {
 }
 
 export function selectAdsProvider(): ProviderSelection<AdsProvider> {
-  const configured = (process.env.ADS_PROVIDER || "windsor").toLowerCase();
+  const configured = getSecretOr("ADS_PROVIDER", "windsor").toLowerCase();
 
   if (configured === "demo") {
     return { provider: demoAdsProvider, warnings: [], demo: true };
   }
 
   if (configured === "native") {
-    const missing = !process.env.META_ACCESS_TOKEN && !process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+    const missing = !hasSecret("META_ACCESS_TOKEN") && !hasSecret("GOOGLE_ADS_DEVELOPER_TOKEN");
     if (missing) {
       return {
         provider: demoAdsProvider,
@@ -47,7 +48,7 @@ export function selectAdsProvider(): ProviderSelection<AdsProvider> {
     return { provider: nativeAdsProvider, warnings: [], demo: false };
   }
 
-  if (!process.env.WINDSOR_API_KEY) {
+  if (!hasSecret("WINDSOR_API_KEY")) {
     return {
       provider: demoAdsProvider,
       warnings: ["WINDSOR_API_KEY não configurada — exibindo dados de demonstração."],
@@ -59,14 +60,14 @@ export function selectAdsProvider(): ProviderSelection<AdsProvider> {
 }
 
 export function selectCrmProvider(): ProviderSelection<CrmProvider> {
-  const configured = (process.env.CRM_PROVIDER || "rdstation").toLowerCase();
+  const configured = getSecretOr("CRM_PROVIDER", "rdstation").toLowerCase();
 
   if (configured === "demo") {
     return { provider: demoCrmProvider, warnings: [], demo: true };
   }
 
   if (configured === "gohighlevel") {
-    if (!process.env.GHL_API_TOKEN) {
+    if (!hasSecret("GHL_API_TOKEN")) {
       return {
         provider: demoCrmProvider,
         warnings: ["GHL_API_TOKEN não configurado — CRM exibindo dados de demonstração."],
@@ -79,8 +80,8 @@ export function selectCrmProvider(): ProviderSelection<CrmProvider> {
   // O token pode ser global (RD_CRM_TOKEN) ou por cliente, via rdCrmTokenEnv no
   // clients.json — por isso a checagem aqui é só pelo caso "nenhum token".
   const hasAnyToken =
-    !!process.env.RD_CRM_TOKEN ||
-    loadClients().some((client) => client.rdCrmTokenEnv && process.env[client.rdCrmTokenEnv]);
+    hasSecret("RD_CRM_TOKEN") ||
+    loadClients().some((client) => client.rdCrmTokenEnv && hasSecret(client.rdCrmTokenEnv));
 
   if (!hasAnyToken) {
     return {

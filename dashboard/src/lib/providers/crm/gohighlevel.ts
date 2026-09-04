@@ -1,6 +1,7 @@
 import type { CrmOpportunity, CrmProvider, CrmStatus, FetchOptions } from "@/lib/types";
 import { cached, cacheTtlSeconds } from "@/lib/cache";
 import { classifyChannel } from "@/lib/channel";
+import { getSecret, getSecretOr } from "@/lib/secrets";
 
 /**
  * GoHighLevel API v2 (services.leadconnectorhq.com).
@@ -8,9 +9,10 @@ import { classifyChannel } from "@/lib/channel";
  * com os escopos opportunities.readonly, contacts.readonly e locations.readonly.
  */
 
-const API_BASE = process.env.GHL_API_BASE || "https://services.leadconnectorhq.com";
-const API_VERSION = process.env.GHL_API_VERSION || "2021-07-28";
-const MAX_PAGES = Number(process.env.GHL_MAX_PAGES || 30); // 30 x 100 = 3.000 oportunidades
+// Lidas por chamada, não no import: o painel admin altera o cofre em tempo de execução.
+const API_BASE = () => getSecretOr("GHL_API_BASE", "https://services.leadconnectorhq.com");
+const API_VERSION = () => getSecretOr("GHL_API_VERSION", "2021-07-28");
+const MAX_PAGES = () => Number(getSecretOr("GHL_MAX_PAGES", "30")); // 30 x 100 = 3.000 oportunidades
 
 interface GhlStage {
   id: string;
@@ -51,13 +53,13 @@ interface GhlOpportunity {
 }
 
 function headers(): Record<string, string> {
-  const token = process.env.GHL_API_TOKEN;
+  const token = getSecret("GHL_API_TOKEN");
   if (!token) {
     throw new Error("GHL_API_TOKEN não configurado — defina no .env ou use CRM_PROVIDER=demo.");
   }
   return {
     Authorization: `Bearer ${token}`,
-    Version: API_VERSION,
+    Version: API_VERSION(),
     Accept: "application/json",
   };
 }
@@ -75,7 +77,7 @@ async function ghlFetch<T>(url: string, signal?: AbortSignal): Promise<T> {
 async function loadStages(locationId: string, signal?: AbortSignal) {
   return cached(`ghl:pipelines:${locationId}`, 900, async () => {
     const payload = await ghlFetch<{ pipelines?: GhlPipeline[] }>(
-      `${API_BASE}/opportunities/pipelines?locationId=${encodeURIComponent(locationId)}`,
+      `${API_BASE()}/opportunities/pipelines?locationId=${encodeURIComponent(locationId)}`,
       signal,
     );
     const stages = new Map<string, { stage: string; order: number; pipeline: string }>();
@@ -95,9 +97,9 @@ async function loadStages(locationId: string, signal?: AbortSignal) {
 async function loadOpportunities(locationId: string, signal?: AbortSignal): Promise<GhlOpportunity[]> {
   const opportunities: GhlOpportunity[] = [];
   let url: string | null =
-    `${API_BASE}/opportunities/search?location_id=${encodeURIComponent(locationId)}&limit=100`;
+    `${API_BASE()}/opportunities/search?location_id=${encodeURIComponent(locationId)}&limit=100`;
 
-  for (let page = 0; url && page < MAX_PAGES; page += 1) {
+  for (let page = 0; url && page < MAX_PAGES(); page += 1) {
     const payload: { opportunities?: GhlOpportunity[]; meta?: { nextPageUrl?: string | null } } =
       await ghlFetch(url, signal);
     opportunities.push(...(payload.opportunities || []));
@@ -108,7 +110,7 @@ async function loadOpportunities(locationId: string, signal?: AbortSignal): Prom
 }
 
 function normalizeStatus(status: string | undefined, stageName: string): CrmStatus {
-  const wonStages = (process.env.GHL_WON_STAGES || "")
+  const wonStages = getSecretOr("GHL_WON_STAGES", "")
     .split(",")
     .map((name) => name.trim().toLowerCase())
     .filter(Boolean);

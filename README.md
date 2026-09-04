@@ -14,8 +14,9 @@ cd && cd ./install && sudo ./install_instancia
 ## DASHBOARD DE MARKETING (Google Ads + Meta Ads + RD Station CRM)
 
 Painel com KPIs, funil, pipeline e performance por campanha, com seletor de
-cliente. Roda no mesmo VPS, em processo próprio no PM2, sem mexer na instalação
-do whaticket.
+cliente e área administrativa para cadastrar clientes, contas de anúncio e
+tokens sem SSH. Roda no mesmo VPS, em processo próprio no PM2, sem mexer na
+instalação do whaticket.
 
 ```bash
 cd && cd ./install && sudo ./install_dashboard

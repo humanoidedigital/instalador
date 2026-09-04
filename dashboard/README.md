@@ -13,7 +13,8 @@ Roda no mesmo VPS do instalador, em processo próprio no PM2 atrás do nginx.
 - [O que comprar de VPS](#o-que-comprar-de-vps)
 - [Instalação no VPS](#instalação-no-vps)
 - [Rodando localmente](#rodando-localmente)
-- [Gerenciar clientes e conexões](#gerenciar-clientes-e-conexões)
+- [Primeiro acesso](#primeiro-acesso)
+- [Painel administrativo](#painel-administrativo)
 - [Cadastro dos clientes](#cadastro-dos-clientes)
 - [Credenciais](#credenciais)
 - [Validar a conexão com o CRM](#validar-a-conexão-com-o-crm)
@@ -83,38 +84,65 @@ demonstração" fica visível no topo enquanto for esse o caso.
 
 ---
 
-## Gerenciar clientes e conexões
+## Primeiro acesso
 
-> **Não existe painel administrativo ainda.** O gerenciamento é por dois
-> arquivos no servidor, via SSH. Quem entra pela web só lê o relatório.
+Abra `https://seu-dominio` no navegador. Se o instalador não tiver definido a
+senha master, a primeira tela pede para criar usuário e senha — e enquanto isso
+não acontece **ninguém abre o painel**.
 
-| O que você quer mudar | Onde |
-|---|---|
-| Adicionar/remover cliente, contas de anúncio, metas | `/home/deploy/marketing-dashboard/config/clients.json` |
-| Tokens (Windsor, RD Station CRM), senha do painel | `/home/deploy/marketing-dashboard/.env` |
+A senha é guardada como hash scrypt em `config/secrets.json` (permissão 600).
+Ela não fica no `.env`, nem em texto puro em lugar nenhum.
+
+Perdeu o acesso? Redefina pelo servidor, sem navegador:
 
 ```bash
-ssh root@SEU_IP
-
-# clientes, contas e metas — vale na hora, sem reiniciar
-nano /home/deploy/marketing-dashboard/config/clients.json
-
-# tokens e senha — exigem reiniciar o processo
-nano /home/deploy/marketing-dashboard/.env
-su - deploy -c "pm2 restart marketing-dashboard"
-
-# conferir se subiu
-curl -s http://127.0.0.1:3333/api/health
+cd /home/deploy/marketing-dashboard
+sudo -u deploy /opt/node20/bin/node scripts/set-password.mjs "admin" "nova-senha-forte"
 ```
 
-O `clients.json` é relido sozinho quando o arquivo muda: cliente novo aparece no
-seletor sem reiniciar nada. O `.env` só é lido na inicialização — por isso o
-`pm2 restart` depois de mexer em token ou senha.
+---
 
-Depois de cadastrar um cliente, valide a conexão com o CRM dele:
+## Painel administrativo
+
+Em `/admin` (link **Administração** no topo do relatório). Só a conta master
+entra. Quatro abas:
+
+| Aba | O que faz |
+|---|---|
+| **Clientes** | Cadastra, edita e desativa clientes: contas do Meta e do Google, token do CRM, funis, metas de CPL/ROAS/investimento/leads. Tem um botão **Testar CRM** por cliente, que consulta a API de verdade e diz quantas negociações e etapas voltaram |
+| **Conexões** | Todas as credenciais e chaves: Windsor, RD Station, Google Ads e Meta nativos, GoHighLevel, senha de leitura. Campos de senha aparecem mascarados e nunca voltam em claro para o navegador |
+| **Acesso** | Troca usuário e senha master (exige a senha atual) |
+| **Sistema** | Estado do processo, fontes ativas, alertas de configuração, caminho dos arquivos e botão para limpar o cache |
+
+### Onde as coisas ficam gravadas
+
+| Arquivo | Conteúdo | Efeito |
+|---|---|---|
+| `config/clients.json` | clientes, contas de anúncio, metas | vale na hora |
+| `config/secrets.json` | tokens, chaves e a senha master (permissão 600) | vale na hora |
+| `.env` | valores iniciais escritos pelo instalador | lido na inicialização |
+
+O painel escreve nos dois primeiros, e eles têm prioridade sobre o `.env`. Por
+isso **trocar um token não exige reiniciar o servidor** — o processo relê os
+arquivos quando eles mudam. O `.env` continua servindo de ponto de partida e de
+plano B.
+
+Os dois arquivos de configuração são todo o estado do painel: faça backup deles.
+
+### Dois níveis de acesso
+
+- **Master** — entra na administração e vê tudo.
+- **Leitura** — só o relatório. Defina a “Senha de leitura” na aba Conexões e
+  entregue para o cliente ou para quem não deve mexer em configuração. Quem
+  entrar com ela não enxerga o link de administração nem as rotas de admin.
+
+### Ainda dá para editar por SSH
+
+O painel é a forma recomendada, mas os arquivos continuam legíveis e editáveis à
+mão — útil para automação ou recuperação:
 
 ```bash
-curl -su admin:SUA_SENHA "https://seu-dominio/api/crm-check?client=novo-cliente" | jq
+nano /home/deploy/marketing-dashboard/config/clients.json
 ```
 
 ---
@@ -313,12 +341,12 @@ padrão). O botão "Atualizar dados" no painel força a releitura ignorando o ca
 |---|---|
 | "Dados de demonstração" no topo | falta `WINDSOR_API_KEY` ou nenhum token de CRM no `.env` |
 | Aviso do Windsor sobre plano | mais contas conectadas do que o plano Free permite |
-| Leads e vendas zerados num cliente | token de CRM ausente — veja o aviso na tela e rode `/api/crm-check` |
+| Leads e vendas zerados num cliente | token de CRM ausente — abra Administração → Clientes e use o botão **Testar CRM** |
 | `401` no `/api/crm-check` | token do RD errado, ou de outra conta que não a do cliente |
 | Todos os clientes com os mesmos leads | vários clientes usando o `RD_CRM_TOKEN` global; separe por `rdCrmTokenEnv` ou por `rdCrmPipelines` |
 | Origem "não identificado" na maioria dos leads | as negociações não têm fonte nem `utm_source`; configure o campo personalizado e aponte em `RD_UTM_SOURCE_FIELD` |
 | ROAS "—" na campanha | nenhum lead do CRM casou com a campanha (falta `utm_campaign` na negociação) |
-| 401 ao abrir o painel | HTTP Basic: usuário `admin` e a senha definida na instalação |
+| Não consigo entrar | redefina a senha master com `scripts/set-password.mjs` (veja Primeiro acesso) |
 | Erro 502 no nginx | processo caiu — veja `pm2 logs marketing-dashboard` |
 
 ---
@@ -339,7 +367,12 @@ dashboard/
 │   ├── metrics.ts                # KPIs, funil, séries, insights automáticos
 │   ├── clients.ts                # leitura do clients.json e das credenciais
 │   └── cache.ts                  # cache TTL + deduplicação de chamadas
+│   └── auth/                     # sessão assinada, hash de senha e guarda de rotas
+├── src/app/admin/                # painel administrativo (conta master)
+├── src/app/login/                # login e criação das credenciais master
 ├── src/app/api/overview/         # endpoint que monta o payload do painel
+├── src/app/api/admin/            # clientes, credenciais, senha e estado do sistema
 ├── src/app/api/crm-check/        # diagnóstico da integração com o CRM
-└── src/components/               # UI e gráficos
+├── scripts/set-password.mjs      # redefine a senha master pelo servidor
+└── src/components/               # UI, gráficos e painel admin
 ```
