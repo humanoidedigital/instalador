@@ -10,8 +10,10 @@ Roda no mesmo VPS do instalador, em processo próprio no PM2 atrás do nginx.
 
 ## Índice
 
+- [O que comprar de VPS](#o-que-comprar-de-vps)
 - [Instalação no VPS](#instalação-no-vps)
 - [Rodando localmente](#rodando-localmente)
+- [Gerenciar clientes e conexões](#gerenciar-clientes-e-conexões)
 - [Cadastro dos clientes](#cadastro-dos-clientes)
 - [Credenciais](#credenciais)
 - [Validar a conexão com o CRM](#validar-a-conexão-com-o-crm)
@@ -19,6 +21,27 @@ Roda no mesmo VPS do instalador, em processo próprio no PM2 atrás do nginx.
 - [Trocar Windsor pelas APIs nativas](#trocar-windsor-pelas-apis-nativas)
 - [Operação no dia a dia](#operação-no-dia-a-dia)
 - [Problemas comuns](#problemas-comuns)
+
+---
+
+## O que comprar de VPS
+
+Números medidos neste app, não estimativa:
+
+| Recurso | Consumo real |
+|---|---|
+| RAM em execução | ~200 MB |
+| RAM no pico do `next build` | ~700 MB (o `npm install` sobe mais) |
+| Disco | ~420 MB (`node_modules` 304 MB + `.next` 124 MB) |
+
+| Cenário | Recomendado |
+|---|---|
+| Só o dashboard | 2 vCPU · 2 GB RAM · 40 GB SSD (o instalador cria 2 GB de swap) |
+| Dashboard + CRM/whaticket na mesma máquina | 2–4 vCPU · 4 GB RAM · 80 GB SSD |
+
+Ubuntu 22.04 LTS. Antes de rodar o instalador, aponte um registro **A** do
+subdomínio (ex.: `painel.suaagencia.com.br`) para o IP da VPS e deixe as portas
+**22, 80 e 443** abertas — o certificado SSL depende disso.
 
 ---
 
@@ -57,6 +80,42 @@ npm run dev        # http://localhost:3333
 Sem credenciais, o painel sobe em **modo demonstração** com dados sintéticos —
 útil para ver o layout antes de conectar as contas. O aviso "Dados de
 demonstração" fica visível no topo enquanto for esse o caso.
+
+---
+
+## Gerenciar clientes e conexões
+
+> **Não existe painel administrativo ainda.** O gerenciamento é por dois
+> arquivos no servidor, via SSH. Quem entra pela web só lê o relatório.
+
+| O que você quer mudar | Onde |
+|---|---|
+| Adicionar/remover cliente, contas de anúncio, metas | `/home/deploy/marketing-dashboard/config/clients.json` |
+| Tokens (Windsor, RD Station CRM), senha do painel | `/home/deploy/marketing-dashboard/.env` |
+
+```bash
+ssh root@SEU_IP
+
+# clientes, contas e metas — vale na hora, sem reiniciar
+nano /home/deploy/marketing-dashboard/config/clients.json
+
+# tokens e senha — exigem reiniciar o processo
+nano /home/deploy/marketing-dashboard/.env
+su - deploy -c "pm2 restart marketing-dashboard"
+
+# conferir se subiu
+curl -s http://127.0.0.1:3333/api/health
+```
+
+O `clients.json` é relido sozinho quando o arquivo muda: cliente novo aparece no
+seletor sem reiniciar nada. O `.env` só é lido na inicialização — por isso o
+`pm2 restart` depois de mexer em token ou senha.
+
+Depois de cadastrar um cliente, valide a conexão com o CRM dele:
+
+```bash
+curl -su admin:SUA_SENHA "https://seu-dominio/api/crm-check?client=novo-cliente" | jq
+```
 
 ---
 
