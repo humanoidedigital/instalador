@@ -8,3 +8,4 @@ tsconfig.tsbuildinfo
 config/secrets.json
 config/secrets.json.tmp
 config/clients.json.tmp
+config/data/

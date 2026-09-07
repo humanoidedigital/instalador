@@ -15,6 +15,7 @@ Roda no mesmo VPS do instalador, em processo próprio no PM2 atrás do nginx.
 - [Rodando localmente](#rodando-localmente)
 - [Primeiro acesso](#primeiro-acesso)
 - [Painel administrativo](#painel-administrativo)
+- [Histórico e coleta diária](#histórico-e-coleta-diária)
 - [Cadastro dos clientes](#cadastro-dos-clientes)
 - [Credenciais](#credenciais)
 - [Validar a conexão com o CRM](#validar-a-conexão-com-o-crm)
@@ -34,6 +35,7 @@ Números medidos neste app, não estimativa:
 | RAM em execução | ~200 MB |
 | RAM no pico do `next build` | ~700 MB (o `npm install` sobe mais) |
 | Disco | ~420 MB (`node_modules` 304 MB + `.next` 124 MB) |
+| Histórico | ~15 MB por ano (medido: 90 dias de 8 clientes = 3,6 MB) |
 
 | Cenário | Recomendado |
 |---|---|
@@ -120,6 +122,7 @@ entra. Quatro abas:
 |---|---|---|
 | `config/clients.json` | clientes, contas de anúncio, metas | vale na hora |
 | `config/secrets.json` | tokens, chaves e a senha master (permissão 600) | vale na hora |
+| `config/data/dashboard.db` | histórico coletado (SQLite) | atualizado pela coleta |
 | `.env` | valores iniciais escritos pelo instalador | lido na inicialização |
 
 O painel escreve nos dois primeiros, e eles têm prioridade sobre o `.env`. Por
@@ -127,7 +130,7 @@ isso **trocar um token não exige reiniciar o servidor** — o processo relê os
 arquivos quando eles mudam. O `.env` continua servindo de ponto de partida e de
 plano B.
 
-Os dois arquivos de configuração são todo o estado do painel: faça backup deles.
+Esses arquivos são todo o estado do painel: faça backup deles.
 
 ### Dois níveis de acesso
 
@@ -144,6 +147,57 @@ mão — útil para automação ou recuperação:
 ```bash
 nano /home/deploy/marketing-dashboard/config/clients.json
 ```
+
+---
+
+## Histórico e coleta diária
+
+Sem histórico próprio o painel só consegue mostrar o que as APIs devolvem no
+momento: nada de comparar com o mesmo mês do ano passado, nada de projeção, e
+períodos antigos somem quando a plataforma para de devolvê-los.
+
+Por isso existe um banco local em **SQLite** (`config/data/dashboard.db`) e uma
+coleta que roda **todo dia às 5h15** por cron.
+
+### Como funciona
+
+| | |
+|---|---|
+| **O que é gravado** | uma linha por campanha/dia (investimento, impressões, cliques, conversões, valor) e uma linha por negociação do CRM |
+| **Janela de recoleta** | os últimos 7 dias, não só ontem — Meta e Google revisam números depois do fechamento e o CRM muda status de negociação antiga |
+| **Idempotência** | recoletar o mesmo dia atualiza a linha em vez de duplicar, então reprocessar corrige o histórico |
+| **Leitura** | `DATA_SOURCE_MODE=auto`: usa o histórico quando ele cobre o período pedido, e cai para as APIs quando não cobre |
+
+Por que SQLite e não Postgres: o volume é pequeno — **90 dias de 8 clientes deram
+20.644 linhas e 3,6 MB**, o que projeta ~15 MB/ano — e o SQLite dá conta com
+folga (200 mil inserções em ~250 ms) sem um serviço a mais para instalar,
+monitorar e fazer backup. Backup do painel inteiro é copiar dois arquivos e uma
+pasta.
+
+### No painel
+
+**Administração → Dados** mostra a cobertura por cliente (de que dia até que
+dia, quantas linhas), o log das últimas coletas com erro quando houver, e três
+botões: coletar a janela padrão, backfill de 90 dias e backfill de 365 dias.
+
+### Pela linha de comando
+
+```bash
+# a mesma chamada que o cron faz
+curl -fsS -X POST -H "Authorization: Bearer $COLLECT_TOKEN" \
+  "http://127.0.0.1:3333/api/collect?days=7"
+
+# backfill de um cliente específico
+curl -fsS -X POST -H "Authorization: Bearer $COLLECT_TOKEN" \
+  "http://127.0.0.1:3333/api/collect?client=isentei&days=365"
+
+# ver o agendamento
+sudo -u deploy crontab -l
+# último resultado
+cat /home/deploy/marketing-dashboard/coleta.log
+```
+
+O `COLLECT_TOKEN` é gerado pelo instalador e fica no `.env`.
 
 ---
 
@@ -347,6 +401,8 @@ padrão). O botão "Atualizar dados" no painel força a releitura ignorando o ca
 | Origem "não identificado" na maioria dos leads | as negociações não têm fonte nem `utm_source`; configure o campo personalizado e aponte em `RD_UTM_SOURCE_FIELD` |
 | ROAS "—" na campanha | nenhum lead do CRM casou com a campanha (falta `utm_campaign` na negociação) |
 | Não consigo entrar | redefina a senha master com `scripts/set-password.mjs` (veja Primeiro acesso) |
+| Relatório de um mês antigo vem vazio | o histórico ainda não cobre esse período — rode um backfill em Administração → Dados |
+| Coleta falhando todo dia | veja o erro em Administração → Dados → Últimas coletas; quase sempre é token vencido |
 | Erro 502 no nginx | processo caiu — veja `pm2 logs marketing-dashboard` |
 
 ---
@@ -366,12 +422,15 @@ dashboard/
 │   │   └── demo.ts               # dados sintéticos determinísticos
 │   ├── metrics.ts                # KPIs, funil, séries, insights automáticos
 │   ├── clients.ts                # leitura do clients.json e das credenciais
+│   ├── collector.ts              # coleta e grava os fatos no histórico
+│   ├── db/                       # SQLite: schema, upserts, cobertura e log
 │   └── cache.ts                  # cache TTL + deduplicação de chamadas
 │   └── auth/                     # sessão assinada, hash de senha e guarda de rotas
 ├── src/app/admin/                # painel administrativo (conta master)
 ├── src/app/login/                # login e criação das credenciais master
 ├── src/app/api/overview/         # endpoint que monta o payload do painel
-├── src/app/api/admin/            # clientes, credenciais, senha e estado do sistema
+├── src/app/api/admin/            # clientes, credenciais, senha, estado e histórico
+├── src/app/api/collect/          # dispara a coleta (painel ou cron)
 ├── src/app/api/crm-check/        # diagnóstico da integração com o CRM
 ├── scripts/set-password.mjs      # redefine a senha master pelo servidor
 └── src/components/               # UI, gráficos e painel admin

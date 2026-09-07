@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { crmCredentials, getClient, loadClients, type ClientConfig } from "@/lib/clients";
-import { previousRange, rangeFromSearchParams } from "@/lib/dates";
+import { previousRange, rangeFromSearchParams, today } from "@/lib/dates";
+import { hasCoverage, readAdDaily, readDeals } from "@/lib/db/repository";
+import { databaseEnabled } from "@/lib/db/sqlite";
 import { assembleDashboard } from "@/lib/metrics";
 import { selectAdsProvider, selectCrmProvider } from "@/lib/providers";
 import { cacheClear } from "@/lib/cache";
@@ -70,6 +72,20 @@ async function fetchCrm(
   return (await Promise.all(jobs)).flat();
 }
 
+/**
+ * Modo de leitura: "auto" usa o histórico quando ele cobre o período pedido e
+ * cai para as APIs quando não cobre; "db" só histórico; "live" só APIs.
+ */
+function dataSourceMode(): "auto" | "db" | "live" {
+  const configured = (process.env.DATA_SOURCE_MODE || "auto").toLowerCase();
+  return configured === "db" || configured === "live" ? configured : "auto";
+}
+
+/** IDs reais por trás do cliente selecionado (a visão consolidada abre em todos). */
+function targetClientIds(client: ClientConfig): string[] {
+  return client.id === "__all__" ? loadClients().map((item) => item.id) : [client.id];
+}
+
 export async function GET(request: Request) {
   // O relatório expõe dados de cliente: sem sessão, nem responde.
   if (!(await getSession())) {
@@ -97,6 +113,36 @@ export async function GET(request: Request) {
   const ads = selectAdsProvider();
   const crm = selectCrmProvider();
   const warnings = [...ads.warnings, ...crm.warnings];
+
+  // ---- Caminho do histórico -------------------------------------------------
+  const mode = dataSourceMode();
+  const clientIds = targetClientIds(client);
+  const useHistory =
+    databaseEnabled() &&
+    mode !== "live" &&
+    (mode === "db" ||
+      (hasCoverage(clientIds, range, today()) && hasCoverage(clientIds, previous, today())));
+
+  if (useHistory) {
+    const payload = assembleDashboard({
+      client,
+      range,
+      previousRange: previous,
+      adRows: readAdDaily(clientIds, range),
+      previousAdRows: readAdDaily(clientIds, previous),
+      opportunities: readDeals(clientIds, range),
+      previousOpportunities: readDeals(clientIds, previous),
+      sources: { ads: `${ads.provider.label} (histórico)`, crm: `${crm.provider.label} (histórico)` },
+      warnings,
+      demo: ads.demo || crm.demo,
+    });
+
+    return NextResponse.json(payload, { headers: { "Cache-Control": "no-store" } });
+  }
+
+  if (mode === "db") {
+    warnings.push("Modo somente histórico, mas o banco ainda não cobre este período — rode uma coleta.");
+  }
 
   const adOptions = (channel: AdChannel, forRange: DateRange): FetchOptions => ({
     range: forRange,

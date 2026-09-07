@@ -81,6 +81,15 @@ DASHBOARD_TIMEZONE=America/Sao_Paulo
 CACHE_TTL_SECONDS=300
 CLIENTS_CONFIG_PATH=/home/deploy/${dashboard_name}/config/clients.json
 
+# Histórico local (SQLite). O relatório lê daqui quando o período pedido já
+# foi coletado, e cai para as APIs quando não foi.
+DATABASE_ENABLED=true
+DATABASE_PATH=/home/deploy/${dashboard_name}/config/data/dashboard.db
+DATA_SOURCE_MODE=auto
+COLLECT_LOOKBACK_DAYS=7
+# Token usado pelo cron para disparar a coleta
+COLLECT_TOKEN=${collect_token}
+
 ADS_PROVIDER=windsor
 WINDSOR_API_KEY=${windsor_api_key}
 WINDSOR_SEND_ACCOUNT_FILTER=false
@@ -186,7 +195,11 @@ dashboard_node_build() {
   mkdir -p .next/standalone/.next
   cp -r .next/static .next/standalone/.next/static
   cp .env .next/standalone/.env
-  cp -r config .next/standalone/config
+  # O banco fica só no diretório do app; copiá-lo criaria uma segunda cópia
+  # desatualizada dentro do standalone.
+  rm -rf .next/standalone/config
+  mkdir -p .next/standalone/config
+  cp config/clients.json .next/standalone/config/ 2>/dev/null || true
 EOF
 
   sleep 2
@@ -212,6 +225,46 @@ dashboard_start_pm2() {
     --name ${dashboard_name} \
     --interpreter /opt/node20/bin/node
   pm2 save
+EOF
+
+  sleep 2
+}
+
+#######################################
+# agenda a coleta diária e faz a carga inicial
+#
+# A coleta roda por cron chamando o próprio app em 127.0.0.1, autenticada pelo
+# COLLECT_TOKEN. Vantagem sobre um script separado: reaproveita exatamente o
+# mesmo código que o painel usa, sem uma segunda cópia para manter.
+# Arguments:
+#   None
+#######################################
+dashboard_setup_collector() {
+  print_banner
+  printf "${WHITE} 💻 Agendando a coleta diária...${GRAY_LIGHT}"
+  printf "\n\n"
+
+  sleep 2
+
+  sudo su - deploy <<EOF
+  # Roda às 5h15; a janela de 7 dias reprocessa o passado recente, porque as
+  # plataformas revisam números depois do fechamento do dia.
+  CRON_LINE="15 5 * * * curl -fsS -m 900 -X POST -H 'Authorization: Bearer ${collect_token}' http://127.0.0.1:${dashboard_port}/api/collect > /home/deploy/${dashboard_name}/coleta.log 2>&1"
+  ( crontab -l 2>/dev/null | grep -v "${dashboard_name}/api/collect\|api/collect" ; echo "\$CRON_LINE" ) | crontab -
+  crontab -l | tail -2
+EOF
+
+  sleep 2
+
+  printf "${WHITE} 💻 Fazendo a carga inicial dos últimos 90 dias...${GRAY_LIGHT}"
+  printf "\n\n"
+
+  sudo su - deploy <<EOF
+  # Tolerante a falha: sem credenciais ainda, a carga só registra o erro e o
+  # painel continua funcionando ao vivo.
+  curl -fsS -m 900 -X POST -H "Authorization: Bearer ${collect_token}" \
+    "http://127.0.0.1:${dashboard_port}/api/collect?days=90" | head -c 400 || true
+  echo
 EOF
 
   sleep 2
@@ -340,4 +393,6 @@ dashboard_done() {
   printf "${WHITE}   Próximo passo: entre no painel e abra Administração para${GRAY_LIGHT}\n"
   printf "${WHITE}   cadastrar clientes, contas de anúncio e tokens do CRM.${GRAY_LIGHT}\n"
   printf "${WHITE}   Nada disso exige SSH nem reiniciar o servidor.${GRAY_LIGHT}\n\n"
+  printf "${WHITE}   A coleta roda todo dia às 5h15 e alimenta o histórico.${GRAY_LIGHT}\n"
+  printf "${WHITE}   Acompanhe em Administração > Dados.${GRAY_LIGHT}\n\n"
 }
