@@ -20,6 +20,8 @@ const nativeAdsProvider: AdsProvider = {
     if (!options.accountIds.length) return [];
     return channel === "google" ? fetchGoogleNative(options) : fetchMetaNative(options);
   },
+  // Nível de anúncio ainda não implementado nas APIs nativas: a tela de
+  // criativos simplesmente não aparece nesse modo, em vez de mostrar vazio.
 };
 
 export interface ProviderSelection<T> {

@@ -1,5 +1,6 @@
 import type {
   AdChannel,
+  AdCreative,
   AdDailyRow,
   AdsProvider,
   CrmOpportunity,
@@ -118,12 +119,77 @@ function buildRows(channel: AdChannel, options: FetchOptions): AdDailyRow[] {
   return rows;
 }
 
+/**
+ * Miniatura sintética: um SVG embutido como data URI. Nada de requisição
+ * externa — o modo demonstração precisa funcionar em máquina sem internet.
+ */
+function demoThumbnail(channel: AdChannel, index: number, label: string): string {
+  const palette = channel === "meta" ? ["#2a78d6", "#4a3aa7"] : ["#eb6834", "#eda100"];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${palette[0]}"/><stop offset="100%" stop-color="${palette[1]}"/>
+    </linearGradient></defs>
+    <rect width="320" height="320" fill="url(#g)"/>
+    <circle cx="${60 + index * 37}" cy="${90 + index * 21}" r="74" fill="rgba(255,255,255,0.16)"/>
+    <text x="24" y="286" font-family="system-ui,sans-serif" font-size="21" font-weight="600" fill="#fff">${label}</text>
+  </svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+const CREATIVE_LABELS = ["Depoimento", "Oferta", "Antes e depois", "Bastidores", "Prova social", "Carrossel"];
+
 export const demoAdsProvider: AdsProvider = {
   id: "demo",
   label: "Dados de demonstração",
   async fetchDaily(channel, options) {
     if (!options.accountIds.length) return [];
     return buildRows(channel, options);
+  },
+
+  async fetchCreatives(channel, options) {
+    if (!options.accountIds.length) return [];
+
+    const campaigns = channel === "meta" ? META_CAMPAIGNS : GOOGLE_CAMPAIGNS;
+    const creatives: AdCreative[] = [];
+
+    options.accountIds.forEach((accountId) => {
+      campaigns.forEach((campaign, campaignIndex) => {
+        // Três anúncios por campanha, com desempenho bem diferente entre si —
+        // é o que torna a tela útil: dá para ver qual criativo carrega a conta.
+        for (let i = 0; i < 3; i += 1) {
+          const random = mulberry32(hash(`creative:${channel}:${accountId}:${campaignIndex}:${i}`));
+          const label = CREATIVE_LABELS[(campaignIndex * 3 + i) % CREATIVE_LABELS.length];
+          const spend = (300 + random() * 1900) * campaign.weight * 3;
+          const cpm = channel === "meta" ? 18 + random() * 14 : 26 + random() * 18;
+          const impressions = Math.round((spend / cpm) * 1000);
+          const ctr = channel === "meta" ? 0.009 + random() * 0.03 : 0.03 + random() * 0.05;
+          const clicks = Math.round(impressions * ctr);
+          const platformLeads = Math.round(clicks * (0.04 + random() * 0.12));
+
+          creatives.push({
+            key: `${channel}-${accountId}-${campaignIndex}-${i}`,
+            channel,
+            adId: `${accountId}-${campaignIndex}${i}`,
+            adName: `${label} | v${i + 1}`,
+            campaign: campaign.name,
+            accountName: `Conta demo ${accountId.slice(-4)}`,
+            thumbnailUrl: demoThumbnail(channel, i, label),
+            imageUrl: null,
+            permalinkUrl: channel === "meta" ? "https://www.instagram.com/" : null,
+            finalUrl: channel === "google" ? "https://exemplo.com.br/lp" : null,
+            spend: Math.round(spend * 100) / 100,
+            impressions,
+            clicks,
+            platformLeads,
+            ctr: impressions ? clicks / impressions : null,
+            cpc: clicks ? spend / clicks : null,
+            cpl: platformLeads ? spend / platformLeads : null,
+          });
+        }
+      });
+    });
+
+    return creatives.sort((a, b) => b.spend - a.spend);
   },
 };
 

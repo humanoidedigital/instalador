@@ -23,6 +23,31 @@ export interface AdDailyRow {
   conversionValue: number;
 }
 
+/** Um anúncio individual, com o criativo e o desempenho no período. */
+export interface AdCreative {
+  key: string;
+  channel: AdChannel;
+  adId: string;
+  adName: string;
+  campaign: string;
+  accountName: string;
+  /** Miniatura servida pela plataforma. Pode expirar — a UI tem fallback. */
+  thumbnailUrl: string | null;
+  /** Imagem em tamanho maior, quando a plataforma expõe. */
+  imageUrl: string | null;
+  /** Link para o post/anúncio publicado. */
+  permalinkUrl: string | null;
+  /** Página de destino do anúncio. */
+  finalUrl: string | null;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  platformLeads: number;
+  ctr: number | null;
+  cpc: number | null;
+  cpl: number | null;
+}
+
 export type CrmStatus = "open" | "won" | "lost" | "abandoned";
 
 /** Uma oportunidade/lead do CRM, já normalizada. */
@@ -65,6 +90,11 @@ export interface AdsProvider {
   label: string;
   /** Retorna linhas diárias por campanha para o canal informado. */
   fetchDaily(channel: AdChannel, options: FetchOptions): Promise<AdDailyRow[]>;
+  /**
+   * Retorna os anúncios individuais com criativo. Opcional: nem toda fonte
+   * expõe nível de anúncio, e a tela de criativos some quando não há dados.
+   */
+  fetchCreatives?(channel: AdChannel, options: FetchOptions): Promise<AdCreative[]>;
 }
 
 export interface CrmProvider {

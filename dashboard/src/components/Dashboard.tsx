@@ -9,6 +9,7 @@ import { KpiGrid } from "./KpiGrid";
 import { Insights } from "./Insights";
 import { ChannelBreakdown } from "./ChannelBreakdown";
 import { CampaignTable } from "./CampaignTable";
+import { CreativesGallery } from "./CreativesGallery";
 import { Badge, Section } from "./ui";
 import { SpendByChannelChart } from "./charts/SpendByChannelChart";
 import { LeadsSalesChart } from "./charts/LeadsSalesChart";
@@ -336,6 +337,13 @@ export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "m
 
           <Section title="Métricas de mídia" description="Indicadores de eficiência das plataformas.">
             <KpiGrid kpis={secondaryKpis} currency={currency} size="sm" columns={3} />
+          </Section>
+
+          <Section
+            title="Criativos"
+            description="Cada anúncio com sua miniatura e link. Serve para achar o criativo que sustenta a conta — e o que só gasta."
+          >
+            <CreativesGallery clientId={state.clientId} query={buildQuery(state, false)} currency={currency} />
           </Section>
 
           <Section
