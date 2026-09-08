@@ -359,6 +359,7 @@ export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "m
                   currency={currency}
                   clientId={state.clientId}
                   query={buildQuery(state, false, templateId)}
+                  isMaster={role === "master"}
                 />
               </Section>
             ) : (
@@ -376,6 +377,7 @@ export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "m
                       currency={currency}
                       clientId={state.clientId}
                       query={buildQuery(state, false, templateId)}
+                      isMaster={role === "master"}
                     />
                   ))}
                 </div>

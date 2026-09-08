@@ -6,6 +6,7 @@ import { Insights } from "../Insights";
 import { ChannelBreakdown } from "../ChannelBreakdown";
 import { CampaignTable } from "../CampaignTable";
 import { CreativesGallery } from "../CreativesGallery";
+import { AiAnalysis } from "../AiAnalysis";
 import { SpendByChannelChart } from "../charts/SpendByChannelChart";
 import { LeadsSalesChart } from "../charts/LeadsSalesChart";
 import { CplChart } from "../charts/CplChart";
@@ -41,6 +42,7 @@ const DEFAULT_TITLES: Record<string, string> = {
   sources: "Origem dos leads",
   creatives: "Criativos",
   campaigns: "Campanhas",
+  ai: "Análise por IA",
   text: "",
 };
 
@@ -74,12 +76,14 @@ export function RenderBlock({
   currency,
   clientId,
   query,
+  isMaster,
 }: {
   block: ReportBlockView;
   data: DashboardPayload;
   currency: string;
   clientId: string;
   query: string;
+  isMaster: boolean;
 }) {
   switch (block.type) {
     case "kpis": {
@@ -113,6 +117,8 @@ export function RenderBlock({
       return <CreativesGallery clientId={clientId} query={query} currency={currency} />;
     case "campaigns":
       return <CampaignTable campaigns={data.campaigns} currency={currency} />;
+    case "ai":
+      return <AiAnalysis data={data} isMaster={isMaster} />;
     case "text":
       return (
         <div className="card p-4">

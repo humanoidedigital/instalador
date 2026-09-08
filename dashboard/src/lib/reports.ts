@@ -51,6 +51,12 @@ export const BLOCK_TYPES = [
   },
   { type: "campaigns", label: "Campanhas", description: "Tabela ordenável por qualquer coluna.", configurable: [] },
   {
+    type: "ai",
+    label: "Análise por IA",
+    description: "Leitura estratégica do período gerada pelo provedor configurado.",
+    configurable: [],
+  },
+  {
     type: "text",
     label: "Texto livre",
     description: "Comentário da agência, contexto do mês, próximos passos.",

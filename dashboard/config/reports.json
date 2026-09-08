@@ -33,6 +33,12 @@
           "description": "Gerado automaticamente a partir dos números acima."
         },
         {
+          "id": "analise-ia",
+          "type": "ai",
+          "title": "Análise por IA",
+          "description": "Leitura estratégica do período. Gerada sob demanda, com os números agregados."
+        },
+        {
           "id": "investimento",
           "type": "spend",
           "title": "Evolução diária"

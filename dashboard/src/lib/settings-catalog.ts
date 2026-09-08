@@ -127,6 +127,45 @@ export const SETTINGS_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    id: "ia",
+    title: "Análise por IA",
+    description:
+      "Gera a leitura estratégica do período. A chave é sua e a cobrança vai direto para a sua conta no provedor escolhido.",
+    fields: [
+      {
+        key: "AI_PROVIDER",
+        label: "Provedor",
+        type: "select",
+        help: "Só agregados são enviados: nome, e-mail e telefone de lead nunca saem do servidor.",
+        options: [
+          { value: "off", label: "Desligado" },
+          { value: "anthropic", label: "Claude (Anthropic)" },
+          { value: "openai", label: "GPT (OpenAI)" },
+          { value: "google", label: "Gemini (Google)" },
+        ],
+      },
+      { key: "ANTHROPIC_API_KEY", label: "Chave da Anthropic", type: "password", placeholder: "sk-ant-..." },
+      { key: "ANTHROPIC_MODEL", label: "Modelo da Anthropic", type: "text", placeholder: "claude-opus-5" },
+      { key: "OPENAI_API_KEY", label: "Chave da OpenAI", type: "password", placeholder: "sk-..." },
+      { key: "OPENAI_MODEL", label: "Modelo da OpenAI", type: "text", placeholder: "gpt-4o" },
+      { key: "GOOGLE_AI_API_KEY", label: "Chave do Google AI", type: "password", placeholder: "AIza..." },
+      { key: "GOOGLE_AI_MODEL", label: "Modelo do Gemini", type: "text", placeholder: "gemini-2.0-flash" },
+      {
+        key: "AI_EXTRA_CONTEXT",
+        label: "Instruções extras",
+        type: "text",
+        help: "Contexto da agência que a IA deve considerar. Ex.: sazonalidade do setor, meta do trimestre, o que não recomendar.",
+      },
+      {
+        key: "AI_CACHE_SECONDS",
+        label: "Cache da análise (segundos)",
+        type: "number",
+        help: "Mesmos números, mesma análise — não paga duas vezes. Padrão 21600 (6 h).",
+        placeholder: "21600",
+      },
+    ],
+  },
+  {
     id: "acesso",
     title: "Acesso de leitura",
     description: "Senha opcional para quem só precisa ver os relatórios, sem entrar na administração.",

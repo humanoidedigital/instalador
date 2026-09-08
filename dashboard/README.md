@@ -18,6 +18,7 @@ Roda no mesmo VPS do instalador, em processo próprio no PM2 atrás do nginx.
 - [Histórico e coleta diária](#histórico-e-coleta-diária)
 - [Construtor de relatórios](#construtor-de-relatórios)
 - [Métricas personalizadas](#métricas-personalizadas)
+- [Análise por IA](#análise-por-ia)
 - [Cadastro dos clientes](#cadastro-dos-clientes)
 - [Credenciais](#credenciais)
 - [Validar a conexão com o CRM](#validar-a-conexão-com-o-crm)
@@ -308,6 +309,57 @@ arquivo muda.
 
 ---
 
+## Análise por IA
+
+O bloco **Análise por IA** lê os números do período e escreve a leitura
+estratégica: o que aconteceu, por quê, e a ação recomendada para cada achado.
+
+### Três provedores, sua chave
+
+| Provedor | Modelo padrão | Onde pegar a chave |
+|---|---|---|
+| **Claude** (Anthropic) | `claude-opus-5` | console.anthropic.com |
+| **GPT** (OpenAI) | `gpt-4o` | platform.openai.com |
+| **Gemini** (Google) | `gemini-2.0-flash` | aistudio.google.com |
+
+Configure em **Administração → Conexões → Análise por IA**: escolha o provedor,
+cole a chave e, se quiser, troque o modelo. A cobrança vai direto para a sua
+conta no provedor — o painel não intermedeia nada.
+
+Cada provedor também aceita uma **URL base alternativa**, para quem passa por
+Azure OpenAI, gateway corporativo ou proxy.
+
+### O que é enviado — e o que não é
+
+Só agregados: KPIs com variação e meta, canais, funil, as 12 maiores campanhas,
+etapas do CRM, origens de lead e a evolução semanal. **Nome, e-mail e telefone
+de lead nunca saem do servidor** — a análise é sobre números de campanha e
+funil, e mandar dado pessoal para uma API de terceiro seria risco sem
+contrapartida.
+
+A série diária vira semanal antes de sair: 90 pontos de ruído diário custam
+token e atrapalham a leitura de tendência.
+
+### Custo sob controle
+
+- **Geração sob demanda**, no botão — nada é gerado ao abrir o relatório.
+- **Cache por conteúdo**: mesmos números, mesma análise. Só gera de novo quando
+  os dados mudam ou quando você clica em "Gerar de novo". Padrão de 6 h,
+  ajustável em `AI_CACHE_SECONDS`.
+- **Só a conta master gera.** Quem tem acesso de leitura vê a análise já
+  gerada, mas não dispara chamadas novas.
+
+### Instruções extras
+
+O campo **Instruções extras** entra no prompt junto com os números. Serve para
+o que só você sabe: sazonalidade do setor, meta do trimestre, o que não
+recomendar, o tom que o cliente espera.
+
+O bloco pode ser posicionado em qualquer lugar do relatório pelo construtor, e
+sai de qualquer template do cliente onde não fizer sentido.
+
+---
+
 ## Cadastro dos clientes
 
 Tudo vive em `config/clients.json`. O app relê o arquivo sempre que ele muda:
@@ -533,6 +585,7 @@ dashboard/
 │   ├── metrics-formula.ts        # avaliador de fórmulas (sem eval)
 │   ├── custom-metrics.ts         # métricas personalizadas
 │   ├── reports.ts                # templates de relatório e resolução por cliente
+│   ├── ai/                       # Claude, GPT e Gemini atrás da mesma interface
 │   ├── db/                       # SQLite: schema, upserts, cobertura e log
 │   └── cache.ts                  # cache TTL + deduplicação de chamadas
 │   └── auth/                     # sessão assinada, hash de senha e guarda de rotas
