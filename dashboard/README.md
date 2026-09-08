@@ -16,6 +16,7 @@ Roda no mesmo VPS do instalador, em processo próprio no PM2 atrás do nginx.
 - [Primeiro acesso](#primeiro-acesso)
 - [Painel administrativo](#painel-administrativo)
 - [Histórico e coleta diária](#histórico-e-coleta-diária)
+- [Construtor de relatórios](#construtor-de-relatórios)
 - [Métricas personalizadas](#métricas-personalizadas)
 - [Cadastro dos clientes](#cadastro-dos-clientes)
 - [Credenciais](#credenciais)
@@ -124,6 +125,7 @@ entra. Quatro abas:
 | `config/clients.json` | clientes, contas de anúncio, metas | vale na hora |
 | `config/secrets.json` | tokens, chaves e a senha master (permissão 600) | vale na hora |
 | `config/metrics.json` | métricas personalizadas | vale na hora |
+| `config/reports.json` | templates de relatório | vale na hora |
 | `config/data/dashboard.db` | histórico coletado (SQLite) | atualizado pela coleta |
 | `.env` | valores iniciais escritos pelo instalador | lido na inicialização |
 
@@ -200,6 +202,65 @@ cat /home/deploy/marketing-dashboard/coleta.log
 ```
 
 O `COLLECT_TOKEN` é gerado pelo instalador e fica no `.env`.
+
+---
+
+## Construtor de relatórios
+
+Um relatório é uma **lista ordenada de blocos**. Em **Administração →
+Relatórios** você escolhe quais entram, em que ordem e com que título — a mesma
+dinâmica do Looker Studio.
+
+O que não copiamos do Looker: o canvas livre com posicionamento em pixel. Custa
+caro de construir e o resultado costuma ficar pior que uma grade responsiva,
+que continua legível no celular e na impressão.
+
+### Blocos disponíveis
+
+| Bloco | O que mostra |
+|---|---|
+| Indicadores | Cards de KPI — você escolhe quais, quantas colunas e o tamanho |
+| Leitura do período | Avisos automáticos a partir dos números |
+| Investimento por dia | Barras empilhadas por canal |
+| Leads e vendas por dia | Linhas de negociações criadas e ganhas |
+| CPL por dia | Custo por lead diário, com a linha de meta |
+| Funil | Do clique à venda, pela taxa de passagem |
+| Canais | Meta Ads e Google Ads lado a lado |
+| Negociações por etapa | Etapas do funil do CRM |
+| Origem dos leads | Agrupado por utm_source |
+| Criativos | Miniatura, desempenho e link de cada anúncio |
+| Campanhas | Tabela ordenável |
+| **Texto livre** | Comentário da agência, contexto do mês, próximos passos |
+
+No bloco de Indicadores dá para escolher qualquer KPI base, qualquer métrica
+personalizada, ou marcar **“Todas as personalizadas”** — assim uma métrica nova
+entra no relatório sozinha, sem precisar editar o template.
+
+Blocos de gráfico em sequência **dividem a linha automaticamente** em telas
+largas. Quem monta o relatório não precisa declarar largura de bloco.
+
+### Templates globais e do cliente
+
+| Escopo | Vale para | Quem edita |
+|---|---|---|
+| **Global** | todos os clientes | conta master |
+| **Do cliente** | só aquele cliente | conta master |
+
+Cada escopo pode ter um **padrão** (a estrela na lista), e o do cliente ganha do
+global. A resolução é: template pedido na URL → padrão do cliente → padrão
+global → layout de fábrica.
+
+Isso cobre os dois usos do dia a dia: um layout global que serve para todo mundo
+e, quando um cliente pede algo diferente, **Duplicar** + trocar o escopo para
+ele = "salvar como template do cliente".
+
+Quem tem acesso master vê um seletor de modelo no topo do relatório e pode
+alternar entre os disponíveis; quem tem acesso de leitura abre direto no padrão.
+
+O botão **Ver no relatório** abre o template em uma aba nova, com dados reais.
+
+Tudo fica em `config/reports.json`. Sem esse arquivo, o painel usa o layout de
+fábrica — o relatório nunca fica em branco por falta de configuração.
 
 ---
 
@@ -471,6 +532,7 @@ dashboard/
 │   ├── collector.ts              # coleta e grava os fatos no histórico
 │   ├── metrics-formula.ts        # avaliador de fórmulas (sem eval)
 │   ├── custom-metrics.ts         # métricas personalizadas
+│   ├── reports.ts                # templates de relatório e resolução por cliente
 │   ├── db/                       # SQLite: schema, upserts, cobertura e log
 │   └── cache.ts                  # cache TTL + deduplicação de chamadas
 │   └── auth/                     # sessão assinada, hash de senha e guarda de rotas
@@ -481,5 +543,6 @@ dashboard/
 ├── src/app/api/collect/          # dispara a coleta (painel ou cron)
 ├── src/app/api/crm-check/        # diagnóstico da integração com o CRM
 ├── scripts/set-password.mjs      # redefine a senha master pelo servidor
+├── src/components/report/        # registro de blocos do relatório
 └── src/components/               # UI, gráficos e painel admin
 ```

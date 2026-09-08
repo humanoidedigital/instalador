@@ -1,22 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { DashboardPayload } from "@/lib/types";
-import { PRIMARY_KPI_IDS } from "@/lib/kpi-order";
 import { formatDateTime } from "@/lib/format";
 import { Filters, type ClientOption, type FilterState } from "./Filters";
-import { KpiGrid } from "./KpiGrid";
-import { Insights } from "./Insights";
-import { ChannelBreakdown } from "./ChannelBreakdown";
-import { CampaignTable } from "./CampaignTable";
-import { CreativesGallery } from "./CreativesGallery";
+import { HALF_WIDTH, RenderBlock, blockTitle, type ReportBlockView } from "./report/blocks";
 import { Badge, Section } from "./ui";
-import { SpendByChannelChart } from "./charts/SpendByChannelChart";
-import { LeadsSalesChart } from "./charts/LeadsSalesChart";
-import { CplChart } from "./charts/CplChart";
-import { FunnelChartCard } from "./charts/FunnelChart";
-import { PipelineChart } from "./charts/PipelineChart";
-import { SourcesChart } from "./charts/SourcesChart";
 
 function isoToday(): string {
   return new Date().toISOString().slice(0, 10);
@@ -28,13 +17,52 @@ function daysAgo(days: number): string {
   return date.toISOString().slice(0, 10);
 }
 
+type BlockGroup =
+  | { kind: "full"; block: ReportBlockView }
+  | { kind: "half"; blocks: ReportBlockView[]; title: string; description?: string };
+
+/**
+ * Blocos estreitos em sequência dividem a mesma linha em telas largas — é o que
+ * mantém gráfico ao lado de gráfico, como no layout original, sem pedir para
+ * quem monta o relatório declarar largura de cada bloco.
+ */
+function groupBlocks(blocks: ReportBlockView[]): BlockGroup[] {
+  const groups: BlockGroup[] = [];
+
+  blocks
+    .filter((block) => !block.hidden)
+    .forEach((block) => {
+      if (!HALF_WIDTH.has(block.type)) {
+        groups.push({ kind: "full", block });
+        return;
+      }
+
+      const last = groups[groups.length - 1];
+      if (last && last.kind === "half" && last.blocks.length < 2) {
+        last.blocks.push(block);
+        return;
+      }
+
+      groups.push({
+        kind: "half",
+        blocks: [block],
+        // O título do grupo vem do primeiro bloco; os cards já trazem o seu.
+        title: block.title || "",
+        description: block.description,
+      });
+    });
+
+  return groups;
+}
+
 function formatRange(range: { from: string; to: string }): string {
   const br = (iso: string) => iso.split("-").reverse().join("/");
   return `${br(range.from)} – ${br(range.to)}`;
 }
 
-function buildQuery(state: FilterState, refresh: boolean): string {
+function buildQuery(state: FilterState, refresh: boolean, templateId = ""): string {
   const params = new URLSearchParams({ client: state.clientId });
+  if (templateId) params.set("template", templateId);
   if (state.preset === "custom") {
     params.set("from", state.from);
     params.set("to", state.to);
@@ -135,13 +163,18 @@ function initialState(clients: ClientOption[]): FilterState {
 
 export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "master" | "viewer" }) {
   const [state, setState] = useState<FilterState>(() => initialState(clients));
+  // Template escolhido na tela. Vazio = o padrão do cliente.
+  const [templateId, setTemplateId] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return new URLSearchParams(window.location.search).get("template") || "";
+  });
   const [data, setData] = useState<DashboardPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const load = useCallback(
-    async (next: FilterState, refresh = false) => {
+    async (next: FilterState, refresh = false, templateOverride = "") => {
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
@@ -149,7 +182,7 @@ export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "m
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/overview?${buildQuery(next, refresh)}`, {
+        const response = await fetch(`/api/overview?${buildQuery(next, refresh, templateOverride)}`, {
           signal: controller.signal,
           cache: "no-store",
         });
@@ -169,21 +202,12 @@ export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "m
   );
 
   useEffect(() => {
-    load(state);
+    load(state, false, templateId);
     // Mantém o filtro na URL para poder compartilhar o link do painel.
-    const params = new URLSearchParams(buildQuery(state, false));
+    const params = new URLSearchParams(buildQuery(state, false, templateId));
     window.history.replaceState(null, "", `?${params.toString()}`);
-  }, [state, load]);
+  }, [state, templateId, load]);
 
-  const primaryKpis = useMemo(
-    () => (data ? data.kpis.filter((kpi) => PRIMARY_KPI_IDS.includes(kpi.id)) : []),
-    [data],
-  );
-  const secondaryKpis = useMemo(
-    () => (data ? data.kpis.filter((kpi) => !PRIMARY_KPI_IDS.includes(kpi.id)) : []),
-    [data],
-  );
-  const cplGoal = useMemo(() => data?.kpis.find((kpi) => kpi.id === "cpl")?.goal ?? null, [data]);
 
   async function handleLogout(event: React.FormEvent) {
     event.preventDefault();
@@ -231,6 +255,23 @@ export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "m
               <Badge>Mídia: {data.meta.sources.ads}</Badge>
               <Badge>CRM: {data.meta.sources.crm}</Badge>
               {data.meta.demo ? <Badge tone="warning">Dados de demonstração</Badge> : null}
+              {data.meta.templates.length > 1 ? (
+                <select
+                  value={data.meta.template.id}
+                  onChange={(event) => setTemplateId(event.target.value)}
+                  aria-label="Modelo de relatório"
+                  className="control no-print py-1 text-xs"
+                >
+                  {data.meta.templates.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
+                      {option.scope === "cliente" ? " (do cliente)" : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <Badge>Modelo: {data.meta.template.name}</Badge>
+              )}
             </div>
           ) : null}
         </div>
@@ -266,7 +307,7 @@ export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "m
           clients={clients}
           state={state}
           onChange={setState}
-          onRefresh={() => load(state, true)}
+          onRefresh={() => load(state, true, templateId)}
           onExport={handleExport}
           loading={loading}
         />
@@ -305,62 +346,42 @@ export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "m
 
       {data ? (
         <div style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms" }}>
-          <Section title="Indicadores principais" description="Comparação com o período anterior de mesmo tamanho.">
-            <KpiGrid kpis={primaryKpis} currency={currency} />
-          </Section>
-
-          {data.insights.length ? (
-            <Section title="Leitura do período" description="Gerado automaticamente a partir dos números acima.">
-              <Insights insights={data.insights} />
-            </Section>
-          ) : null}
-
-          <Section title="Evolução diária">
-            <div className="grid gap-4 xl:grid-cols-2">
-              <SpendByChannelChart series={data.series} currency={currency} />
-              <LeadsSalesChart series={data.series} />
-              <CplChart series={data.series} currency={currency} goal={cplGoal} />
-              <FunnelChartCard stages={data.funnel} />
-            </div>
-          </Section>
-
-          <Section title="Canais" description="Meta Ads e Google Ads lado a lado.">
-            <ChannelBreakdown channels={data.channels} currency={currency} />
-          </Section>
-
-          <Section title="CRM" description="Funil e origem das negociações no RD Station CRM.">
-            <div className="grid gap-4 xl:grid-cols-2">
-              <PipelineChart stages={data.pipeline} currency={currency} />
-              <SourcesChart sources={data.sources} currency={currency} />
-            </div>
-          </Section>
-
-          {data.customKpis.length ? (
-            <Section
-              title="Métricas personalizadas"
-              description="Fórmulas configuradas em Administração → Métricas."
-            >
-              <KpiGrid kpis={data.customKpis} currency={currency} size="sm" columns={3} />
-            </Section>
-          ) : null}
-
-          <Section title="Métricas de mídia" description="Indicadores de eficiência das plataformas.">
-            <KpiGrid kpis={secondaryKpis} currency={currency} size="sm" columns={3} />
-          </Section>
-
-          <Section
-            title="Criativos"
-            description="Cada anúncio com sua miniatura e link. Serve para achar o criativo que sustenta a conta — e o que só gasta."
-          >
-            <CreativesGallery clientId={state.clientId} query={buildQuery(state, false)} currency={currency} />
-          </Section>
-
-          <Section
-            title="Campanhas"
-            description="Ordene por qualquer coluna para achar onde cortar ou escalar. Leads e ROAS marcados com “(plataforma)” não tiveram correspondência no CRM e vêm do que o Meta/Google reportaram."
-          >
-            <CampaignTable campaigns={data.campaigns} currency={currency} />
-          </Section>
+          {groupBlocks(data.meta.template.blocks as ReportBlockView[]).map((group, index) =>
+            group.kind === "full" ? (
+              <Section
+                key={group.block.id}
+                title={blockTitle(group.block)}
+                description={group.block.description}
+              >
+                <RenderBlock
+                  block={group.block}
+                  data={data}
+                  currency={currency}
+                  clientId={state.clientId}
+                  query={buildQuery(state, false, templateId)}
+                />
+              </Section>
+            ) : (
+              <Section
+                key={`grupo-${index}`}
+                title={group.title}
+                description={group.description}
+              >
+                <div className="grid gap-4 xl:grid-cols-2">
+                  {group.blocks.map((block) => (
+                    <RenderBlock
+                      key={block.id}
+                      block={block}
+                      data={data}
+                      currency={currency}
+                      clientId={state.clientId}
+                      query={buildQuery(state, false, templateId)}
+                    />
+                  ))}
+                </div>
+              </Section>
+            ),
+          )}
 
           <footer className="mt-8 text-[11px]" style={{ color: "var(--text-muted)" }}>
             Leads e vendas vêm do CRM; investimento, impressões e cliques vêm das plataformas de anúncio. As conversões

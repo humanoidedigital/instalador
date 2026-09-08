@@ -7,10 +7,12 @@ import { AccessTab } from "./AccessTab";
 import { SystemTab } from "./SystemTab";
 import { DataTab } from "./DataTab";
 import { MetricsTab } from "./MetricsTab";
+import { ReportsTab } from "./ReportsTab";
 
 const TABS = [
   { id: "clientes", label: "Clientes" },
   { id: "conexoes", label: "Conexões" },
+  { id: "relatorios", label: "Relatórios" },
   { id: "metricas", label: "Métricas" },
   { id: "dados", label: "Dados" },
   { id: "acesso", label: "Acesso" },
@@ -122,6 +124,7 @@ export function AdminPanel({ user }: { user: string }) {
 
       {tab === "clientes" ? <ClientsTab /> : null}
       {tab === "conexoes" ? <ConnectionsTab /> : null}
+      {tab === "relatorios" ? <ReportsTab /> : null}
       {tab === "metricas" ? <MetricsTab /> : null}
       {tab === "dados" ? <DataTab /> : null}
       {tab === "acesso" ? <AccessTab user={user} /> : null}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { crmCredentials, getClient, loadClients, type ClientConfig } from "@/lib/clients";
 import { previousRange, rangeFromSearchParams, today } from "@/lib/dates";
 import { hasCoverage, readAdDaily, readDeals } from "@/lib/db/repository";
+import { resolveTemplate, templatesForClient } from "@/lib/reports";
 import { databaseEnabled } from "@/lib/db/sqlite";
 import { assembleDashboard } from "@/lib/metrics";
 import { selectAdsProvider, selectCrmProvider } from "@/lib/providers";
@@ -110,6 +111,15 @@ export async function GET(request: Request) {
   const { range } = rangeFromSearchParams(url.searchParams);
   const previous = previousRange(range);
 
+  // Qual layout montar: o pedido na URL, ou o padrão do cliente.
+  const template = resolveTemplate(client.id, url.searchParams.get("template"));
+  const templateInfo = { id: template.id, name: template.name, blocks: template.blocks as unknown[] };
+  const templateOptions = templatesForClient(client.id).map((item) => ({
+    id: item.id,
+    name: item.name,
+    scope: (item.clientId ? "cliente" : "global") as "global" | "cliente",
+  }));
+
   const ads = selectAdsProvider();
   const crm = selectCrmProvider();
   const warnings = [...ads.warnings, ...crm.warnings];
@@ -126,6 +136,8 @@ export async function GET(request: Request) {
   if (useHistory) {
     const payload = assembleDashboard({
       client,
+      template: templateInfo,
+      templates: templateOptions,
       range,
       previousRange: previous,
       adRows: readAdDaily(clientIds, range),
@@ -173,6 +185,8 @@ export async function GET(request: Request) {
 
   const payload = assembleDashboard({
     client,
+    template: templateInfo,
+    templates: templateOptions,
     range,
     previousRange: previous,
     adRows: [...metaRows, ...googleRows],

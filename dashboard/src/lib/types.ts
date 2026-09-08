@@ -222,6 +222,14 @@ export interface DashboardPayload {
     };
     warnings: string[];
     demo: boolean;
+    /** Template usado para montar esta tela. */
+    template: {
+      id: string;
+      name: string;
+      blocks: unknown[];
+    };
+    /** Templates que este cliente pode usar, para o seletor. */
+    templates: { id: string; name: string; scope: "global" | "cliente" }[];
   };
   kpis: Kpi[];
   /** Cards vindos das fórmulas configuradas em Administração > Métricas. */

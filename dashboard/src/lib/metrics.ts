@@ -544,6 +544,12 @@ export function buildInsights(
 
 export interface AssembleInput {
   client: ClientConfig;
+  template: {
+    id: string;
+    name: string;
+    blocks: unknown[];
+  };
+  templates: { id: string; name: string; scope: "global" | "cliente" }[];
   range: DateRange;
   previousRange: DateRange;
   adRows: AdDailyRow[];
@@ -572,6 +578,8 @@ export function assembleDashboard(input: AssembleInput): DashboardPayload {
       sources: input.sources,
       warnings: input.warnings,
       demo: input.demo,
+      template: input.template,
+      templates: input.templates,
     },
     kpis: buildKpis(current, previous, input.client),
     customKpis: buildCustomKpis(

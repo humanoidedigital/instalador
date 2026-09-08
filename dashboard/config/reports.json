@@ -1,0 +1,114 @@
+{
+  "_comment": "Templates de relatório. Editáveis em Administração > Relatórios. clientId nulo = template global; isDefault marca o padrão do escopo (o do cliente ganha do global).",
+  "templates": [
+    {
+      "id": "completo",
+      "name": "Relatório completo",
+      "description": "Todos os blocos. É o padrão global.",
+      "clientId": null,
+      "isDefault": true,
+      "blocks": [
+        {
+          "id": "principais",
+          "type": "kpis",
+          "title": "Indicadores principais",
+          "description": "Comparação com o período anterior de mesmo tamanho.",
+          "kpiIds": [
+            "spend",
+            "crmLeads",
+            "cpl",
+            "opportunities",
+            "won",
+            "revenue",
+            "roas",
+            "cac"
+          ],
+          "columns": 4,
+          "size": "lg"
+        },
+        {
+          "id": "leitura",
+          "type": "insights",
+          "title": "Leitura do período",
+          "description": "Gerado automaticamente a partir dos números acima."
+        },
+        {
+          "id": "investimento",
+          "type": "spend",
+          "title": "Evolução diária"
+        },
+        {
+          "id": "leads-dia",
+          "type": "leads"
+        },
+        {
+          "id": "cpl-dia",
+          "type": "cpl"
+        },
+        {
+          "id": "funil",
+          "type": "funnel"
+        },
+        {
+          "id": "canais",
+          "type": "channels",
+          "title": "Canais",
+          "description": "Meta Ads e Google Ads lado a lado."
+        },
+        {
+          "id": "etapas",
+          "type": "pipeline",
+          "title": "CRM",
+          "description": "Funil e origem das negociações no RD Station CRM."
+        },
+        {
+          "id": "origens",
+          "type": "sources"
+        },
+        {
+          "id": "personalizadas",
+          "type": "kpis",
+          "title": "Métricas personalizadas",
+          "description": "Fórmulas configuradas em Administração → Métricas.",
+          "kpiIds": [
+            "__custom__"
+          ],
+          "columns": 3,
+          "size": "sm"
+        },
+        {
+          "id": "midia",
+          "type": "kpis",
+          "title": "Métricas de mídia",
+          "description": "Indicadores de eficiência das plataformas.",
+          "kpiIds": [
+            "impressions",
+            "clicks",
+            "ctr",
+            "cpc",
+            "cpm",
+            "platformLeads",
+            "leadToSale",
+            "ticket",
+            "cpa"
+          ],
+          "columns": 3,
+          "size": "sm"
+        },
+        {
+          "id": "criativos",
+          "type": "creatives",
+          "title": "Criativos",
+          "description": "Cada anúncio com sua miniatura e link. Serve para achar o criativo que sustenta a conta — e o que só gasta."
+        },
+        {
+          "id": "campanhas",
+          "type": "campaigns",
+          "title": "Campanhas",
+          "description": "Ordene por qualquer coluna para achar onde cortar ou escalar."
+        }
+      ],
+      "updatedAt": ""
+    }
+  ]
+}

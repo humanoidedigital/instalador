@@ -14,21 +14,29 @@ export function Section({
   actions?: ReactNode;
   children: ReactNode;
 }) {
+  // Bloco sem título não deve deixar um cabeçalho vazio ocupando espaço — e um
+  // <h2> vazio é ruído para leitor de tela.
+  const hasHeader = !!title || !!description || !!actions;
+
   return (
     <section className="mb-8">
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h2 className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>
-            {title}
-          </h2>
-          {description ? (
-            <p className="mt-0.5 text-xs" style={{ color: "var(--text-secondary)" }}>
-              {description}
-            </p>
-          ) : null}
+      {hasHeader ? (
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            {title ? (
+              <h2 className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>
+                {title}
+              </h2>
+            ) : null}
+            {description ? (
+              <p className="mt-0.5 text-xs" style={{ color: "var(--text-secondary)" }}>
+                {description}
+              </p>
+            ) : null}
+          </div>
+          {actions}
         </div>
-        {actions}
-      </div>
+      ) : null}
       {children}
     </section>
   );
