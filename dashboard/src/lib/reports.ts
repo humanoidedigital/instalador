@@ -51,6 +51,12 @@ export const BLOCK_TYPES = [
   },
   { type: "campaigns", label: "Campanhas", description: "Tabela ordenável por qualquer coluna.", configurable: [] },
   {
+    type: "alerts",
+    label: "Alertas",
+    description: "Regras que dispararam no período, do histórico gravado.",
+    configurable: [],
+  },
+  {
     type: "ai",
     label: "Análise por IA",
     description: "Leitura estratégica do período gerada pelo provedor configurado.",
@@ -113,6 +119,7 @@ export const BUILTIN_TEMPLATE: ReportTemplate = {
       size: "lg",
     },
     { id: "leitura", type: "insights", title: "Leitura do período" },
+    { id: "alertas", type: "alerts", title: "Alertas" },
     { id: "investimento", type: "spend" },
     { id: "leads-dia", type: "leads" },
     { id: "cpl-dia", type: "cpl" },

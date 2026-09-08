@@ -30,6 +30,10 @@ export const FORMULA_VARIABLES: VariableDefinition[] = [
   { id: "receita", label: "Receita", description: "Valor das negociações ganhas." },
   { id: "valor_plataforma", label: "Valor de conversão", description: "Valor de conversão reportado pelas plataformas." },
   { id: "dias", label: "Dias", description: "Quantidade de dias do período selecionado." },
+  { id: "meta_cpl", label: "Meta de CPL", description: "CPL alvo do cliente. Vazio faz a conta virar indefinida." },
+  { id: "meta_roas", label: "Meta de ROAS", description: "ROAS alvo do cliente." },
+  { id: "meta_investimento", label: "Meta de investimento", description: "Investimento planejado no mês." },
+  { id: "meta_leads", label: "Meta de leads", description: "Leads planejados no mês." },
 ];
 
 const VARIABLE_IDS = new Set(FORMULA_VARIABLES.map((variable) => variable.id));

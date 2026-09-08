@@ -165,8 +165,14 @@ export function buildKpis(current: Totals, previous: Totals, client: ClientConfi
 }
 
 /** Valores dos campos que as fórmulas podem usar. */
-function formulaValues(totals: Totals, days: number): Record<string, number> {
+function formulaValues(totals: Totals, days: number, goals: ClientConfig["goals"] = {}): Record<string, number> {
   return {
+    // Meta ausente vira 0: a divisão por zero devolve "sem valor", que é o
+    // comportamento certo — sem meta definida, não há o que comparar.
+    meta_cpl: goals.cpl ?? 0,
+    meta_roas: goals.roas ?? 0,
+    meta_investimento: goals.monthlyBudget ?? 0,
+    meta_leads: goals.monthlyLeads ?? 0,
     investimento: totals.spend,
     impressoes: totals.impressions,
     cliques: totals.clicks,
@@ -182,15 +188,15 @@ function formulaValues(totals: Totals, days: number): Record<string, number> {
 }
 
 export function buildCustomKpis(
-  clientId: string,
+  client: ClientConfig,
   current: Totals,
   previous: Totals,
   currentDays: number,
   previousDays: number,
 ): Kpi[] {
-  return metricsForClient(clientId).map(({ metric, compiled }) => {
-    const value = compiled.evaluate(formulaValues(current, currentDays));
-    const before = compiled.evaluate(formulaValues(previous, previousDays));
+  return metricsForClient(client.id).map(({ metric, compiled }) => {
+    const value = compiled.evaluate(formulaValues(current, currentDays, client.goals));
+    const before = compiled.evaluate(formulaValues(previous, previousDays, client.goals));
 
     return kpi(metric.id, metric.label, value, before, metric.format, metric.higherIsBetter, {
       goal: metric.goal,
@@ -583,7 +589,7 @@ export function assembleDashboard(input: AssembleInput): DashboardPayload {
     },
     kpis: buildKpis(current, previous, input.client),
     customKpis: buildCustomKpis(
-      input.client.id,
+      input.client,
       current,
       previous,
       daysBetween(input.range.from, input.range.to),

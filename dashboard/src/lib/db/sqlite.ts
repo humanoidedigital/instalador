@@ -75,6 +75,28 @@ CREATE TABLE IF NOT EXISTS collection_run (
 );
 
 CREATE INDEX IF NOT EXISTS collection_run_recent ON collection_run (finished_at DESC);
+
+CREATE TABLE IF NOT EXISTS alert_event (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  rule_id    TEXT NOT NULL,
+  rule_name  TEXT NOT NULL,
+  client_id  TEXT NOT NULL,
+  client_name TEXT NOT NULL DEFAULT '',
+  scope_key  TEXT NOT NULL DEFAULT '',
+  severity   TEXT NOT NULL,
+  title      TEXT NOT NULL,
+  detail     TEXT NOT NULL,
+  value      REAL NOT NULL DEFAULT 0,
+  threshold  REAL NOT NULL DEFAULT 0,
+  fired_on   TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  delivered  INTEGER NOT NULL DEFAULT 0,
+  -- Um disparo por regra, alvo e dia: sem isto o mesmo alerta reapareceria a
+  -- cada coleta e o webhook viraria spam.
+  UNIQUE (rule_id, client_id, scope_key, fired_on)
+);
+
+CREATE INDEX IF NOT EXISTS alert_event_recent ON alert_event (fired_on DESC, id DESC);
 `;
 
 export function db(): Database.Database {

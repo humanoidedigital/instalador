@@ -33,6 +33,11 @@
           "description": "Gerado automaticamente a partir dos números acima."
         },
         {
+          "id": "alertas",
+          "type": "alerts",
+          "title": "Alertas"
+        },
+        {
           "id": "analise-ia",
           "type": "ai",
           "title": "Análise por IA",

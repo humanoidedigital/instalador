@@ -19,6 +19,7 @@ Roda no mesmo VPS do instalador, em processo próprio no PM2 atrás do nginx.
 - [Construtor de relatórios](#construtor-de-relatórios)
 - [Métricas personalizadas](#métricas-personalizadas)
 - [Análise por IA](#análise-por-ia)
+- [Alertas](#alertas)
 - [Cadastro dos clientes](#cadastro-dos-clientes)
 - [Credenciais](#credenciais)
 - [Validar a conexão com o CRM](#validar-a-conexão-com-o-crm)
@@ -110,12 +111,16 @@ sudo -u deploy /opt/node20/bin/node scripts/set-password.mjs "admin" "nova-senha
 ## Painel administrativo
 
 Em `/admin` (link **Administração** no topo do relatório). Só a conta master
-entra. Quatro abas:
+entra. Oito abas:
 
 | Aba | O que faz |
 |---|---|
 | **Clientes** | Cadastra, edita e desativa clientes: contas do Meta e do Google, token do CRM, funis, metas de CPL/ROAS/investimento/leads. Tem um botão **Testar CRM** por cliente, que consulta a API de verdade e diz quantas negociações e etapas voltaram |
 | **Conexões** | Todas as credenciais e chaves: Windsor, RD Station, Google Ads e Meta nativos, GoHighLevel, senha de leitura. Campos de senha aparecem mascarados e nunca voltam em claro para o navegador |
+| **Relatórios** | Monta o layout: quais blocos, em que ordem, e os templates globais e por cliente |
+| **Métricas** | Cria e testa métricas personalizadas por fórmula |
+| **Alertas** | Regras de alerta, histórico de disparos e o botão **Rodar agora** |
+| **Dados** | Cobertura do histórico por cliente, backfill e resultado das últimas coletas |
 | **Acesso** | Troca usuário e senha master (exige a senha atual) |
 | **Sistema** | Estado do processo, fontes ativas, alertas de configuração, caminho dos arquivos e botão para limpar o cache |
 
@@ -229,6 +234,7 @@ que continua legível no celular e na impressão.
 | Canais | Meta Ads e Google Ads lado a lado |
 | Negociações por etapa | Etapas do funil do CRM |
 | Origem dos leads | Agrupado por utm_source |
+| Alertas | Regras que dispararam no período, do histórico gravado |
 | Criativos | Miniatura, desempenho e link de cada anúncio |
 | Campanhas | Tabela ordenável |
 | **Texto livre** | Comentário da agência, contexto do mês, próximos passos |
@@ -357,6 +363,100 @@ recomendar, o tom que o cliente espera.
 
 O bloco pode ser posicionado em qualquer lugar do relatório pelo construtor, e
 sai de qualquer template do cliente onde não fizer sentido.
+
+---
+
+## Alertas
+
+O dashboard avisa quando um número sai do lugar, em vez de esperar alguém abrir
+o relatório e reparar. As regras ficam em **Administração › Alertas** e são
+gravadas em `config/alerts.json`.
+
+### Como uma regra é montada
+
+Uma regra é sempre a mesma frase: *esta fórmula, nesta janela, passou deste
+limiar*. Os campos são:
+
+| Campo | Para que serve |
+|---|---|
+| Escopo | `cliente` avalia o total do período; `campanha` avalia uma campanha por vez |
+| Fórmula | Mesmo catálogo e mesma sintaxe das métricas personalizadas |
+| Janela | Quantos dias entram na conta (1, 3, 7, 14 ou 30) |
+| Operador e limiar | `>`, `>=`, `<` ou `<=` contra um número |
+| Severidade | Crítico, Atenção ou Informativo — define a cor no relatório |
+| Gasto mínimo | Só no escopo de campanha: ignora as que gastaram pouco |
+| Clientes | Nenhum marcado = vale para todos |
+| Mensagem | Aceita `{valor}`, `{limiar}`, `{cliente}` e `{campanha}` |
+
+Cada regra é avaliada na **sua própria janela**: uma regra de 7 dias e outra de
+30 rodam contra períodos diferentes, sem misturar.
+
+### Regra por cliente, sem limiar por cliente
+
+A fórmula enxerga as metas cadastradas no cliente — `meta_cpl`, `meta_roas`,
+`meta_investimento` e `meta_leads`. Assim uma regra só serve para a carteira
+inteira:
+
+```
+(investimento / leads) / meta_cpl   >   1.2
+```
+
+Isso é “CPL 20% acima da meta **deste** cliente”, com um limiar único. Cliente
+sem meta cadastrada faz a conta virar indefinida — e regra sem resultado não
+dispara. Divisão por zero também não dispara: um CPL sem nenhum lead **não**
+vira alerta de “CPL baixo”.
+
+### O que já vem configurado
+
+| Regra | Escopo | Dispara quando |
+|---|---|---|
+| CPL acima da meta | Cliente | CPL de 7 dias passa de 1,2× a meta |
+| Campanha gastando sem gerar lead | Campanha | Gastou mais de R$ 300 em 7 dias sem um lead |
+| CTR baixo | Campanha | CTR de 14 dias abaixo de 0,5%, com gasto acima de R$ 200 |
+| ROAS abaixo da meta | Cliente | ROAS de 30 dias abaixo de 0,8× a meta |
+| Ritmo de verba acima do previsto | Cliente | Projeção do mês passa de 1,15× o orçamento |
+| Leads parados no CRM | Cliente | Menos de 10% dos leads viraram oportunidade em 14 dias |
+
+Ajuste os limiares para a sua operação — os que vêm de fábrica são um ponto de
+partida, não um consenso de mercado.
+
+### Quando as regras rodam
+
+Junto com a coleta diária, logo depois de gravar os números do dia — não gastam
+chamada de API a mais, porque leem do histórico. O botão **Rodar agora** faz a
+mesma avaliação na hora, contra o que já está no banco.
+
+Uma regra dispara **no máximo uma vez por dia** por cliente (ou por campanha).
+Rodar duas vezes no mesmo dia não duplica nada nem reenvia o webhook.
+
+### Para onde os alertas vão
+
+- **Bloco “Alertas”** no relatório, posicionável como qualquer outro bloco.
+- **Histórico** dos últimos 30 dias na aba Alertas.
+- **Webhook**, se `ALERT_WEBHOOK_URL` estiver preenchido em Conexões › Alertas.
+
+O webhook recebe um POST com JSON por alerta:
+
+```json
+{
+  "tipo": "alerta",
+  "severidade": "critico",
+  "cliente": "Isentei",
+  "clienteId": "isentei",
+  "regra": "CPL acima da meta",
+  "titulo": "CPL acima da meta",
+  "detalhe": "O CPL dos últimos 7 dias está 1,67x a meta do cliente. …",
+  "valor": 1.6727322580645165,
+  "limiar": 1.2,
+  "data": "2026-09-08",
+  "texto": "[CRITICO] Isentei — CPL acima da meta: O CPL dos últimos 7 dias …"
+}
+```
+
+O campo `texto` já vem pronto para quem só repassa a mensagem adiante — cole a
+URL de um webhook do Slack, do Discord ou de um fluxo do n8n e nada mais
+precisa ser feito. Uma falha no envio não derruba os demais alertas nem a
+coleta; ela aparece no resultado da execução.
 
 ---
 

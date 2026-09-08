@@ -3,6 +3,7 @@ import { collect, defaultLookbackDays } from "@/lib/collector";
 import { getSession } from "@/lib/auth/guard";
 import { getSecret } from "@/lib/secrets";
 import { cacheClear } from "@/lib/cache";
+import { runAlerts } from "@/lib/alerts-runner";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -40,8 +41,19 @@ export async function POST(request: Request) {
     // O relatório passa a ler o histórico novo.
     cacheClear();
 
+    // Alertas avaliados logo após a gravação: os números são os que acabaram
+    // de entrar, e não custa nenhuma chamada de API a mais.
+    const alertas = await runAlerts().catch((error) => ({
+      avaliados: 0,
+      disparos: 0,
+      novos: 0,
+      entregues: 0,
+      erros: [(error as Error).message],
+    }));
+
     const erros = results.filter((result) => result.status === "erro");
     return NextResponse.json({
+      alertas,
       ok: erros.length === 0,
       periodo: range,
       duracaoMs: Date.now() - startedAt,

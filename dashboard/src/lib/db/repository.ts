@@ -336,3 +336,91 @@ export function databaseStats() {
 
   return { bytes: size.bytes, adRows: adRows.total, dealRows: dealRows.total };
 }
+
+export interface AlertEventRow {
+  id: number;
+  ruleId: string;
+  ruleName: string;
+  clientId: string;
+  clientName: string;
+  scopeKey: string;
+  severity: string;
+  title: string;
+  detail: string;
+  value: number;
+  threshold: number;
+  firedOn: string;
+  createdAt: string;
+}
+
+/**
+ * Grava um disparo. Devolve false quando já existia para a mesma regra, alvo e
+ * dia — é assim que o webhook não vira spam a cada coleta.
+ */
+export function recordAlert(entry: Omit<AlertEventRow, "id" | "createdAt">): boolean {
+  const result = db()
+    .prepare(
+      `INSERT OR IGNORE INTO alert_event
+         (rule_id, rule_name, client_id, client_name, scope_key, severity, title, detail, value, threshold, fired_on, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      entry.ruleId,
+      entry.ruleName,
+      entry.clientId,
+      entry.clientName,
+      entry.scopeKey,
+      entry.severity,
+      entry.title,
+      entry.detail,
+      entry.value,
+      entry.threshold,
+      entry.firedOn,
+      new Date().toISOString(),
+    );
+
+  return result.changes > 0;
+}
+
+export function markAlertDelivered(ruleId: string, clientId: string, scopeKey: string, firedOn: string): void {
+  db()
+    .prepare(
+      `UPDATE alert_event SET delivered = 1
+        WHERE rule_id = ? AND client_id = ? AND scope_key = ? AND fired_on = ?`,
+    )
+    .run(ruleId, clientId, scopeKey, firedOn);
+}
+
+export function recentAlerts(options: { clientId?: string; days?: number; limit?: number } = {}): AlertEventRow[] {
+  const limit = options.limit || 50;
+  const since = options.days
+    ? new Date(Date.now() - options.days * 86_400_000).toISOString().slice(0, 10)
+    : "0000-00-00";
+
+  const records = options.clientId
+    ? (db()
+        .prepare(
+          `SELECT * FROM alert_event WHERE client_id = ? AND fired_on >= ?
+            ORDER BY fired_on DESC, id DESC LIMIT ?`,
+        )
+        .all(options.clientId, since, limit) as Record<string, unknown>[])
+    : (db()
+        .prepare(`SELECT * FROM alert_event WHERE fired_on >= ? ORDER BY fired_on DESC, id DESC LIMIT ?`)
+        .all(since, limit) as Record<string, unknown>[]);
+
+  return records.map((record) => ({
+    id: Number(record.id),
+    ruleId: String(record.rule_id),
+    ruleName: String(record.rule_name),
+    clientId: String(record.client_id),
+    clientName: String(record.client_name),
+    scopeKey: String(record.scope_key),
+    severity: String(record.severity),
+    title: String(record.title),
+    detail: String(record.detail),
+    value: Number(record.value),
+    threshold: Number(record.threshold),
+    firedOn: String(record.fired_on),
+    createdAt: String(record.created_at),
+  }));
+}

@@ -7,6 +7,7 @@ import { ChannelBreakdown } from "../ChannelBreakdown";
 import { CampaignTable } from "../CampaignTable";
 import { CreativesGallery } from "../CreativesGallery";
 import { AiAnalysis } from "../AiAnalysis";
+import { AlertsPanel } from "../AlertsPanel";
 import { SpendByChannelChart } from "../charts/SpendByChannelChart";
 import { LeadsSalesChart } from "../charts/LeadsSalesChart";
 import { CplChart } from "../charts/CplChart";
@@ -42,6 +43,7 @@ const DEFAULT_TITLES: Record<string, string> = {
   sources: "Origem dos leads",
   creatives: "Criativos",
   campaigns: "Campanhas",
+  alerts: "Alertas",
   ai: "Análise por IA",
   text: "",
 };
@@ -117,6 +119,8 @@ export function RenderBlock({
       return <CreativesGallery clientId={clientId} query={query} currency={currency} />;
     case "campaigns":
       return <CampaignTable campaigns={data.campaigns} currency={currency} />;
+    case "alerts":
+      return <AlertsPanel data={data} />;
     case "ai":
       return <AiAnalysis data={data} isMaster={isMaster} />;
     case "text":

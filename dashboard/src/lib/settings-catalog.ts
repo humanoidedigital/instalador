@@ -166,6 +166,27 @@ export const SETTINGS_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    id: "alertas",
+    title: "Alertas",
+    description:
+      "Para onde mandar os disparos. Um POST por alerta novo, em JSON — encaixa em n8n, Slack, Discord ou qualquer automação sua.",
+    fields: [
+      {
+        key: "ALERT_WEBHOOK_URL",
+        label: "URL do webhook",
+        type: "password",
+        help: "Deixe vazio para só registrar os alertas no painel, sem enviar para fora.",
+      },
+      {
+        key: "ALERT_WINDOW_DAYS",
+        label: "Janela avaliada (dias)",
+        type: "number",
+        placeholder: "7",
+        help: "Período que as regras enxergam quando a coleta dispara a avaliação.",
+      },
+    ],
+  },
+  {
     id: "acesso",
     title: "Acesso de leitura",
     description: "Senha opcional para quem só precisa ver os relatórios, sem entrar na administração.",

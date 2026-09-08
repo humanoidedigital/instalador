@@ -1,0 +1,89 @@
+{
+  "_comment": "Regras de alerta. Editáveis em Administração > Alertas. A fórmula usa o mesmo catálogo de campos das métricas personalizadas; scope 'campanha' avalia cada campanha separadamente.",
+  "rules": [
+    {
+      "id": "cpl-acima-da-meta",
+      "name": "CPL acima da meta",
+      "enabled": true,
+      "clients": [],
+      "scope": "cliente",
+      "formula": "(investimento / leads) / meta_cpl",
+      "operator": ">",
+      "threshold": 1.2,
+      "severity": "critico",
+      "windowDays": 7,
+      "minSpend": 0,
+      "message": "O CPL dos últimos 7 dias está {valor}x a meta do cliente. Revise segmentação e criativos antes de escalar o orçamento."
+    },
+    {
+      "id": "campanha-gastando-sem-lead",
+      "name": "Campanha gastando sem gerar lead",
+      "enabled": true,
+      "clients": [],
+      "scope": "campanha",
+      "formula": "leads",
+      "operator": "<",
+      "threshold": 1,
+      "severity": "critico",
+      "windowDays": 7,
+      "minSpend": 300,
+      "message": "{campanha} gastou acima de R$ 300 em 7 dias sem nenhum lead. Pause ou refaça a oferta."
+    },
+    {
+      "id": "ctr-baixo",
+      "name": "CTR baixo",
+      "enabled": true,
+      "clients": [],
+      "scope": "campanha",
+      "formula": "cliques / impressoes",
+      "operator": "<",
+      "threshold": 0.005,
+      "severity": "atencao",
+      "windowDays": 14,
+      "minSpend": 200,
+      "message": "{campanha} está com CTR de {valor} — abaixo de 0,5%. Sinal clássico de criativo saturado."
+    },
+    {
+      "id": "roas-abaixo-da-meta",
+      "name": "ROAS abaixo da meta",
+      "enabled": true,
+      "clients": [],
+      "scope": "cliente",
+      "formula": "(receita / investimento) / meta_roas",
+      "operator": "<",
+      "threshold": 0.8,
+      "severity": "critico",
+      "windowDays": 30,
+      "minSpend": 0,
+      "message": "O ROAS dos últimos 30 dias está em {valor}x a meta contratada. Vale revisar a rota antes do fechamento do mês."
+    },
+    {
+      "id": "ritmo-de-verba",
+      "name": "Ritmo de verba acima do previsto",
+      "enabled": true,
+      "clients": [],
+      "scope": "cliente",
+      "formula": "(investimento / dias * 30) / meta_investimento",
+      "operator": ">",
+      "threshold": 1.15,
+      "severity": "atencao",
+      "windowDays": 7,
+      "minSpend": 0,
+      "message": "No ritmo atual o mês fecha em {valor}x o orçamento combinado. Ajuste os budgets diários."
+    },
+    {
+      "id": "leads-sem-atendimento",
+      "name": "Leads parados no CRM",
+      "enabled": true,
+      "clients": [],
+      "scope": "cliente",
+      "formula": "oportunidades / leads",
+      "operator": "<",
+      "threshold": 0.1,
+      "severity": "atencao",
+      "windowDays": 14,
+      "minSpend": 0,
+      "message": "Só {valor} dos leads viraram oportunidade nos últimos 14 dias. Provável gargalo no atendimento, não na mídia."
+    }
+  ]
+}
