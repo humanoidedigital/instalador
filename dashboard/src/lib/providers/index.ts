@@ -1,4 +1,4 @@
-import type { AdsProvider, CrmProvider } from "@/lib/types";
+import type { AdsProvider, CrmProvider, OrganicProvider } from "@/lib/types";
 import { loadClients } from "@/lib/clients";
 import { windsorAdsProvider } from "./ads/windsor";
 import { fetchGoogleNative } from "./ads/google-native";
@@ -6,6 +6,9 @@ import { fetchMetaNative } from "./ads/meta-native";
 import { rdstationProvider } from "./crm/rdstation";
 import { gohighlevelProvider } from "./crm/gohighlevel";
 import { demoAdsProvider, demoCrmProvider } from "./demo";
+import { windsorOrganicProvider } from "./organic/windsor";
+import { demoOrganicProvider } from "./organic/demo";
+import { loadOrganicConfig, ORGANIC_SOURCE_IDS } from "@/lib/organic-config";
 import { getSecretOr, hasSecret } from "@/lib/secrets";
 
 /**
@@ -97,4 +100,38 @@ export function selectCrmProvider(): ProviderSelection<CrmProvider> {
   }
 
   return { provider: rdstationProvider, warnings: [], demo: false };
+}
+
+export function selectOrganicProvider(): ProviderSelection<OrganicProvider> {
+  const configured = getSecretOr("ORGANIC_PROVIDER", "windsor").toLowerCase();
+
+  if (configured === "demo") {
+    return { provider: demoOrganicProvider, warnings: [], demo: true };
+  }
+
+  if (!hasSecret("WINDSOR_API_KEY")) {
+    return {
+      provider: demoOrganicProvider,
+      warnings: ["WINDSOR_API_KEY não configurada — orgânico exibindo dados de demonstração."],
+      demo: true,
+    };
+  }
+
+  // Fonte ativada é uma decisão explícita: enquanto ninguém ligou nenhuma, o
+  // provedor real só devolveria listas vazias, o que na tela é
+  // indistinguível de "não houve tráfego".
+  const config = loadOrganicConfig();
+  const ativas = ORGANIC_SOURCE_IDS.filter((source) => config.sources[source].enabled);
+  if (!ativas.length) {
+    return {
+      provider: demoOrganicProvider,
+      warnings: [
+        "Nenhuma fonte de orgânico ativada — exibindo dados de demonstração. " +
+          "Ative em Administração › Orgânico depois de conectar as contas na Windsor.",
+      ],
+      demo: true,
+    };
+  }
+
+  return { provider: windsorOrganicProvider, warnings: [], demo: false };
 }

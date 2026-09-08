@@ -19,7 +19,14 @@
         "monthlyBudget": 15000,
         "monthlyLeads": 600
       },
-      "active": true
+      "active": true,
+      "organicAccounts": {
+        "ga4": [],
+        "search": [],
+        "instagram": [],
+        "facebook": [],
+        "gmb": []
+      }
     },
     {
       "id": "isentoo",
@@ -40,7 +47,14 @@
         "monthlyBudget": 12000,
         "monthlyLeads": 480
       },
-      "active": true
+      "active": true,
+      "organicAccounts": {
+        "ga4": [],
+        "search": [],
+        "instagram": [],
+        "facebook": [],
+        "gmb": []
+      }
     },
     {
       "id": "isenteja",

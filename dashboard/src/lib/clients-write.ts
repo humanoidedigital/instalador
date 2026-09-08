@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { ClientConfig } from "./clients";
+import { ORGANIC_SOURCE_IDS } from "./organic-config";
+import type { OrganicSource } from "./types";
 
 /**
  * Escrita do config/clients.json a partir do painel admin.
@@ -16,6 +18,7 @@ export interface ClientInput {
   googleAccountIds?: string[];
   rdCrmTokenEnv?: string;
   rdCrmPipelines?: string[];
+  organicAccounts?: Partial<Record<OrganicSource, string[]>>;
   goals?: { cpl?: number | null; roas?: number | null; monthlyBudget?: number | null; monthlyLeads?: number | null };
   active?: boolean;
 }
@@ -81,6 +84,9 @@ export function normalizeClient(client: ClientInput): Record<string, unknown> {
     googleAccountIds: cleanList(client.googleAccountIds),
     rdCrmTokenEnv: (client.rdCrmTokenEnv || "").trim(),
     rdCrmPipelines: cleanList(client.rdCrmPipelines),
+    organicAccounts: Object.fromEntries(
+      ORGANIC_SOURCE_IDS.map((source) => [source, cleanList(client.organicAccounts?.[source])]),
+    ),
     goals: {
       cpl: cleanNumber(client.goals?.cpl),
       roas: cleanNumber(client.goals?.roas),
@@ -122,6 +128,7 @@ export function toInput(client: ClientConfig): ClientInput {
     googleAccountIds: client.googleAccountIds,
     rdCrmTokenEnv: client.rdCrmTokenEnv,
     rdCrmPipelines: client.rdCrmPipelines,
+    organicAccounts: client.organicAccounts,
     goals: client.goals,
     active: client.active !== false,
   };

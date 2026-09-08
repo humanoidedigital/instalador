@@ -51,6 +51,42 @@ export const BLOCK_TYPES = [
   },
   { type: "campaigns", label: "Campanhas", description: "Tabela ordenável por qualquer coluna.", configurable: [] },
   {
+    type: "organic-kpis",
+    label: "Orgânico — indicadores",
+    description: "Sessões, busca, redes e Meu Negócio, conforme as fontes conectadas.",
+    configurable: [],
+  },
+  {
+    type: "organic-traffic",
+    label: "Orgânico — tráfego do site",
+    description: "Sessões e usuários por dia, pelo GA4.",
+    configurable: [],
+  },
+  {
+    type: "organic-channels",
+    label: "Orgânico — canais",
+    description: "De onde vem o tráfego: busca, direto, social, referência.",
+    configurable: [],
+  },
+  {
+    type: "organic-search",
+    label: "Orgânico — busca",
+    description: "Search Console: evolução, termos e páginas.",
+    configurable: [],
+  },
+  {
+    type: "organic-social",
+    label: "Orgânico — redes sociais",
+    description: "Seguidores, alcance e engajamento por rede.",
+    configurable: [],
+  },
+  {
+    type: "organic-status",
+    label: "Orgânico — situação das fontes",
+    description: "O que está conectado e o que falta. Útil durante a configuração.",
+    configurable: [],
+  },
+  {
     type: "alerts",
     label: "Alertas",
     description: "Regras que dispararam no período, do histórico gravado.",

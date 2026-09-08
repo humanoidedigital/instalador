@@ -9,6 +9,7 @@ import { DataTab } from "./DataTab";
 import { MetricsTab } from "./MetricsTab";
 import { ReportsTab } from "./ReportsTab";
 import { AlertsTab } from "./AlertsTab";
+import { OrganicTab } from "./OrganicTab";
 
 const TABS = [
   { id: "clientes", label: "Clientes" },
@@ -16,6 +17,7 @@ const TABS = [
   { id: "relatorios", label: "Relatórios" },
   { id: "metricas", label: "Métricas" },
   { id: "alertas", label: "Alertas" },
+  { id: "organico", label: "Orgânico" },
   { id: "dados", label: "Dados" },
   { id: "acesso", label: "Acesso" },
   { id: "sistema", label: "Sistema" },
@@ -129,6 +131,7 @@ export function AdminPanel({ user }: { user: string }) {
       {tab === "relatorios" ? <ReportsTab /> : null}
       {tab === "metricas" ? <MetricsTab /> : null}
       {tab === "alertas" ? <AlertsTab /> : null}
+      {tab === "organico" ? <OrganicTab /> : null}
       {tab === "dados" ? <DataTab /> : null}
       {tab === "acesso" ? <AccessTab user={user} /> : null}
       {tab === "sistema" ? <SystemTab /> : null}

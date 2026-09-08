@@ -8,6 +8,14 @@ import { CampaignTable } from "../CampaignTable";
 import { CreativesGallery } from "../CreativesGallery";
 import { AiAnalysis } from "../AiAnalysis";
 import { AlertsPanel } from "../AlertsPanel";
+import {
+  OrganicChannels,
+  OrganicKpis,
+  OrganicSearch,
+  OrganicSocial,
+  OrganicStatus,
+  OrganicTraffic,
+} from "../organic/OrganicBlocks";
 import { SpendByChannelChart } from "../charts/SpendByChannelChart";
 import { LeadsSalesChart } from "../charts/LeadsSalesChart";
 import { CplChart } from "../charts/CplChart";
@@ -44,6 +52,12 @@ const DEFAULT_TITLES: Record<string, string> = {
   creatives: "Criativos",
   campaigns: "Campanhas",
   alerts: "Alertas",
+  "organic-kpis": "Tráfego orgânico",
+  "organic-traffic": "Tráfego do site",
+  "organic-channels": "Canais de origem",
+  "organic-search": "Busca orgânica",
+  "organic-social": "Redes sociais",
+  "organic-status": "Fontes de orgânico",
   ai: "Análise por IA",
   text: "",
 };
@@ -53,7 +67,16 @@ export function blockTitle(block: ReportBlockView): string {
 }
 
 /** Blocos que ocupam meia largura em telas grandes, para emparelharem. */
-export const HALF_WIDTH = new Set(["spend", "leads", "cpl", "funnel", "pipeline", "sources"]);
+export const HALF_WIDTH = new Set([
+  "spend",
+  "leads",
+  "cpl",
+  "funnel",
+  "pipeline",
+  "sources",
+  "organic-traffic",
+  "organic-channels",
+]);
 
 function selectKpis(payload: DashboardPayload, ids: string[] | undefined): Kpi[] {
   if (!ids || !ids.length) return payload.kpis;
@@ -121,6 +144,18 @@ export function RenderBlock({
       return <CampaignTable campaigns={data.campaigns} currency={currency} />;
     case "alerts":
       return <AlertsPanel data={data} />;
+    case "organic-kpis":
+      return <OrganicKpis query={query} demoLabel />;
+    case "organic-traffic":
+      return <OrganicTraffic query={query} />;
+    case "organic-channels":
+      return <OrganicChannels query={query} />;
+    case "organic-search":
+      return <OrganicSearch query={query} />;
+    case "organic-social":
+      return <OrganicSocial query={query} />;
+    case "organic-status":
+      return <OrganicStatus query={query} />;
     case "ai":
       return <AiAnalysis data={data} isMaster={isMaster} />;
     case "text":

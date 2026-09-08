@@ -61,6 +61,32 @@ CREATE TABLE IF NOT EXISTS crm_deal (
 
 CREATE INDEX IF NOT EXISTS crm_deal_range ON crm_deal (client_id, created_at);
 
+CREATE TABLE IF NOT EXISTS organic_daily (
+  client_id    TEXT NOT NULL,
+  source       TEXT NOT NULL,
+  account_id   TEXT NOT NULL,
+  dimension    TEXT NOT NULL DEFAULT '',
+  date         TEXT NOT NULL,
+  account_name TEXT NOT NULL DEFAULT '',
+  sessions     REAL NOT NULL DEFAULT 0,
+  users        REAL NOT NULL DEFAULT 0,
+  new_users    REAL NOT NULL DEFAULT 0,
+  engaged_sessions REAL NOT NULL DEFAULT 0,
+  page_views   REAL NOT NULL DEFAULT 0,
+  conversions  REAL NOT NULL DEFAULT 0,
+  impressions  REAL NOT NULL DEFAULT 0,
+  clicks       REAL NOT NULL DEFAULT 0,
+  position_weighted REAL NOT NULL DEFAULT 0,
+  reach        REAL NOT NULL DEFAULT 0,
+  engagement   REAL NOT NULL DEFAULT 0,
+  followers    REAL NOT NULL DEFAULT 0,
+  posts        REAL NOT NULL DEFAULT 0,
+  collected_at TEXT NOT NULL,
+  PRIMARY KEY (client_id, source, account_id, dimension, date)
+);
+
+CREATE INDEX IF NOT EXISTS organic_daily_range ON organic_daily (client_id, date);
+
 CREATE TABLE IF NOT EXISTS collection_run (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   client_id   TEXT NOT NULL,

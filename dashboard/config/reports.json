@@ -120,6 +120,54 @@
         }
       ],
       "updatedAt": ""
+    },
+    {
+      "id": "organico",
+      "name": "Tráfego orgânico",
+      "description": "Site, busca e redes sociais, sem mídia paga.",
+      "clientId": null,
+      "isDefault": false,
+      "blocks": [
+        {
+          "id": "organico-kpis",
+          "type": "organic-kpis",
+          "title": "Indicadores do orgânico",
+          "description": "Só aparecem os indicadores das fontes conectadas."
+        },
+        {
+          "id": "organico-trafego",
+          "type": "organic-traffic",
+          "title": ""
+        },
+        {
+          "id": "organico-canais",
+          "type": "organic-channels",
+          "title": ""
+        },
+        {
+          "id": "organico-busca",
+          "type": "organic-search",
+          "title": "Busca orgânica",
+          "description": "Como o site aparece e é clicado nos resultados do Google."
+        },
+        {
+          "id": "organico-social",
+          "type": "organic-social",
+          "title": "Redes sociais"
+        },
+        {
+          "id": "organico-comentario",
+          "type": "text",
+          "title": "Leitura do período",
+          "text": "Escreva aqui a leitura da agência sobre o orgânico do período."
+        },
+        {
+          "id": "organico-fontes",
+          "type": "organic-status",
+          "title": "Fontes conectadas",
+          "description": "Conferência da configuração. Remova este bloco do relatório do cliente quando tudo estiver conectado."
+        }
+      ]
     }
   ]
 }

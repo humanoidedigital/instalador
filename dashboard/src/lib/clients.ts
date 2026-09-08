@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { getSecret } from "./secrets";
+import { ORGANIC_SOURCE_IDS } from "./organic-config";
+import type { OrganicSource } from "./types";
 
 export interface ClientGoals {
   /** CPL alvo, na moeda do cliente. */
@@ -33,6 +35,11 @@ export interface ClientConfig {
   rdCrmPipelines: string[];
   /** locationId do GoHighLevel, para quem usa CRM_PROVIDER=gohighlevel. */
   ghlLocationId: string;
+  /**
+   * Contas de cada fonte de orgânico (GA4, Search Console, redes). Uma fonte
+   * sem conta aqui simplesmente não é consultada para este cliente.
+   */
+  organicAccounts: Record<OrganicSource, string[]>;
   goals: ClientGoals;
   active?: boolean;
 }
@@ -60,6 +67,9 @@ function normalize(raw: Partial<ClientConfig>, index: number): ClientConfig {
     rdCrmTokenEnv: raw.rdCrmTokenEnv ? String(raw.rdCrmTokenEnv) : "",
     rdCrmPipelines: (raw.rdCrmPipelines || []).map(String),
     ghlLocationId: raw.ghlLocationId ? String(raw.ghlLocationId) : "",
+    organicAccounts: Object.fromEntries(
+      ORGANIC_SOURCE_IDS.map((source) => [source, (raw.organicAccounts?.[source] || []).map(String)]),
+    ) as Record<OrganicSource, string[]>,
     goals: raw.goals || {},
     active: raw.active !== false,
   };
@@ -96,6 +106,9 @@ export function consolidatedClient(clients: ClientConfig[]): ClientConfig {
     rdCrmTokenEnv: "",
     rdCrmPipelines: [],
     ghlLocationId: "",
+    organicAccounts: Object.fromEntries(
+      ORGANIC_SOURCE_IDS.map((source) => [source, clients.flatMap((client) => client.organicAccounts?.[source] || [])]),
+    ) as Record<OrganicSource, string[]>,
     goals: {
       monthlyBudget: sumGoal(clients, "monthlyBudget"),
       monthlyLeads: sumGoal(clients, "monthlyLeads"),

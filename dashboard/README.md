@@ -20,6 +20,7 @@ Roda no mesmo VPS do instalador, em processo próprio no PM2 atrás do nginx.
 - [Métricas personalizadas](#métricas-personalizadas)
 - [Análise por IA](#análise-por-ia)
 - [Alertas](#alertas)
+- [Tráfego orgânico](#tráfego-orgânico)
 - [Cadastro dos clientes](#cadastro-dos-clientes)
 - [Credenciais](#credenciais)
 - [Validar a conexão com o CRM](#validar-a-conexão-com-o-crm)
@@ -111,7 +112,7 @@ sudo -u deploy /opt/node20/bin/node scripts/set-password.mjs "admin" "nova-senha
 ## Painel administrativo
 
 Em `/admin` (link **Administração** no topo do relatório). Só a conta master
-entra. Oito abas:
+entra. Nove abas:
 
 | Aba | O que faz |
 |---|---|
@@ -120,6 +121,7 @@ entra. Oito abas:
 | **Relatórios** | Monta o layout: quais blocos, em que ordem, e os templates globais e por cliente |
 | **Métricas** | Cria e testa métricas personalizadas por fórmula |
 | **Alertas** | Regras de alerta, histórico de disparos e o botão **Rodar agora** |
+| **Orgânico** | Liga as fontes de tráfego orgânico e ajusta o mapa de campos de cada conector |
 | **Dados** | Cobertura do histórico por cliente, backfill e resultado das últimas coletas |
 | **Acesso** | Troca usuário e senha master (exige a senha atual) |
 | **Sistema** | Estado do processo, fontes ativas, alertas de configuração, caminho dos arquivos e botão para limpar o cache |
@@ -235,6 +237,12 @@ que continua legível no celular e na impressão.
 | Negociações por etapa | Etapas do funil do CRM |
 | Origem dos leads | Agrupado por utm_source |
 | Alertas | Regras que dispararam no período, do histórico gravado |
+| Orgânico — indicadores | Sessões, busca, redes e Meu Negócio, conforme as fontes conectadas |
+| Orgânico — tráfego do site | Sessões e usuários por dia, pelo GA4 |
+| Orgânico — canais | De onde vem o tráfego: busca, direto, social, referência |
+| Orgânico — busca | Search Console: evolução, termos e páginas |
+| Orgânico — redes sociais | Seguidores, alcance e engajamento por rede |
+| Orgânico — situação das fontes | O que está conectado e o que falta |
 | Criativos | Miniatura, desempenho e link de cada anúncio |
 | Campanhas | Tabela ordenável |
 | **Texto livre** | Comentário da agência, contexto do mês, próximos passos |
@@ -457,6 +465,70 @@ O campo `texto` já vem pronto para quem só repassa a mensagem adiante — cole
 URL de um webhook do Slack, do Discord ou de um fluxo do n8n e nada mais
 precisa ser feito. Uma falha no envio não derruba os demais alertas nem a
 coleta; ela aparece no resultado da execução.
+
+---
+
+## Tráfego orgânico
+
+Mídia paga responde "quanto custou o lead". Orgânico responde "o que o cliente
+construiu que não depende de verba". São fontes diferentes, então o orgânico tem
+o seu próprio payload, os seus próprios blocos e o seu próprio template — o
+**Tráfego orgânico**, que já vem pronto e pode virar o relatório de um cliente
+ou entrar no relatório completo bloco a bloco.
+
+### As cinco fontes
+
+| Fonte | Conector Windsor | O que traz |
+|---|---|---|
+| Google Analytics 4 | `googleanalytics4` | Sessões, usuários, engajamento e conversões, por canal |
+| Google Search Console | `searchconsole` | Cliques, impressões, CTR e posição média, por consulta e por página |
+| Instagram | `instagram` | Seguidores, alcance, impressões e engajamento |
+| Facebook orgânico | `facebook_organic` | Alcance, impressões e engajamento da página |
+| Google Meu Negócio | `google_my_business` | Visualizações do perfil e ações (ligar, rota, site) |
+
+As contas de cada fonte ficam no cliente, em **Administração › Clientes**. Fonte
+sem conta cadastrada não é consultada para aquele cliente.
+
+### Os IDs de campo ainda não foram conferidos
+
+Vale dizer com todas as letras: os IDs de campo destas cinco fontes **são
+palpites informados, não valores validados**. Os conectores de Meta Ads e Google
+Ads foram conferidos campo a campo contra o `get_fields` da Windsor, porque as
+contas estão conectadas. Nas fontes de orgânico não há conta conectada, e a
+Windsor recusa listar os campos de um conector sem conta.
+
+Por isso o mapa de campos é um arquivo (`config/organic.json`) e não código:
+
+1. Conecte a conta na Windsor (o link está em cada fonte na aba Orgânico).
+2. Abra **Administração › Orgânico** e clique em **Conferir campos**.
+3. A tela mostra o que o conector devolveu de verdade e lista o que o mapa pede
+   e não veio.
+4. Corrija os IDs errados no próprio formulário e marque a fonte como **Ativa**.
+
+Nada disso exige rebuild nem reinício. O diagnóstico também responde direto em
+`GET /api/organic-check?days=7` (só conta master).
+
+### Enquanto nada está conectado
+
+Sem nenhuma fonte ativa, os blocos mostram **dados de demonstração** com um aviso
+explícito. É proposital: assim dá para desenhar e aprovar o relatório antes de
+ter as contas, e ninguém confunde demonstração com número real. Bloco cuja fonte
+não existe não mostra zero — mostra o que precisa ser conectado.
+
+### Coleta e histórico
+
+O orgânico entra na mesma coleta diária da mídia e do CRM, gravado em
+`organic_daily`. Duas regras de cálculo que valem a pena conhecer:
+
+- **Seguidores é estoque, não fluxo.** Somar dia a dia daria um número sem
+  sentido; o relatório usa o valor do último dia do período.
+- **Posição média é ponderada por impressões.** Média simples de posições de
+  consultas diferentes daria um número errado — a consulta com 5 impressões
+  pesaria igual à com 5.000.
+
+E o Search Console devolve consultas e páginas na mesma fonte: as páginas (que
+começam com `/`) ficam fora do total de cliques, senão cada clique contaria duas
+vezes.
 
 ---
 

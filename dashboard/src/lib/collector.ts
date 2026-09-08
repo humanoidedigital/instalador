@@ -1,9 +1,10 @@
 import { crmCredentials, loadClients, type ClientConfig } from "./clients";
 import { addDays, today } from "./dates";
-import { selectAdsProvider, selectCrmProvider } from "./providers";
-import { logRun, upsertAdDaily, upsertDeals } from "./db/repository";
+import { selectAdsProvider, selectCrmProvider, selectOrganicProvider } from "./providers";
+import { logRun, upsertAdDaily, upsertDeals, upsertOrganicDaily } from "./db/repository";
 import { databaseEnabled } from "./db/sqlite";
-import type { AdChannel, DateRange, FetchOptions } from "./types";
+import type { AdChannel, DateRange, FetchOptions, OrganicDailyRow } from "./types";
+import { loadOrganicConfig, ORGANIC_SOURCE_IDS } from "./organic-config";
 
 /**
  * Coleta e persistência.
@@ -17,7 +18,7 @@ import type { AdChannel, DateRange, FetchOptions } from "./types";
 export interface CollectResult {
   clientId: string;
   clientName: string;
-  source: "ads" | "crm";
+  source: "ads" | "crm" | "organic";
   rows: number;
   status: "ok" | "erro" | "ignorado";
   error?: string;
@@ -178,6 +179,91 @@ async function collectCrm(client: ClientConfig, range: DateRange): Promise<Colle
   }
 }
 
+async function collectOrganic(client: ClientConfig, range: DateRange): Promise<CollectResult> {
+  const started = new Date();
+  const organic = selectOrganicProvider();
+  const config = loadOrganicConfig();
+
+  // Só as fontes ligadas e com conta neste cliente. Sem isto, cada coleta
+  // bateria em cinco conectores por cliente para receber lista vazia.
+  const sources = ORGANIC_SOURCE_IDS.filter(
+    (source) =>
+      (organic.demo || config.sources[source].enabled) && (client.organicAccounts?.[source]?.length || 0) > 0,
+  );
+
+  if (!sources.length) {
+    return {
+      clientId: client.id,
+      clientName: client.name,
+      source: "organic",
+      rows: 0,
+      status: "ignorado",
+      error: "cliente sem conta de orgânico configurada",
+      durationMs: 0,
+    };
+  }
+
+  try {
+    const collected: OrganicDailyRow[] = [];
+    for (const source of sources) {
+      const rows = await organic.provider.fetchDaily(source, {
+        range,
+        accountIds: client.organicAccounts[source],
+      });
+      collected.push(...rows);
+    }
+
+    const rows = upsertOrganicDaily(client.id, collected);
+    const finished = new Date();
+
+    logRun({
+      clientId: client.id,
+      source: "organic",
+      rangeFrom: range.from,
+      rangeTo: range.to,
+      rows,
+      status: "ok",
+      error: null,
+      startedAt: started.toISOString(),
+      finishedAt: finished.toISOString(),
+    });
+
+    return {
+      clientId: client.id,
+      clientName: client.name,
+      source: "organic",
+      rows,
+      status: "ok",
+      durationMs: finished.getTime() - started.getTime(),
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const finished = new Date();
+
+    logRun({
+      clientId: client.id,
+      source: "organic",
+      rangeFrom: range.from,
+      rangeTo: range.to,
+      rows: 0,
+      status: "erro",
+      error: message,
+      startedAt: started.toISOString(),
+      finishedAt: finished.toISOString(),
+    });
+
+    return {
+      clientId: client.id,
+      clientName: client.name,
+      source: "organic",
+      rows: 0,
+      status: "erro",
+      error: message,
+      durationMs: finished.getTime() - started.getTime(),
+    };
+  }
+}
+
 /**
  * Coleta sequencial por cliente: as APIs têm limite de requisição e disparar
  * tudo em paralelo é o caminho mais curto para tomar 429.
@@ -202,6 +288,7 @@ export async function collect(options: {
   for (const client of clients) {
     results.push(await collectAds(client, range));
     results.push(await collectCrm(client, range));
+    results.push(await collectOrganic(client, range));
   }
 
   return { range, results };

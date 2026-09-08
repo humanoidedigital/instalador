@@ -1,0 +1,76 @@
+{
+  "_comment": "Mapa de campos das fontes de tráfego orgânico. Editável em Administração > Orgânico. Os IDs de campo precisam bater com o conector da Windsor; use /api/organic-check para ver o que vem de verdade. Enquanto nenhuma conta estiver conectada, tudo fica desativado e o relatório usa dados de demonstração.",
+  "sources": {
+    "ga4": {
+      "enabled": false,
+      "connector": "googleanalytics4",
+      "dimensionLabel": "Canal",
+      "fields": {
+        "date": "date",
+        "accountId": "account_id",
+        "accountName": "account_name",
+        "dimension": "default_channel_group",
+        "sessions": "sessions",
+        "users": "users",
+        "newUsers": "new_users",
+        "engagedSessions": "engaged_sessions",
+        "pageViews": "screen_page_views",
+        "conversions": "conversions"
+      }
+    },
+    "search": {
+      "enabled": false,
+      "connector": "searchconsole",
+      "dimensionLabel": "Consulta",
+      "fields": {
+        "date": "date",
+        "accountId": "account_id",
+        "accountName": "account_name",
+        "dimension": "query",
+        "impressions": "impressions",
+        "clicks": "clicks",
+        "position": "position"
+      }
+    },
+    "instagram": {
+      "enabled": false,
+      "connector": "instagram",
+      "dimensionLabel": "Tipo de conteúdo",
+      "fields": {
+        "date": "date",
+        "accountId": "account_id",
+        "accountName": "account_name",
+        "impressions": "impressions",
+        "reach": "reach",
+        "engagement": "engagement",
+        "followers": "followers_count"
+      }
+    },
+    "facebook": {
+      "enabled": false,
+      "connector": "facebook_organic",
+      "dimensionLabel": "Tipo de conteúdo",
+      "fields": {
+        "date": "date",
+        "accountId": "account_id",
+        "accountName": "account_name",
+        "impressions": "page_impressions",
+        "reach": "page_impressions_unique",
+        "engagement": "page_engaged_users",
+        "followers": "page_fans"
+      }
+    },
+    "gmb": {
+      "enabled": false,
+      "connector": "google_my_business",
+      "dimensionLabel": "Ação",
+      "fields": {
+        "date": "date",
+        "accountId": "account_id",
+        "accountName": "account_name",
+        "impressions": "views",
+        "clicks": "actions"
+      }
+    }
+  }
+}

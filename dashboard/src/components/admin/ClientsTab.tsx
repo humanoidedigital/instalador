@@ -11,10 +11,24 @@ interface ClientRow {
   googleAccountIds?: string[];
   rdCrmTokenEnv?: string;
   rdCrmPipelines?: string[];
+  organicAccounts?: Record<string, string[]>;
   goals?: { cpl?: number | null; roas?: number | null; monthlyBudget?: number | null; monthlyLeads?: number | null };
   active?: boolean;
   tokenDefinido?: boolean;
 }
+
+/**
+ * Fontes de orgânico na ordem em que aparecem no formulário. A lista canônica
+ * vive em organic-config.ts (servidor); aqui fica só o rótulo, para não puxar
+ * node:fs para o bundle do navegador.
+ */
+const ORGANIC_SOURCES = [
+  { id: "ga4", label: "Google Analytics 4", help: "ID da propriedade GA4." },
+  { id: "search", label: "Google Search Console", help: "URL da propriedade, como aparece na Windsor." },
+  { id: "instagram", label: "Instagram", help: "ID do perfil profissional." },
+  { id: "facebook", label: "Facebook (orgânico)", help: "ID da página." },
+  { id: "gmb", label: "Google Meu Negócio", help: "ID da localização." },
+];
 
 /** Nome da variável de ambiente sugerido a partir do identificador do cliente. */
 function tokenEnvFor(id: string): string {
@@ -31,6 +45,7 @@ function emptyClient(): ClientRow {
     googleAccountIds: [],
     rdCrmTokenEnv: "",
     rdCrmPipelines: [],
+    organicAccounts: {},
     goals: { cpl: null, roas: null, monthlyBudget: null, monthlyLeads: null },
     active: true,
   };
@@ -321,6 +336,34 @@ export function ClientsTab() {
                       onChange={(event) => updateGoal(index, "monthlyLeads", event.target.value)}
                     />
                   </Field>
+
+                  <div className="md:col-span-2">
+                    <p className="mb-2 mt-1 text-xs font-medium" style={{ color: "var(--text-primary)" }}>
+                      Contas de tráfego orgânico
+                    </p>
+                    <p className="mb-2 text-[11px]" style={{ color: "var(--text-muted)" }}>
+                      IDs separados por vírgula. Fonte sem conta aqui não é consultada para este cliente. Ative a
+                      fonte em Administração › Orgânico.
+                    </p>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {ORGANIC_SOURCES.map((source) => (
+                        <Field key={source.id} label={source.label} help={source.help}>
+                          <input
+                            className="control w-full"
+                            value={fromList(client.organicAccounts?.[source.id])}
+                            onChange={(event) =>
+                              update(index, {
+                                organicAccounts: {
+                                  ...(client.organicAccounts || {}),
+                                  [source.id]: toList(event.target.value),
+                                },
+                              })
+                            }
+                          />
+                        </Field>
+                      ))}
+                    </div>
+                  </div>
 
                   <Field label="Situação" help="Cliente inativo some do seletor sem perder a configuração.">
                     <select

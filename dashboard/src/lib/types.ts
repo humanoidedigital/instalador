@@ -242,3 +242,127 @@ export interface DashboardPayload {
   sources: SourceRow[];
   insights: Insight[];
 }
+
+/* ---------------------------------------------------------------------------
+ * Tráfego orgânico
+ *
+ * Fica separado do pago de propósito: as fontes são outras (GA4, Search
+ * Console, redes sociais), a granularidade é outra (não há campanha nem custo)
+ * e nem todo cliente tem as duas coisas. Misturar os dois num payload só
+ * obrigaria metade do relatório a conviver com zeros.
+ * ------------------------------------------------------------------------ */
+
+export type OrganicSource = "ga4" | "search" | "instagram" | "facebook" | "gmb";
+
+/**
+ * Uma linha diária de orgânico, já normalizada.
+ *
+ * É um formato só para fontes bem diferentes: o que a fonte não tem fica em
+ * zero. `dimension` é o agrupador natural de cada uma — o canal no GA4, a
+ * consulta no Search Console, o tipo de ação no Google Meu Negócio.
+ */
+export interface OrganicDailyRow {
+  date: string; // YYYY-MM-DD
+  source: OrganicSource;
+  accountId: string;
+  accountName: string;
+  dimension: string;
+  sessions: number;
+  users: number;
+  newUsers: number;
+  engagedSessions: number;
+  pageViews: number;
+  conversions: number;
+  impressions: number;
+  clicks: number;
+  /** Posição média já multiplicada pelas impressões, para poder somar e dividir depois. */
+  positionWeighted: number;
+  reach: number;
+  engagement: number;
+  /**
+   * Seguidores é estoque, não fluxo: somar dia a dia dá um número sem sentido.
+   * A camada de métricas usa o valor do último dia do período.
+   */
+  followers: number;
+  posts: number;
+}
+
+export interface OrganicProvider {
+  id: string;
+  label: string;
+  fetchDaily(source: OrganicSource, options: FetchOptions): Promise<OrganicDailyRow[]>;
+}
+
+export interface OrganicPoint {
+  date: string;
+  sessions: number;
+  users: number;
+  pageViews: number;
+  conversions: number;
+  searchClicks: number;
+  searchImpressions: number;
+  reach: number;
+  engagement: number;
+}
+
+export interface OrganicChannelRow {
+  channel: string;
+  sessions: number;
+  users: number;
+  engagedSessions: number;
+  conversions: number;
+  engagementRate: number | null;
+  conversionRate: number | null;
+  share: number | null;
+}
+
+export interface OrganicQueryRow {
+  query: string;
+  clicks: number;
+  impressions: number;
+  ctr: number | null;
+  position: number | null;
+}
+
+export interface OrganicSocialRow {
+  source: OrganicSource;
+  label: string;
+  followers: number;
+  followersDelta: number | null;
+  reach: number;
+  impressions: number;
+  engagement: number;
+  posts: number;
+  engagementRate: number | null;
+}
+
+/** O que cada fonte trouxe — alimenta o diagnóstico e os avisos da tela. */
+export interface OrganicSourceStatus {
+  source: OrganicSource;
+  label: string;
+  connector: string;
+  enabled: boolean;
+  accounts: number;
+  rows: number;
+  error: string | null;
+}
+
+export interface OrganicPayload {
+  meta: {
+    clientId: string;
+    clientName: string;
+    range: DateRange;
+    previousRange: DateRange;
+    generatedAt: string;
+    provider: string;
+    demo: boolean;
+    warnings: string[];
+  };
+  kpis: Kpi[];
+  series: OrganicPoint[];
+  channels: OrganicChannelRow[];
+  queries: OrganicQueryRow[];
+  pages: OrganicQueryRow[];
+  social: OrganicSocialRow[];
+  status: OrganicSourceStatus[];
+}

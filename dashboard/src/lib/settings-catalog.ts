@@ -166,6 +166,21 @@ export const SETTINGS_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    id: "organico",
+    title: "Tráfego orgânico",
+    description:
+      "As fontes e o mapa de campos ficam em Administração › Orgânico. Aqui só a escolha do provedor.",
+    fields: [
+      {
+        key: "ORGANIC_PROVIDER",
+        label: "Provedor do orgânico",
+        type: "text",
+        placeholder: "windsor",
+        help: "windsor (padrão) ou demo. Sem fonte ativada, cai em demo automaticamente.",
+      },
+    ],
+  },
+  {
     id: "alertas",
     title: "Alertas",
     description:

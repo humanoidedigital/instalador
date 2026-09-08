@@ -1,5 +1,13 @@
 import { db } from "./sqlite";
-import type { AdChannel, AdDailyRow, CrmOpportunity, CrmStatus, DateRange, LeadChannel } from "@/lib/types";
+import type {
+  AdChannel,
+  AdDailyRow,
+  CrmOpportunity,
+  CrmStatus,
+  DateRange,
+  LeadChannel,
+  OrganicDailyRow,
+} from "@/lib/types";
 
 /**
  * Leitura e escrita dos fatos coletados. Toda escrita é idempotente: coletar
@@ -10,7 +18,7 @@ import type { AdChannel, AdDailyRow, CrmOpportunity, CrmStatus, DateRange, LeadC
 
 export interface CoverageRow {
   clientId: string;
-  source: "ads" | "crm";
+  source: "ads" | "crm" | "organic";
   minDate: string | null;
   maxDate: string | null;
   rows: number;
@@ -130,6 +138,151 @@ export function upsertDeals(clientId: string, deals: CrmOpportunity[]): number {
 
   write(deals);
   return deals.length;
+}
+
+export function upsertOrganicDaily(clientId: string, rows: OrganicDailyRow[]): number {
+  if (!rows.length) return 0;
+
+  const statement = db().prepare(`
+    INSERT INTO organic_daily (
+      client_id, source, account_id, dimension, date, account_name,
+      sessions, users, new_users, engaged_sessions, page_views, conversions,
+      impressions, clicks, position_weighted, reach, engagement, followers, posts, collected_at
+    ) VALUES (
+      @client_id, @source, @account_id, @dimension, @date, @account_name,
+      @sessions, @users, @new_users, @engaged_sessions, @page_views, @conversions,
+      @impressions, @clicks, @position_weighted, @reach, @engagement, @followers, @posts, @collected_at
+    )
+    ON CONFLICT (client_id, source, account_id, dimension, date) DO UPDATE SET
+      account_name = excluded.account_name,
+      sessions = excluded.sessions,
+      users = excluded.users,
+      new_users = excluded.new_users,
+      engaged_sessions = excluded.engaged_sessions,
+      page_views = excluded.page_views,
+      conversions = excluded.conversions,
+      impressions = excluded.impressions,
+      clicks = excluded.clicks,
+      position_weighted = excluded.position_weighted,
+      reach = excluded.reach,
+      engagement = excluded.engagement,
+      followers = excluded.followers,
+      posts = excluded.posts,
+      collected_at = excluded.collected_at
+  `);
+
+  const collectedAt = new Date().toISOString();
+  const write = db().transaction((list: OrganicDailyRow[]) => {
+    list.forEach((row) => {
+      statement.run({
+        client_id: clientId,
+        source: row.source,
+        account_id: row.accountId,
+        dimension: row.dimension,
+        date: row.date,
+        account_name: row.accountName,
+        sessions: row.sessions,
+        users: row.users,
+        new_users: row.newUsers,
+        engaged_sessions: row.engagedSessions,
+        page_views: row.pageViews,
+        conversions: row.conversions,
+        impressions: row.impressions,
+        clicks: row.clicks,
+        position_weighted: row.positionWeighted,
+        reach: row.reach,
+        engagement: row.engagement,
+        followers: row.followers,
+        posts: row.posts,
+        collected_at: collectedAt,
+      });
+    });
+  });
+
+  write(rows);
+  return rows.length;
+}
+
+/**
+ * Até onde o histórico de orgânico vai, por conjunto de clientes.
+ *
+ * O `hasCoverage` de mídia/CRM não serve aqui: um cliente pode ter dois anos de
+ * anúncios e a primeira coleta de orgânico de ontem.
+ */
+export function organicCoverage(clientIds: string[]): { minDate: string | null; maxDate: string | null } {
+  if (!clientIds.length) return { minDate: null, maxDate: null };
+
+  const placeholders = clientIds.map(() => "?").join(",");
+  const row = db()
+    .prepare(
+      `SELECT MIN(date) AS min_date, MAX(date) AS max_date
+         FROM organic_daily WHERE client_id IN (${placeholders})`,
+    )
+    .get(...clientIds) as { min_date: string | null; max_date: string | null };
+
+  return { minDate: row?.min_date || null, maxDate: row?.max_date || null };
+}
+
+interface OrganicRecord {
+  source: string;
+  account_id: string;
+  account_name: string;
+  dimension: string;
+  date: string;
+  sessions: number;
+  users: number;
+  new_users: number;
+  engaged_sessions: number;
+  page_views: number;
+  conversions: number;
+  impressions: number;
+  clicks: number;
+  position_weighted: number;
+  reach: number;
+  engagement: number;
+  followers: number;
+  posts: number;
+}
+
+export function readOrganicDaily(clientIds: string[], range: DateRange): OrganicDailyRow[] {
+  if (!clientIds.length) return [];
+
+  const placeholders = clientIds.map(() => "?").join(",");
+  const records = db()
+    .prepare(
+      `SELECT source, account_id, account_name, dimension, date,
+              SUM(sessions) AS sessions, SUM(users) AS users, SUM(new_users) AS new_users,
+              SUM(engaged_sessions) AS engaged_sessions, SUM(page_views) AS page_views,
+              SUM(conversions) AS conversions, SUM(impressions) AS impressions,
+              SUM(clicks) AS clicks, SUM(position_weighted) AS position_weighted,
+              SUM(reach) AS reach, SUM(engagement) AS engagement,
+              SUM(followers) AS followers, SUM(posts) AS posts
+         FROM organic_daily
+        WHERE client_id IN (${placeholders}) AND date BETWEEN ? AND ?
+        GROUP BY source, account_id, dimension, date`,
+    )
+    .all(...clientIds, range.from, range.to) as OrganicRecord[];
+
+  return records.map((record) => ({
+    date: record.date,
+    source: record.source as OrganicDailyRow["source"],
+    accountId: record.account_id,
+    accountName: record.account_name,
+    dimension: record.dimension,
+    sessions: record.sessions,
+    users: record.users,
+    newUsers: record.new_users,
+    engagedSessions: record.engaged_sessions,
+    pageViews: record.page_views,
+    conversions: record.conversions,
+    impressions: record.impressions,
+    clicks: record.clicks,
+    positionWeighted: record.position_weighted,
+    reach: record.reach,
+    engagement: record.engagement,
+    followers: record.followers,
+    posts: record.posts,
+  }));
 }
 
 interface AdDailyRecord {
@@ -268,6 +421,13 @@ export function coverage(): CoverageRow[] {
     )
     .all() as { client_id: string; min_date: string; max_date: string; rows: number }[];
 
+  const organic = db()
+    .prepare(
+      `SELECT client_id, MIN(date) AS min_date, MAX(date) AS max_date, COUNT(*) AS rows
+         FROM organic_daily GROUP BY client_id`,
+    )
+    .all() as { client_id: string; min_date: string; max_date: string; rows: number }[];
+
   return [
     ...ads.map((row) => ({
       clientId: row.client_id,
@@ -279,6 +439,13 @@ export function coverage(): CoverageRow[] {
     ...crm.map((row) => ({
       clientId: row.client_id,
       source: "crm" as const,
+      minDate: row.min_date,
+      maxDate: row.max_date,
+      rows: row.rows,
+    })),
+    ...organic.map((row) => ({
+      clientId: row.client_id,
+      source: "organic" as const,
       minDate: row.min_date,
       maxDate: row.max_date,
       rows: row.rows,
