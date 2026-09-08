@@ -1,0 +1,49 @@
+{
+  "_comment": "Métricas personalizadas do relatório. Editáveis em Administração > Métricas. A fórmula aceita os campos do catálogo e as operações + - * / ( ) além de min, max, abs e round.",
+  "metrics": [
+    {
+      "id": "margem-sobre-investimento",
+      "label": "Margem sobre investimento",
+      "formula": "(receita - investimento) / investimento",
+      "format": "percent",
+      "higherIsBetter": true,
+      "goal": null,
+      "hint": "Quanto sobrou de receita para cada real investido em mídia, já descontado o próprio investimento.",
+      "enabled": true,
+      "clients": []
+    },
+    {
+      "id": "investimento-por-dia",
+      "label": "Investimento por dia",
+      "formula": "investimento / dias",
+      "format": "currency",
+      "higherIsBetter": true,
+      "goal": null,
+      "hint": "Ritmo diário de gasto no período — útil para projetar o fechamento do mês.",
+      "enabled": true,
+      "clients": []
+    },
+    {
+      "id": "taxa-de-qualificacao",
+      "label": "Taxa de qualificação",
+      "formula": "oportunidades / leads",
+      "format": "percent",
+      "higherIsBetter": true,
+      "goal": null,
+      "hint": "Parte dos leads que passou da triagem inicial. Cai quando a mídia traz volume sem qualidade.",
+      "enabled": true,
+      "clients": []
+    },
+    {
+      "id": "custo-por-oportunidade",
+      "label": "Custo por oportunidade",
+      "formula": "investimento / oportunidades",
+      "format": "currency",
+      "higherIsBetter": false,
+      "goal": null,
+      "hint": "Investimento dividido pelas negociações qualificadas. Sobe quando a mídia traz volume sem qualidade.",
+      "enabled": true,
+      "clients": []
+    }
+  ]
+}

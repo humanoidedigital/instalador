@@ -224,6 +224,8 @@ export interface DashboardPayload {
     demo: boolean;
   };
   kpis: Kpi[];
+  /** Cards vindos das fórmulas configuradas em Administração > Métricas. */
+  customKpis: Kpi[];
   series: TimeseriesPoint[];
   channels: ChannelSummary[];
   campaigns: CampaignRow[];

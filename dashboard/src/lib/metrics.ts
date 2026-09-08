@@ -15,13 +15,13 @@ import type {
 } from "./types";
 import type { ClientConfig } from "./clients";
 import { CHANNEL_LABELS, normalizeCampaignKey } from "./channel";
-import { eachDay } from "./dates";
+import { metricsForClient } from "./custom-metrics";
+import { daysBetween, eachDay } from "./dates";
 import { safeDivide } from "./format";
 
-/** KPIs que aparecem na linha principal; o resto vai para o bloco secundário. */
-export const PRIMARY_KPI_IDS = ["spend", "crmLeads", "cpl", "opportunities", "won", "revenue", "roas", "cac"];
+export { PRIMARY_KPI_IDS } from "./kpi-order";
 
-interface Totals {
+export interface Totals {
   spend: number;
   impressions: number;
   clicks: number;
@@ -162,6 +162,41 @@ export function buildKpis(current: Totals, previous: Totals, client: ClientConfi
       hint: "Investimento dividido pelas conversões reportadas pelo Meta e pelo Google.",
     }),
   ];
+}
+
+/** Valores dos campos que as fórmulas podem usar. */
+function formulaValues(totals: Totals, days: number): Record<string, number> {
+  return {
+    investimento: totals.spend,
+    impressoes: totals.impressions,
+    cliques: totals.clicks,
+    leads: totals.crmLeads,
+    leads_plataforma: totals.platformLeads,
+    oportunidades: totals.opportunities,
+    vendas: totals.won,
+    perdidas: totals.lost,
+    receita: totals.revenue,
+    valor_plataforma: totals.platformValue,
+    dias: days,
+  };
+}
+
+export function buildCustomKpis(
+  clientId: string,
+  current: Totals,
+  previous: Totals,
+  currentDays: number,
+  previousDays: number,
+): Kpi[] {
+  return metricsForClient(clientId).map(({ metric, compiled }) => {
+    const value = compiled.evaluate(formulaValues(current, currentDays));
+    const before = compiled.evaluate(formulaValues(previous, previousDays));
+
+    return kpi(metric.id, metric.label, value, before, metric.format, metric.higherIsBetter, {
+      goal: metric.goal,
+      hint: metric.hint || `Fórmula: ${metric.formula}`,
+    });
+  });
 }
 
 export function buildSeries(
@@ -539,6 +574,13 @@ export function assembleDashboard(input: AssembleInput): DashboardPayload {
       demo: input.demo,
     },
     kpis: buildKpis(current, previous, input.client),
+    customKpis: buildCustomKpis(
+      input.client.id,
+      current,
+      previous,
+      daysBetween(input.range.from, input.range.to),
+      daysBetween(input.previousRange.from, input.previousRange.to),
+    ),
     series: buildSeries(input.range, input.adRows, input.opportunities),
     channels,
     campaigns,

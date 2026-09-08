@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DashboardPayload } from "@/lib/types";
-import { PRIMARY_KPI_IDS } from "@/lib/metrics";
+import { PRIMARY_KPI_IDS } from "@/lib/kpi-order";
 import { formatDateTime } from "@/lib/format";
 import { Filters, type ClientOption, type FilterState } from "./Filters";
 import { KpiGrid } from "./KpiGrid";
@@ -56,7 +56,7 @@ function toCsv(data: DashboardPayload): string {
   lines.push(`Período;${data.meta.range.from} a ${data.meta.range.to}`);
   lines.push("");
   lines.push("Indicador;Valor;Período anterior;Variação");
-  data.kpis.forEach((kpi) => {
+  [...data.kpis, ...data.customKpis].forEach((kpi) => {
     lines.push(
       [kpi.label, kpi.value, kpi.previous ?? "", kpi.delta === null ? "" : `${(kpi.delta * 100).toFixed(1)}%`]
         .map(escape)
@@ -334,6 +334,15 @@ export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "m
               <SourcesChart sources={data.sources} currency={currency} />
             </div>
           </Section>
+
+          {data.customKpis.length ? (
+            <Section
+              title="Métricas personalizadas"
+              description="Fórmulas configuradas em Administração → Métricas."
+            >
+              <KpiGrid kpis={data.customKpis} currency={currency} size="sm" columns={3} />
+            </Section>
+          ) : null}
 
           <Section title="Métricas de mídia" description="Indicadores de eficiência das plataformas.">
             <KpiGrid kpis={secondaryKpis} currency={currency} size="sm" columns={3} />

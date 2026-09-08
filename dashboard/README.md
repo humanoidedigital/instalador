@@ -16,6 +16,7 @@ Roda no mesmo VPS do instalador, em processo próprio no PM2 atrás do nginx.
 - [Primeiro acesso](#primeiro-acesso)
 - [Painel administrativo](#painel-administrativo)
 - [Histórico e coleta diária](#histórico-e-coleta-diária)
+- [Métricas personalizadas](#métricas-personalizadas)
 - [Cadastro dos clientes](#cadastro-dos-clientes)
 - [Credenciais](#credenciais)
 - [Validar a conexão com o CRM](#validar-a-conexão-com-o-crm)
@@ -122,6 +123,7 @@ entra. Quatro abas:
 |---|---|---|
 | `config/clients.json` | clientes, contas de anúncio, metas | vale na hora |
 | `config/secrets.json` | tokens, chaves e a senha master (permissão 600) | vale na hora |
+| `config/metrics.json` | métricas personalizadas | vale na hora |
 | `config/data/dashboard.db` | histórico coletado (SQLite) | atualizado pela coleta |
 | `.env` | valores iniciais escritos pelo instalador | lido na inicialização |
 
@@ -198,6 +200,50 @@ cat /home/deploy/marketing-dashboard/coleta.log
 ```
 
 O `COLLECT_TOKEN` é gerado pelo instalador e fica no `.env`.
+
+---
+
+## Métricas personalizadas
+
+Em **Administração → Métricas** você cria indicadores próprios com fórmula, e
+eles viram cards na seção “Métricas personalizadas” do relatório — com
+comparação contra o período anterior e meta, como qualquer outro KPI.
+
+```
+(receita - investimento) / investimento     margem sobre investimento
+investimento / dias                         ritmo diário de gasto
+oportunidades / leads                       taxa de qualificação
+investimento / oportunidades                custo por oportunidade
+```
+
+### Campos disponíveis
+
+`investimento`, `impressoes`, `cliques`, `leads`, `leads_plataforma`,
+`oportunidades`, `vendas`, `perdidas`, `receita`, `valor_plataforma`, `dias`.
+
+Operações: `+ - * / ( )` e as funções `min`, `max`, `abs`, `round`.
+
+### Como a fórmula é avaliada
+
+Sem `eval` e sem `new Function`. A fórmula vem de um formulário web e, avaliada
+com qualquer um dos dois, viraria execução de código arbitrário no servidor.
+Aqui ela é tokenizada, convertida para notação polonesa reversa e avaliada
+sobre uma tabela de variáveis conhecidas — nada além de aritmética sobre os
+campos do catálogo é possível. `require("fs")`, `process.exit(1)`,
+`constructor` e afins são recusados na validação, antes de salvar.
+
+Divisão por zero devolve **vazio, não infinito**: um custo por lead sem nenhum
+lead é indefinido, não infinito.
+
+### Testar antes de salvar
+
+O botão **Testar** roda a fórmula contra os números reais dos últimos 30 dias e
+mostra o resultado. É a diferença entre “a sintaxe está certa” e “o número faz
+sentido”.
+
+Cada métrica pode valer para todos os clientes ou só para alguns, e pode ser
+desativada sem ser apagada. Tudo fica em `config/metrics.json`, relido quando o
+arquivo muda.
 
 ---
 
@@ -423,6 +469,8 @@ dashboard/
 │   ├── metrics.ts                # KPIs, funil, séries, insights automáticos
 │   ├── clients.ts                # leitura do clients.json e das credenciais
 │   ├── collector.ts              # coleta e grava os fatos no histórico
+│   ├── metrics-formula.ts        # avaliador de fórmulas (sem eval)
+│   ├── custom-metrics.ts         # métricas personalizadas
 │   ├── db/                       # SQLite: schema, upserts, cobertura e log
 │   └── cache.ts                  # cache TTL + deduplicação de chamadas
 │   └── auth/                     # sessão assinada, hash de senha e guarda de rotas
