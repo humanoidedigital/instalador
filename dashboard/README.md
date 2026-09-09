@@ -72,8 +72,11 @@ O script pergunta domínio, porta, senha de acesso e as credenciais, e então:
 5. sobe no PM2 como `marketing-dashboard`;
 6. cria o site no nginx e emite o certificado SSL.
 
-O acesso é protegido por HTTP Basic (usuário `admin` e a senha digitada na
-instalação).
+Ao final ele também agenda a **coleta diária às 5h15** e faz a carga inicial dos
+últimos 90 dias.
+
+O acesso é pela tela de login do próprio dashboard, com o usuário e a senha
+digitados na instalação — que entram já como hash, nunca em texto puro.
 
 ---
 
