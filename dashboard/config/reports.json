@@ -35,7 +35,8 @@
         {
           "id": "alertas",
           "type": "alerts",
-          "title": "Alertas"
+          "title": "Alertas",
+          "internal": true
         },
         {
           "id": "analise-ia",
@@ -165,7 +166,8 @@
           "id": "organico-fontes",
           "type": "organic-status",
           "title": "Fontes conectadas",
-          "description": "Conferência da configuração. Remova este bloco do relatório do cliente quando tudo estiver conectado."
+          "description": "Conferência da configuração. Remova este bloco do relatório do cliente quando tudo estiver conectado.",
+          "internal": true
         }
       ]
     }

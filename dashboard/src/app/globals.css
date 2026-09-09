@@ -170,6 +170,21 @@ a:focus-visible {
   O painel é impresso e enviado como relatório: controles somem, nada de
   posicionamento fixo e nenhum card partido entre duas páginas.
 */
+/*
+ * Seção cujo bloco não renderizou nada some por completo.
+ *
+ * Acontece de verdade: a análise por IA some para quem não pode gerar, o bloco
+ * de indicadores some quando a métrica foi apagada, o de leitura do período
+ * some quando não há aviso. Sem isto sobra um título com vazio embaixo.
+ *
+ * A primeira regra pega o bloco solto; a segunda, a linha de dois blocos, em
+ * que o corpo tem só a grade e a grade é que ficou vazia.
+ */
+section:has(> [data-block-body]:empty),
+section:has(> [data-block-body] > *:only-child:empty) {
+  display: none;
+}
+
 @media print {
   .no-print {
     display: none !important;

@@ -54,6 +54,28 @@ export async function hasRole(role: Role): Promise<boolean> {
   return role === "viewer" ? true : session.role === "master";
 }
 
+/**
+ * Qual cliente esta sessão pode ver, dado o que a requisição pediu.
+ *
+ * No papel `cliente` o pedido é ignorado e vale sempre o cliente da sessão —
+ * inclusive `__all__`. Devolver o próprio relatório em vez de um 403 é de
+ * propósito: um erro diferente para "cliente existe" e "não existe" contaria
+ * a quem tentou quais clientes a agência atende.
+ */
+export function allowedClientId(session: Session, requested: string | null | undefined): string | null {
+  if (session.role === "cliente") return session.clientId || null;
+  return requested ?? null;
+}
+
+/** Sessão + cliente já resolvido, que é o par que toda rota de dados precisa. */
+export async function sessionWithClient(
+  requested: string | null | undefined,
+): Promise<{ session: Session; clientId: string | null } | null> {
+  const session = await getSession();
+  if (!session) return null;
+  return { session, clientId: allowedClientId(session, requested) };
+}
+
 /** Define a senha master, sempre gravando hash — nunca texto puro. */
 export function setMasterPassword(password: string): void {
   writeSecrets({

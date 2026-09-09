@@ -9,6 +9,7 @@ interface ReportBlock {
   title?: string;
   description?: string;
   hidden?: boolean;
+  internal?: boolean;
   kpiIds?: string[];
   columns?: 3 | 4;
   size?: "lg" | "sm";
@@ -323,6 +324,11 @@ export function ReportsTab() {
                           oculto
                         </span>
                       ) : null}
+                      {block.internal ? (
+                        <span className="ml-2 font-normal" style={{ color: "var(--warning)" }}>
+                          só a agência
+                        </span>
+                      ) : null}
                     </span>
                     <div className="flex items-center gap-1">
                       <button type="button" className="control px-2 py-1 text-xs" onClick={() => moveBlock(index, -1)}>
@@ -337,6 +343,14 @@ export function ReportsTab() {
                         onClick={() => updateBlock(index, { hidden: !block.hidden })}
                       >
                         {block.hidden ? "Mostrar" : "Ocultar"}
+                      </button>
+                      <button
+                        type="button"
+                        className="control px-2 py-1 text-xs"
+                        title="Bloco visível para a agência e escondido das contas de cliente."
+                        onClick={() => updateBlock(index, { internal: !block.internal })}
+                      >
+                        {block.internal ? "Liberar ao cliente" : "Só a agência"}
                       </button>
                       <button
                         type="button"

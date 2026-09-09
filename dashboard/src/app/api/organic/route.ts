@@ -6,7 +6,7 @@ import { databaseEnabled } from "@/lib/db/sqlite";
 import { assembleOrganic } from "@/lib/organic";
 import { loadOrganicConfig, ORGANIC_SOURCES } from "@/lib/organic-config";
 import { selectOrganicProvider } from "@/lib/providers";
-import { getSession } from "@/lib/auth/guard";
+import { sessionWithClient } from "@/lib/auth/guard";
 import type { DateRange, OrganicDailyRow, OrganicSource, OrganicSourceStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -18,12 +18,13 @@ function targetClientIds(client: ClientConfig): string[] {
 }
 
 export async function GET(request: Request) {
-  if (!(await getSession())) {
+  const url = new URL(request.url);
+  const access = await sessionWithClient(url.searchParams.get("client"));
+  if (!access) {
     return NextResponse.json({ error: "Sessão expirada. Entre novamente." }, { status: 401 });
   }
 
-  const url = new URL(request.url);
-  const found = getClient(url.searchParams.get("client"));
+  const found = getClient(access.clientId);
   if (!found) {
     return NextResponse.json({ error: "Cliente não encontrado." }, { status: 404 });
   }

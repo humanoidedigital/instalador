@@ -7,5 +7,8 @@ next-env.d.ts
 tsconfig.tsbuildinfo
 config/secrets.json
 config/secrets.json.tmp
+# Contas de acesso dos clientes: guardam hash de senha.
+config/users.json
+config/users.json.tmp
 config/clients.json.tmp
 config/data/

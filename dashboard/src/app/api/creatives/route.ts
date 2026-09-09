@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getClient } from "@/lib/clients";
 import { rangeFromSearchParams } from "@/lib/dates";
 import { selectAdsProvider } from "@/lib/providers";
-import { getSession } from "@/lib/auth/guard";
+import { sessionWithClient } from "@/lib/auth/guard";
 import type { AdChannel, AdCreative, FetchOptions } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -13,12 +13,14 @@ export const runtime = "nodejs";
  * é uma consulta mais pesada e só é feita quando a seção é aberta na tela.
  */
 export async function GET(request: Request) {
-  if (!(await getSession())) {
+  const url = new URL(request.url);
+  // No papel `cliente` o parâmetro da URL não decide nada: vale o da sessão.
+  const access = await sessionWithClient(url.searchParams.get("client"));
+  if (!access) {
     return NextResponse.json({ error: "Sessão expirada. Entre novamente." }, { status: 401 });
   }
 
-  const url = new URL(request.url);
-  const client = getClient(url.searchParams.get("client"));
+  const client = getClient(access.clientId);
   if (!client) {
     return NextResponse.json({ error: "Cliente não encontrado." }, { status: 404 });
   }

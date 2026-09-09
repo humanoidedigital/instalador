@@ -69,7 +69,7 @@ export function AiAnalysis({ data, isMaster }: { data: DashboardPayload; isMaste
     fetch("/api/insights", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ payload: data, forcar: false }),
+      body: JSON.stringify({ payload: data, forcar: false, apenasCache: true }),
     })
       .then(async (response) => {
         const body = (await response.json()) as AnalysisResponse;
@@ -83,12 +83,18 @@ export function AiAnalysis({ data, isMaster }: { data: DashboardPayload; isMaste
   }, [status?.configurado, data.meta.clientId, data.meta.range.from, data.meta.range.to]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (status && !status.configurado) {
+    // Para quem não pode gerar, o motivo é assunto de operação da agência.
+    if (!isMaster) return null;
     return (
       <div className="card p-4 text-xs" style={{ color: "var(--text-secondary)" }}>
         {status.motivo}
       </div>
     );
   }
+
+  // Sem análise gerada e sem poder gerar, o bloco não tem o que mostrar: some
+  // do relatório em vez de deixar um botão morto e um recado interno.
+  if (!isMaster && !result) return null;
 
   return (
     <div className="space-y-3">

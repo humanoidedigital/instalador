@@ -5,11 +5,20 @@
  * middleware, que executa no runtime Edge — lá `node:crypto` não existe.
  */
 
-export type Role = "master" | "viewer";
+/**
+ * `cliente` é o acesso que a agência entrega ao próprio cliente: enxerga um
+ * relatório só, o do `clientId` gravado na sessão. `viewer` continua vendo a
+ * carteira inteira sem poder administrar.
+ */
+export type Role = "master" | "viewer" | "cliente";
+
+const ROLES: Role[] = ["master", "viewer", "cliente"];
 
 export interface Session {
   user: string;
   role: Role;
+  /** Só no papel `cliente`: o único cliente que esta sessão pode ver. */
+  clientId?: string;
   /** Epoch em milissegundos. */
   exp: number;
 }
@@ -65,15 +74,28 @@ export async function verifySession(token: string | undefined, secret: string): 
 
     const session = JSON.parse(new TextDecoder().decode(decodeBase64Url(payload))) as Session;
     if (!session.exp || session.exp < Date.now()) return null;
-    if (session.role !== "master" && session.role !== "viewer") return null;
+    if (!ROLES.includes(session.role)) return null;
+    // Sessão de cliente sem cliente não é sessão válida: sem isto, um token
+    // adulterado para role "cliente" cairia no caminho "sem restrição".
+    if (session.role === "cliente" && !session.clientId) return null;
     return session;
   } catch {
     return null;
   }
 }
 
-export function newSession(user: string, role: Role, ttlHours = DEFAULT_TTL_HOURS): Session {
-  return { user, role, exp: Date.now() + ttlHours * 3600_000 };
+export function newSession(
+  user: string,
+  role: Role,
+  options: { clientId?: string; ttlHours?: number } = {},
+): Session {
+  const ttlHours = options.ttlHours ?? DEFAULT_TTL_HOURS;
+  return {
+    user,
+    role,
+    ...(role === "cliente" && options.clientId ? { clientId: options.clientId } : {}),
+    exp: Date.now() + ttlHours * 3600_000,
+  };
 }
 
 export function cookieOptions(secure: boolean) {

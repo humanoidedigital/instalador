@@ -30,6 +30,7 @@ export interface ReportBlockView {
   title?: string;
   description?: string;
   hidden?: boolean;
+  internal?: boolean;
   kpiIds?: string[];
   columns?: 3 | 4;
   size?: "lg" | "sm";

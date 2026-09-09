@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { Role } from "@/lib/auth/session";
 import type { DashboardPayload } from "@/lib/types";
 import { formatDateTime } from "@/lib/format";
 import { Filters, type ClientOption, type FilterState } from "./Filters";
@@ -26,11 +27,13 @@ type BlockGroup =
  * mantém gráfico ao lado de gráfico, como no layout original, sem pedir para
  * quem monta o relatório declarar largura de cada bloco.
  */
-function groupBlocks(blocks: ReportBlockView[]): BlockGroup[] {
+function groupBlocks(blocks: ReportBlockView[], role: Role): BlockGroup[] {
   const groups: BlockGroup[] = [];
 
   blocks
     .filter((block) => !block.hidden)
+    // Bloco marcado como interno é papo da agência: não vai para o cliente.
+    .filter((block) => !(block.internal && role === "cliente"))
     .forEach((block) => {
       if (!HALF_WIDTH.has(block.type)) {
         groups.push({ kind: "full", block });
@@ -161,7 +164,7 @@ function initialState(clients: ClientOption[]): FilterState {
   };
 }
 
-export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "master" | "viewer" }) {
+export function Dashboard({ clients, role }: { clients: ClientOption[]; role: Role }) {
   const [state, setState] = useState<FilterState>(() => initialState(clients));
   // Template escolhido na tela. Vazio = o padrão do cliente.
   const [templateId, setTemplateId] = useState<string>(() => {
@@ -323,7 +326,10 @@ export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "m
         </div>
       ) : null}
 
-      {data && data.meta.warnings.length ? (
+      {/* Aviso de integração é recado de operação — cita variável de ambiente,
+          token faltando, limite de plano. Quem opera resolve; para o cliente é
+          só ruído sobre a cozinha da agência. */}
+      {data && data.meta.warnings.length && role !== "cliente" ? (
         <div className="card mb-5 p-4" role="status">
           <p className="mb-1 text-sm font-medium" style={{ color: "var(--text-primary)" }}>
             Avisos de integração
@@ -346,7 +352,7 @@ export function Dashboard({ clients, role }: { clients: ClientOption[]; role: "m
 
       {data ? (
         <div style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms" }}>
-          {groupBlocks(data.meta.template.blocks as ReportBlockView[]).map((group, index) =>
+          {groupBlocks(data.meta.template.blocks as ReportBlockView[], role).map((group, index) =>
             group.kind === "full" ? (
               <Section
                 key={group.block.id}

@@ -8,7 +8,7 @@ import { assembleDashboard } from "@/lib/metrics";
 import { selectAdsProvider, selectCrmProvider } from "@/lib/providers";
 import { cacheClear } from "@/lib/cache";
 import type { AdChannel, AdDailyRow, CrmOpportunity, CrmProvider, DateRange, FetchOptions } from "@/lib/types";
-import { getSession } from "@/lib/auth/guard";
+import { sessionWithClient } from "@/lib/auth/guard";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -89,13 +89,15 @@ function targetClientIds(client: ClientConfig): string[] {
 
 export async function GET(request: Request) {
   // O relatório expõe dados de cliente: sem sessão, nem responde.
-  if (!(await getSession())) {
+  const url = new URL(request.url);
+  // O cliente vem da sessão quando o papel é `cliente`: o parâmetro da URL não
+  // decide o que ele enxerga.
+  const access = await sessionWithClient(url.searchParams.get("client"));
+  if (!access) {
     return NextResponse.json({ error: "Sessão expirada. Entre novamente." }, { status: 401 });
   }
 
-  const url = new URL(request.url);
-  const clientId = url.searchParams.get("client");
-  const client = getClient(clientId);
+  const client = getClient(access.clientId);
 
   if (!client) {
     return NextResponse.json(

@@ -15,6 +15,7 @@ Roda no mesmo VPS do instalador, em processo próprio no PM2 atrás do nginx.
 - [Rodando localmente](#rodando-localmente)
 - [Primeiro acesso](#primeiro-acesso)
 - [Painel administrativo](#painel-administrativo)
+- [Acesso do cliente](#acesso-do-cliente)
 - [Histórico e coleta diária](#histórico-e-coleta-diária)
 - [Construtor de relatórios](#construtor-de-relatórios)
 - [Métricas personalizadas](#métricas-personalizadas)
@@ -144,12 +145,16 @@ plano B.
 
 Esses arquivos são todo o estado do painel: faça backup deles.
 
-### Dois níveis de acesso
+### Três níveis de acesso
 
-- **Master** — entra na administração e vê tudo.
-- **Leitura** — só o relatório. Defina a “Senha de leitura” na aba Conexões e
-  entregue para o cliente ou para quem não deve mexer em configuração. Quem
-  entrar com ela não enxerga o link de administração nem as rotas de admin.
+| Nível | Enxerga | Administra |
+|---|---|---|
+| **Master** | Tudo, todos os clientes | Sim |
+| **Leitura** | Todos os clientes, sem administração | Não |
+| **Cliente** | **Um cliente só** — o dele | Não |
+
+O nível de leitura (a “Senha de leitura” em Conexões) é para gente do time. Para
+o cliente, use uma **conta de cliente** — veja a seção a seguir.
 
 ### Ainda dá para editar por SSH
 
@@ -159,6 +164,57 @@ mão — útil para automação ou recuperação:
 ```bash
 nano /home/deploy/marketing-dashboard/config/clients.json
 ```
+
+---
+
+## Acesso do cliente
+
+Uma conta de cliente abre **um relatório só**. É o acesso para mandar ao próprio
+cliente: ele entra, vê os números dele e nada mais.
+
+### Criando a conta
+
+Em **Administração › Acesso**, no bloco “Contas de cliente”: escolha um usuário,
+o cliente que ele enxerga e uma senha (deixe em branco para gerar uma). A senha
+aparece **uma vez**, na confirmação — depois só dá para trocar, não para ver.
+
+Na mesma lista dá para trocar o cliente, redefinir a senha, desativar
+temporariamente ou remover. Desativar corta o login na hora; remover também.
+
+### O que muda na tela dele
+
+- Não existe seletor de cliente — o nome dele fica no cabeçalho.
+- Não existe link para a administração, e `/admin` redireciona para o relatório.
+- Os **avisos de integração** somem. Eles citam variável de ambiente, token
+  faltando e limite de plano: é recado de operação da agência, não do cliente.
+- A análise por IA só aparece se já tiver sido gerada. Quem gera é a conta
+  master; o cliente não vê botão nem custo.
+
+### Blocos só da agência
+
+No construtor de relatórios, cada bloco tem o botão **“Só a agência”**. Bloco
+marcado assim aparece para você e some para o cliente — serve para o que é
+conversa interna sem obrigar você a manter dois templates.
+
+Já vêm marcados assim o bloco de **Alertas** (“ajuste os budgets diários” é
+instrução para a agência, não para o cliente) e o de **Fontes conectadas** do
+relatório de orgânico.
+
+### O que garante o isolamento
+
+Vale saber por que isto é seguro, e não só escondido na tela:
+
+- O cliente da consulta vem **da sessão**, não da URL. Trocar `?client=` na
+  barra de endereço não muda nada: a API responde com o cliente da sessão.
+- O cookie é assinado com HMAC. Um token adulterado para apontar a outro
+  cliente é rejeitado — a sessão inteira cai.
+- `/api/clients` devolve só o cliente da conta. O nome dos outros nunca chega
+  ao navegador dele.
+- Toda rota de administração exige conta master, e `/api/collect` exige master
+  ou o token do cron.
+
+As contas ficam em `config/users.json`, com senha em hash scrypt e o arquivo
+restrito ao dono (`600`). O arquivo não vai para o git.
 
 ---
 

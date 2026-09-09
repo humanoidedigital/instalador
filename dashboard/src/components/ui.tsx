@@ -37,7 +37,10 @@ export function Section({
           {actions}
         </div>
       ) : null}
-      {children}
+      {/* O corpo fica num elemento próprio para o CSS conseguir esconder a
+          seção inteira quando o bloco não renderizou nada — um <h2> sozinho é
+          pior que seção nenhuma. Ver a regra em globals.css. */}
+      <div data-block-body>{children}</div>
     </section>
   );
 }

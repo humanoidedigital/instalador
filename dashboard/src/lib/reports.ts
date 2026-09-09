@@ -117,6 +117,12 @@ export interface ReportBlock {
   title?: string;
   description?: string;
   hidden?: boolean;
+  /**
+   * Bloco só da agência: some do relatório quando quem olha é uma conta de
+   * cliente. Serve para o que é conversa interna — alertas de operação,
+   * conferência de configuração — sem precisar manter dois templates.
+   */
+  internal?: boolean;
   /** Bloco "kpis": quais indicadores e como distribuí-los. */
   kpiIds?: string[];
   columns?: 3 | 4;
@@ -197,6 +203,7 @@ function normalizeBlock(raw: Partial<ReportBlock>, index: number): ReportBlock {
     title: raw.title ? String(raw.title) : undefined,
     description: raw.description ? String(raw.description) : undefined,
     hidden: raw.hidden === true,
+    internal: raw.internal === true,
     kpiIds: Array.isArray(raw.kpiIds) ? raw.kpiIds.map(String) : undefined,
     columns: raw.columns === 3 ? 3 : raw.columns === 4 ? 4 : undefined,
     size: raw.size === "sm" ? "sm" : raw.size === "lg" ? "lg" : undefined,

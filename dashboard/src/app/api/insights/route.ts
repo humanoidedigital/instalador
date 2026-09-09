@@ -48,7 +48,12 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sessão expirada." }, { status: 401 });
 
-  const body = (await request.json().catch(() => ({}))) as { payload?: DashboardPayload; forcar?: boolean };
+  const body = (await request.json().catch(() => ({}))) as {
+    payload?: DashboardPayload;
+    forcar?: boolean;
+    /** Só consulta o cache; nunca gera. É o que a tela faz ao abrir. */
+    apenasCache?: boolean;
+  };
   if (!body.payload?.meta) {
     return NextResponse.json({ error: "Faltaram os dados do relatório." }, { status: 400 });
   }
@@ -65,6 +70,12 @@ export async function POST(request: Request) {
   if (!body.forcar) {
     const hit = cacheGet<CachedAnalysis>(key);
     if (hit) return NextResponse.json({ ...hit, doCache: true });
+  }
+
+  // Consulta de cache que não achou nada não é erro: a tela abriu, não pediu
+  // para gerar. Responder 409 aqui enchia o console de quem só lê o relatório.
+  if (body.apenasCache) {
+    return NextResponse.json({ disponivel: false });
   }
 
   // Gerar custa dinheiro: quem só lê o relatório recebe o que já está em cache,

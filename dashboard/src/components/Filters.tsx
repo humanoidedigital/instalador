@@ -68,18 +68,22 @@ export function Filters({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <select
-        value={state.clientId}
-        onChange={(event) => onChange({ ...state, clientId: event.target.value })}
-        aria-label="Cliente"
-        className="control min-w-[200px] font-medium"
-      >
-        {clients.map((client) => (
-          <option key={client.id} value={client.id}>
-            {client.name}
-          </option>
-        ))}
-      </select>
+      {/* Com um cliente só — o acesso que a agência dá ao próprio cliente — um
+          seletor de uma opção só é ruído: o nome já está no cabeçalho. */}
+      {clients.length > 1 ? (
+        <select
+          value={state.clientId}
+          onChange={(event) => onChange({ ...state, clientId: event.target.value })}
+          aria-label="Cliente"
+          className="control min-w-[200px] font-medium"
+        >
+          {clients.map((client) => (
+            <option key={client.id} value={client.id}>
+              {client.name}
+            </option>
+          ))}
+        </select>
+      ) : null}
 
       <select
         value={state.preset}

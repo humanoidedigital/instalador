@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Field, Notice } from "./shared";
+import { ClientAccounts } from "./ClientAccounts";
 
 export function AccessTab({ user }: { user: string }) {
   const [usuario, setUsuario] = useState(user);
@@ -108,9 +109,11 @@ export function AccessTab({ user }: { user: string }) {
       </form>
 
       <p className="max-w-lg text-xs" style={{ color: "var(--text-muted)" }}>
-        Para dar acesso só de leitura a alguém — cliente ou pessoa do time que não deve mexer em configuração —, defina
-        a “Senha de leitura” na aba Conexões. Quem entrar com ela vê os relatórios e não abre esta área.
+        A “Senha de leitura” da aba Conexões dá acesso de leitura à carteira inteira — serve para alguém do time, não
+        para o cliente. Para o cliente, crie uma conta abaixo: ela abre um relatório só.
       </p>
+
+      <ClientAccounts />
     </div>
   );
 }

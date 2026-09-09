@@ -9,9 +9,24 @@ export default async function Page() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const clients = clientOptions();
+  // A sessão de cliente enxerga um relatório só: nem "Todos os clientes" nem o
+  // nome dos outros chegam ao navegador.
+  const todos = clientOptions();
+  const clients =
+    session.role === "cliente" ? todos.filter((client) => client.id === session.clientId) : todos;
 
-  if (clients.length <= 1) {
+  if (!clients.length) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-16">
+        <h1 className="text-xl font-semibold">Cliente indisponível</h1>
+        <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+          A conta está ligada a um cliente que não existe mais ou foi desativado. Fale com a agência.
+        </p>
+      </main>
+    );
+  }
+
+  if (session.role !== "cliente" && clients.length <= 1) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-16">
         <h1 className="text-xl font-semibold">Nenhum cliente configurado</h1>

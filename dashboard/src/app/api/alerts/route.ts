@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/guard";
+import { sessionWithClient } from "@/lib/auth/guard";
 import { getClient, loadClients } from "@/lib/clients";
 import { recentAlerts } from "@/lib/db/repository";
 import { databaseEnabled } from "@/lib/db/sqlite";
@@ -9,15 +9,17 @@ export const runtime = "nodejs";
 
 /** Alertas do cliente selecionado, para o bloco no relatório. */
 export async function GET(request: Request) {
-  if (!(await getSession())) {
+  const url = new URL(request.url);
+  // No papel `cliente` o parâmetro da URL não decide nada: vale o da sessão.
+  const access = await sessionWithClient(url.searchParams.get("client"));
+  if (!access) {
     return NextResponse.json({ error: "Sessão expirada." }, { status: 401 });
   }
   if (!databaseEnabled()) {
     return NextResponse.json({ alertas: [], motivo: "Histórico desativado." });
   }
 
-  const url = new URL(request.url);
-  const client = getClient(url.searchParams.get("client"));
+  const client = getClient(access.clientId);
   if (!client) return NextResponse.json({ error: "Cliente não encontrado." }, { status: 404 });
 
   const days = Number(url.searchParams.get("days")) || 14;
