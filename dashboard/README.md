@@ -17,6 +17,7 @@ Roda no mesmo VPS do instalador, em processo próprio no PM2 atrás do nginx.
 - [Painel administrativo](#painel-administrativo)
 - [Acesso do cliente](#acesso-do-cliente)
 - [Histórico e coleta diária](#histórico-e-coleta-diária)
+- [Entrada de dados de fora (n8n)](#entrada-de-dados-de-fora-n8n)
 - [Construtor de relatórios](#construtor-de-relatórios)
 - [Métricas personalizadas](#métricas-personalizadas)
 - [Análise por IA](#análise-por-ia)
@@ -269,6 +270,91 @@ cat /home/deploy/marketing-dashboard/coleta.log
 ```
 
 O `COLLECT_TOKEN` é gerado pelo instalador e fica no `.env`.
+
+---
+
+## Entrada de dados de fora (n8n)
+
+O coletor interno vai buscar nas APIs. `POST /api/ingest` faz o caminho inverso:
+**recebe linhas prontas** de quem você quiser — um fluxo do n8n, um script, uma
+planilha.
+
+Isso muda uma coisa importante: **de onde o dado vem deixa de ser decisão do
+código**. Windsor, Reportei, API nativa ou uma mistura dos três entram pelo mesmo
+lugar, e trocar de fornecedor vira trocar um nó no n8n.
+
+### Como chamar
+
+Mesma autorização da coleta — sessão master, ou o `COLLECT_TOKEN` no Bearer:
+
+```bash
+curl -X POST https://seudominio/api/ingest \
+  -H "Authorization: Bearer $COLLECT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client": "isentei",
+    "ads": [{
+      "date": "2026-09-16", "channel": "meta",
+      "account_id": "710457422909643", "campaign": "[MET] Lead Form",
+      "spend": 1234.56, "impressions": 10000, "clicks": 250, "platform_leads": 18
+    }]
+  }'
+```
+
+Os três blocos são opcionais e combináveis numa chamada só: `ads`, `crm` e
+`organic`. Os nomes dos campos aceitam as duas convenções — `platform_leads` ou
+`platformLeads`, tanto faz.
+
+| Bloco | Campos obrigatórios | Chave que evita duplicar |
+|---|---|---|
+| `ads` | `date`, `channel` (`meta`/`google`) | cliente + canal + conta + campanha + dia |
+| `crm` | `id`, `createdAt` | cliente + `id` |
+| `organic` | `date`, `source` (`ga4`, `search`, `instagram`, `facebook`, `gmb`) | cliente + fonte + conta + dimensão + dia |
+
+### Linha recusada não vira número silencioso
+
+Um fluxo com um campo mapeado errado gravaria investimento zerado sem reclamar,
+e o CPL do relatório mentiria por semanas. Então a validação é rígida: linha
+inválida é **recusada e devolvida com o motivo**, não gravada pela metade.
+
+```json
+{
+  "cliente": "isentei",
+  "gravados": { "ads": 1, "crm": 1, "organic": 1 },
+  "recusados": [
+    { "kind": "ads", "index": 3, "motivo": "canal \"tiktok\" inválido — use \"meta\" ou \"google\"." },
+    { "kind": "crm", "index": 1, "motivo": "campo \"id\" é obrigatório — é a chave que evita duplicar a negociação." }
+  ],
+  "periodo": { "from": "2026-09-17", "to": "2026-09-17" }
+}
+```
+
+O código HTTP diz o que aconteceu sem precisar ler o corpo:
+
+| Código | Significado |
+|---|---|
+| **200** | Tudo gravado |
+| **207** | Gravou em parte — veja `recusados` |
+| **400** | Cliente inexistente, JSON inválido ou banco desligado |
+| **401** | Token errado |
+
+### Reenviar é seguro
+
+A gravação é idempotente, igual à da coleta interna: mandar o mesmo dia duas
+vezes **atualiza** a linha em vez de duplicar. É por isso que o fluxo pode
+rodar numa janela de 7 dias para trás — Meta e Google revisam números depois do
+fechamento do dia — e pode ser repetido sem medo quando falhar no meio.
+
+Cada chamada aparece em **Administração › Dados**, na mesma lista da coleta
+interna, marcada como **Entrada externa**. Chamada com linha recusada fica em
+vermelho.
+
+### Exemplo pronto para importar
+
+`exemplos/n8n-ingest.json` é um fluxo completo: agenda diária, busca na fonte,
+mapeia, envia e **avisa quando alguma linha é recusada**. Importe no n8n, troque
+a URL, o token e o nó "Buscar na fonte" pelo extrator que você usar — o nó
+"Mapear para o dashboard" é o único lugar que muda ao trocar de fornecedor.
 
 ---
 

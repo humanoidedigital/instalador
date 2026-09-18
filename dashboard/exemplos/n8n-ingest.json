@@ -1,0 +1,267 @@
+{
+  "name": "Dashboard — entrada diária (exemplo)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 5,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "id": "cron",
+      "name": "Todo dia 5h30",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -380,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "cliente",
+              "value": "isentei",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "de",
+              "value": "={{ $now.minus(7, 'days').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "ate",
+              "value": "={{ $now.toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "params",
+      "name": "Cliente e período",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        0
+      ],
+      "notes": "Janela de 7 dias: Meta e Google revisam números depois do fechamento do dia. Como a gravação é idempotente, reenviar corrige em vez de duplicar."
+    },
+    {
+      "parameters": {
+        "url": "https://connectors.windsor.ai/facebook",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "={{ $credentials.windsor }}"
+            },
+            {
+              "name": "date_from",
+              "value": "={{ $json.de }}"
+            },
+            {
+              "name": "date_to",
+              "value": "={{ $json.ate }}"
+            },
+            {
+              "name": "fields",
+              "value": "date,account_id,account_name,campaign_id,campaign,objective,spend,impressions,clicks,actions_lead"
+            },
+            {
+              "name": "_renderer",
+              "value": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fonte",
+      "name": "Buscar na fonte",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        0
+      ],
+      "notes": "Troque por qualquer fonte: Reportei Connect, MCP Client, planilha, API nativa. O que importa é o formato que sai do próximo nó."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Traduz a resposta da fonte para o formato que o dashboard aceita.\n// É aqui — e só aqui — que você mexe ao trocar de extrator.\nconst params = $('Cliente e período').first().json;\nconst linhas = $input.first().json.data || [];\n\nconst ads = linhas.map((linha) => ({\n  date: String(linha.date).slice(0, 10),\n  channel: 'meta',\n  account_id: linha.account_id,\n  account_name: linha.account_name,\n  campaign_id: linha.campaign_id,\n  campaign: linha.campaign,\n  campaign_type: linha.objective,\n  spend: linha.spend,\n  impressions: linha.impressions,\n  clicks: linha.clicks,\n  platform_leads: linha.actions_lead,\n}));\n\nreturn [{ json: { client: params.cliente, ads } }];"
+      },
+      "id": "mapear",
+      "name": "Mapear para o dashboard",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://SEU-DOMINIO/api/ingest",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer COLE_AQUI_O_COLLECT_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "ingest",
+      "name": "Enviar ao dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        0
+      ],
+      "notes": "neverError ligado para o próximo nó conseguir ler o 207 (gravou em parte) em vez de abortar o fluxo."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 200
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "conferir",
+      "name": "Tudo gravado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        0
+      ],
+      "notes": "200 = tudo entrou. 207 = parte foi recusada, e o corpo traz o motivo de cada linha. 400/401 = pedido ou token errado."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Linha recusada vira aviso: dado faltando não pode passar despercebido.\nconst corpo = $json.body || {};\nconst recusados = corpo.recusados || [];\nthrow new Error(`${recusados.length} linha(s) recusada(s): ` + recusados.slice(0, 5).map((r) => `${r.kind}[${r.index}] ${r.motivo}`).join(' | '));"
+      },
+      "id": "alerta",
+      "name": "Avisar o que foi recusado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        120
+      ]
+    }
+  ],
+  "connections": {
+    "Todo dia 5h30": {
+      "main": [
+        [
+          {
+            "node": "Cliente e período",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cliente e período": {
+      "main": [
+        [
+          {
+            "node": "Buscar na fonte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar na fonte": {
+      "main": [
+        [
+          {
+            "node": "Mapear para o dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear para o dashboard": {
+      "main": [
+        [
+          {
+            "node": "Enviar ao dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar ao dashboard": {
+      "main": [
+        [
+          {
+            "node": "Tudo gravado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tudo gravado?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Avisar o que foi recusado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

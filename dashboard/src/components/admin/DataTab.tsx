@@ -55,6 +55,14 @@ function Cell({ entry }: { entry: CoverageEntry | null }) {
   );
 }
 
+/** Rótulo de cada origem de coleta. "ingest" é o que entrou de fora, pelo n8n. */
+const SOURCE_LABELS: Record<string, string> = {
+  ads: "Mídia",
+  crm: "CRM",
+  organic: "Orgânico",
+  ingest: "Entrada externa",
+};
+
 export function DataTab() {
   const [info, setInfo] = useState<DataInfo | null>(null);
   const [status, setStatus] = useState<{ tone: "ok" | "erro" | "aviso"; text: string } | null>(null);
@@ -207,7 +215,7 @@ export function DataTab() {
                     {run.clientId}
                   </td>
                   <td className="py-2 pr-3" style={{ borderBottom: "1px solid var(--border)", color: "var(--text-secondary)" }}>
-                    {run.source === "ads" ? "Mídia" : "CRM"}
+                    {SOURCE_LABELS[run.source] || run.source}
                   </td>
                   <td className="tnum py-2 pr-3" style={{ borderBottom: "1px solid var(--border)", color: "var(--text-secondary)" }}>
                     {br(run.rangeFrom)} – {br(run.rangeTo)}
