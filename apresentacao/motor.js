@@ -1,7 +1,7 @@
-/* Motor da apresentação Raio-X de Receita.
+/* Motor da apresentação Raio-X Comercial.
    Lê window.MARCA (marca.js) e window.NICHOS (nichos/*.js) e monta os slides.
-   A lógica (pontuação, projeção, relatório) é a mesma para todo nicho; o que muda
-   são os textos, as perguntas e os parâmetros que cada arquivo de nicho define. */
+   A lógica (placar, custo de esperar, empilhamento, relatório) é a mesma para todo nicho;
+   o que muda são os textos, as telas do raio-x e os parâmetros que cada arquivo de nicho define. */
 (function(){
   'use strict';
 
@@ -31,36 +31,16 @@
     }
   })();
 
-  // ============ edições (modo edição) ============
-  const ED_KEY = 'rb:edicoes';
-  const norm = e => ({ marca: Object.assign({}, e && e.marca), nichos: Object.assign({}, e && e.nichos) });
-  let embutidas = {};
-  try{ embutidas = JSON.parse(($('#edicoes-embutidas') || {}).textContent || '{}'); }catch(e){}
-  embutidas = norm(embutidas);
-  let localEd = norm(store.get(ED_KEY));
-  let ED = { marca:{}, nicho:{} };
-  function refreshED(){
-    ED.marca = Object.assign({}, embutidas.marca, localEd.marca);
-    ED.nicho = N ? Object.assign({}, embutidas.nichos[N.id], localEd.nichos[N.id]) : {};
-  }
-  function setEdit(sc, path, v){
-    const original = getPath(sc === 'nicho' ? N : MARCA, path);
-    const alvo = sc === 'nicho' ? (localEd.nichos[N.id] = localEd.nichos[N.id] || {}) : localEd.marca;
-    if(String(v) === String(original ?? '') && !(sc === 'nicho' ? (embutidas.nichos[N.id] || {}) : embutidas.marca).hasOwnProperty(path)) delete alvo[path];
-    else alvo[path] = v;
-    store.set(ED_KEY, localEd);
-    refreshED();
-  }
-
   // ============ estado ============
   let N = null;                       // nicho ativo
   let dx = novoDx();                  // diagnóstico em andamento
-  let slides = [];                    // [{id, el, oculto}]
+  let slides = [];
   let idx = 0;
   let editing = false;
+  const abertos = new Set();          // acordeões abertos no slide final
 
   function hojeISO(){ const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
-  function novoDx(){ return { ident:{ empresa:'', responsavel:'', whatsapp:'', data:hojeISO() }, resp:{}, nums:{} }; }
+  function novoDx(){ return { ident:{ empresa:'', whatsapp:'', data:hojeISO() }, resp:{}, nums:{} }; }
   const dxKey = () => 'rb:dx:' + (N ? N.id : 'x');
   let saveT = null;
   function gravarDx(){ clearTimeout(saveT); saveT = null; dx.ts = Date.now(); store.set(dxKey(), dx); }
@@ -68,7 +48,29 @@
   window.addEventListener('pagehide', () => { if(saveT) gravarDx(); });
   document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden' && saveT) gravarDx(); });
 
-  // ============ leitura de dados com edição e fallback nicho → marca ============
+  // ============ edições (modo edição) ============
+  const ED_KEY = 'rb:edicoes';
+  const norm = e => ({ marca: Object.assign({}, e && e.marca), nichos: Object.assign({}, e && e.nichos) });
+  let embutidas = {};
+  try{ embutidas = JSON.parse(($('#edicoes-embutidas') || {}).textContent || '{}'); }catch(e){}
+  embutidas = norm(embutidas);
+  let localEd = norm(store.get(ED_KEY));
+  const ED = { marca:{}, nicho:{} };
+  function refreshED(){
+    ED.marca = Object.assign({}, embutidas.marca, localEd.marca);
+    ED.nicho = N ? Object.assign({}, embutidas.nichos[N.id], localEd.nichos[N.id]) : {};
+  }
+  function setEdit(sc, path, v){
+    const original = getPath(sc === 'nicho' ? N : MARCA, path);
+    const alvo = sc === 'nicho' ? (localEd.nichos[N.id] = localEd.nichos[N.id] || {}) : localEd.marca;
+    const base = sc === 'nicho' ? (embutidas.nichos[N.id] || {}) : embutidas.marca;
+    if(String(v) === String(original == null ? '' : original) && !Object.prototype.hasOwnProperty.call(base, path)) delete alvo[path];
+    else alvo[path] = v;
+    store.set(ED_KEY, localEd);
+    refreshED();
+  }
+
+  // ============ leitura: edição → nicho → marca ============
   function getPath(o, p){ return String(p).split('.').reduce((a, k) => (a == null ? undefined : a[k]), o); }
   function resolve(path){
     if(N){
@@ -83,15 +85,17 @@
   function list(path){ const a = N && getPath(N, path); if(Array.isArray(a)) return a; const b = getPath(MARCA, path); return Array.isArray(b) ? b : []; }
   function merged(key){ return Object.assign({}, MARCA[key], N && N[key]); }
 
-  const TERMOS_PADRAO = { empresa:'empresa', empresas:'empresas', cliente:'cliente', clientes:'clientes', venda:'venda', vendas:'vendas', ticket:'ticket médio' };
+  const TERMOS_PADRAO = { empresa:'empresa', empresas:'empresas', cliente:'cliente', clientes:'clientes', venda:'venda', vendas:'vendas',
+    ticket:'ticket médio', receita:'receita', suaReceita:'sua receita', fimJornada:'a venda fechada' };
   function termo(k){
+    if(k === 'marca' || k === 'Marca') return MARCA.curto || MARCA.nome || '';
     const t = Object.assign({}, TERMOS_PADRAO, MARCA.termos, N && N.termos);
     if(t[k] != null) return t[k];
     const low = k.charAt(0).toLowerCase() + k.slice(1);
     if(k !== low && t[low] != null) return t[low].charAt(0).toUpperCase() + t[low].slice(1);
     return null;
   }
-  const LIVE = ['meses', 'fator12', 'empresa_cliente'];
+  const LIVE = ['meses', 'fator12'];
   function esc(s){ return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c])); }
   function fmt(s){
     if(s == null) return '';
@@ -106,9 +110,16 @@
     h = h.replace(/\*([^*\n]+)\*/g, '<span class="hl">$1</span>');
     return h.replace(/\n/g, '<br>');
   }
-  const plain = s => (s == null ? '' : String(s).replace(/\{(\w+)\}/g, (m, k) => { const v = termo(k); return v != null ? v : (k === 'meses' ? 'alguns meses' : m); }).replace(/[*\[\]]/g, '').replace(/~~[^~]*~~/g, '').trim());
-
-  // elemento de texto editável
+  // texto puro (resumo, PDF): troca termos e tokens extras, tira marcações
+  function plain(s, extra){
+    if(s == null) return '';
+    return String(s).replace(/\{(\w+)\}/g, (m, k) => {
+      if(extra && extra[k] != null) return extra[k];
+      const v = termo(k); if(v != null) return v;
+      if(k === 'meses'){ const M = Math.round(num('meses')); return M > 0 ? (M === 1 ? '1 mês' : M + ' meses') : 'alguns meses'; }
+      return m;
+    }).replace(/~~([^~]*)~~/g, '$1').replace(/[*\[\]]/g, '').trim();
+  }
   function T(path, tag, cls){
     tag = tag || 'span';
     const r = resolve(path);
@@ -120,17 +131,19 @@
   const nf0 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits:0 });
   const nf1 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits:1 });
   const brl = v => 'R$ ' + nf0.format(Math.round(v || 0));
-  const brlK = v => { const a = Math.abs(v); if(a >= 1e6) return nf1.format(v / 1e6) + ' mi'; if(a >= 1e3) return nf1.format(v / 1e3) + ' mil'; return nf0.format(v); };
-  const pct = v => nf1.format(v) + '%';
+  const brlS = v => (v < 0 ? '-' : '') + brl(Math.abs(v));
   function num(id){ const v = parseFloat(String(dx.nums[id] == null ? '' : dx.nums[id]).replace(',', '.')); return isFinite(v) ? v : 0; }
 
-  // ============ raio-x: pontuação ============
-  const cats = () => (N && Array.isArray(N.categorias)) ? N.categorias : [];
-  const qkey = (c, q, i) => c.id + '.' + (q.id || i);
+  // ============ raio-x ============
+  const secoes = () => (N && Array.isArray(N.raiox)) ? N.raiox : [];
+  const areas = () => (N && Array.isArray(N.areas) && N.areas.length) ? N.areas : [{ id:'comercial', nome:'Comercial' }];
   const optObj = o => (o && typeof o === 'object') ? o : { t:o };
+  const qkey = (s, q, i) => s.id + '.' + (q.id || i);
+  const qPath = (si, qi) => 'raiox.' + si + '.perguntas.' + qi;
+  const optPath = (si, qi, oi) => { const o = (secoes()[si].perguntas || [])[qi].opcoes[oi]; return qPath(si, qi) + '.opcoes.' + oi + (o && typeof o === 'object' ? '.t' : ''); };
   function pontua(q){ return q.tipo === 'multipla' ? typeof q.bom === 'number' : (q.opcoes || []).some(o => typeof optObj(o).dor === 'number'); }
-  function dorQ(c, q, i){
-    const r = dx.resp[qkey(c, q, i)];
+  function dorQ(s, q, i){
+    const r = dx.resp[qkey(s, q, i)];
     const sel = (r && r.sel) || [];
     if(q.tipo === 'multipla'){
       if(typeof q.bom !== 'number' || !sel.length) return null;
@@ -140,95 +153,90 @@
     const o = optObj((q.opcoes || [])[sel[0]]);
     return typeof o.dor === 'number' ? o.dor : null;
   }
-  function catStats(c){
-    let tot = 0, n = 0, alertas = 0;
-    (c.perguntas || []).forEach((q, i) => { const d = dorQ(c, q, i); if(d == null) return; tot += d; n++; if(d >= 0.99) alertas++; });
-    return { n, total:(c.perguntas || []).filter(pontua).length, alertas, aprov: n ? Math.round((1 - tot / n) * 100) : null };
+  function cadaPergunta(fn){ secoes().forEach((s, si) => (s.perguntas || []).forEach((q, qi) => fn(s, si, q, qi))); }
+  function areaStats(aid){
+    let tot = 0, n = 0, alertas = 0, total = 0, respondidas = 0, perguntas = 0;
+    cadaPergunta((s, si, q, qi) => {
+      if((s.area || 'comercial') !== aid) return;
+      perguntas++;
+      if(respostaTexto(si, qi)) respondidas++;
+      if(!pontua(q)) return;
+      total++;
+      const d = dorQ(s, q, qi);
+      if(d == null) return;
+      tot += d; n++; if(d >= 0.99) alertas++;
+    });
+    return { dor: n ? tot / n : null, aprov: n ? Math.round((1 - tot / n) * 100) : null, n, total, alertas, respondidas, perguntas };
   }
+  const areasQuePontuam = () => areas().filter(a => areaStats(a.id).total > 0);
   const tier = a => a == null ? 'nodata' : (a < 34 ? 'red' : a < 66 ? 'yellow' : 'green');
   const TIER = { red:'Crítico', yellow:'Atenção', green:'Sob controle', nodata:'Sem dados' };
   function geral(){
-    const st = cats().map(c => ({ c, s:catStats(c) })).filter(x => x.s.aprov != null);
+    const st = areasQuePontuam().map(a => ({ a, s:areaStats(a.id) })).filter(x => x.s.dor != null);
     if(!st.length) return { aprov:null, st:[] };
-    return { aprov: Math.round(st.reduce((a, x) => a + x.s.aprov, 0) / st.length), st };
+    const dor = st.reduce((s, x) => s + x.s.dor, 0) / st.length;
+    return { aprov:Math.round((1 - dor) * 100), dor, st };
   }
-  function respostaTexto(c, q, i){
-    const r = dx.resp[qkey(c, q, i)];
+  function respostaTexto(si, qi){
+    const s = secoes()[si], q = s.perguntas[qi];
+    const r = dx.resp[qkey(s, q, qi)];
     const sel = (r && r.sel) || [];
     if(!sel.length) return '';
     return sel.map(oi => {
-      const base = plain(raw(optPath(c, q, i, oi)));
+      const base = plain(raw(optPath(si, qi, oi))).replace(/,?\s*(qual|quais|quanto)\?$/i, '');
       const campo = r.campos && r.campos[oi];
-      return campo ? base + ': ' + campo : base;
-    }).join(', ');
+      return campo ? base + ' (' + campo + ')' : base;
+    }).join(' · ');
   }
-  function catIndex(c){ return cats().indexOf(c); }
-  function qPath(c, i){ return 'categorias.' + catIndex(c) + '.perguntas.' + i; }
-  function optPath(c, q, i, oi){ const o = (q.opcoes || [])[oi]; return qPath(c, i) + '.opcoes.' + oi + (o && typeof o === 'object' ? '.t' : ''); }
+  const nomeArea = a => plain(raw('areas.' + areas().indexOf(a) + '.nome')) || a.nome;
 
-  // ============ cálculos ============
-  function calc(){
-    const P = Object.assign({ recorrente:false, ganho:0.3, referencia:{} }, merged('projecao'));
-    const ref = P.referencia || {};
-    const leads = num('leads'), vendas = num('vendas'), ticket = num('ticket'), midia = num('midia');
-    const V = vendas > 0 ? vendas : (ref.vendas || 10);
-    const Tk = ticket > 0 ? ticket : (ref.ticket || 300);
-    const usaRef = !(vendas > 0 && ticket > 0);
-    const extra = Math.max(1, Math.round(V * P.ganho));
-    const mensal = extra * Tk;
-    const perm = P.permanencia > 0 ? P.permanencia : Infinity;
-    const serie = n => { const a = []; for(let m = 1; m <= n; m++) a.push(P.recorrente ? mensal * Math.min(m, perm) : mensal * m); return a; };
-    const total = n => P.recorrente ? serie(n).reduce((s, v) => s + v, 0) : mensal * n;
-    const M = Math.round(num('meses')), C = num('custo'), R0 = num('receitaIni'), R1 = num('receitaHoje');
-    let espera = null;
-    if(M >= 1 && (R0 > 0 || R1 > 0)){
-      const inc = (R1 - R0) / M;
-      espera = { M, C, R0, R1, investido:C * M, inc, ganho:inc * M * (M + 1) / 2, varPct: R0 > 0 ? (R1 - R0) / R0 * 100 : null, nosso:total(M) };
-    } else if(M >= 1 && C > 0){
-      espera = { M, C, investido:C * M, semReceita:true };
+  // ============ contas ============
+  // O custo de esperar: M meses tentando, V custo operacional por mês, R0 receita no início, R1 hoje.
+  // O ganho sobe em rampa: no mês m a receita está incremento × m acima do início, então o
+  // acumulado é incremento × m(m+1)/2. Saldo = ganho acumulado − investido; payback = 1º mês com saldo ≥ 0.
+  function custoEsperar(){
+    const M = Math.round(num('meses')), V = num('custo'), R0 = num('receitaIni'), R1 = num('receitaHoje');
+    if(M < 1 || (R0 <= 0 && R1 <= 0)) return null;
+    const inc = (R1 - R0) / M, cresceu = R1 > R0, linhas = [];
+    let payback = null;
+    for(let m = 1; m <= M; m++){
+      const ganho = inc * m * (m + 1) / 2, investido = V * m, saldo = ganho - investido;
+      linhas.push({ mes:m, ganho, investido, saldo });
+      if(cresceu && payback === null && saldo >= 0) payback = m;
     }
+    const fim = linhas[M - 1], per = M === 1 ? '1 mês' : M + ' meses', b = t => '<b>' + t + '</b>';
+    let html;
+    if(!cresceu) html = 'Você gastou ' + b(brl(V * M)) + ' em ' + b(per) + ' e ' + esc(termo('suaReceita')) + ' ' + (R1 < R0 ? b('caiu') : b('não cresceu')) + '.';
+    else if(fim.saldo > 0) html = 'Em ' + b(per) + ' e ' + b(brl(V * M)) + ' investidos, você teve ' + b(brl(fim.saldo)) + ' de ganho líquido acumulado de ' + esc(termo('receita')) + '.';
+    else html = 'Em ' + b(per) + ' e ' + b(brl(V * M)) + ' investidos, você ainda não recuperou o que gastou. Seu saldo está ' + b(brl(Math.abs(fim.saldo)) + ' negativo') + '.';
+    return { M, V, R0, R1, inc, cresceu, payback, linhas: cresceu ? linhas : [], ganhoFinal:fim.ganho, investidoFinal:V * M, saldoFinal:fim.saldo, html, texto:html.replace(/<[^>]+>/g, '') };
+  }
+  // Empilhamento: clientes novos por mês × ticket. Recorrente (escola): cada mês soma os anteriores.
+  // Venda única (veículo): o resultado acumula mês a mês.
+  function proj(){
+    const P = Object.assign({ recorrente:true, multiplicador:2, conta:'total', baseRotulo:'{n} {clientes} novos/mês', explicacao:'o dobro das {hoje} que você faz hoje' }, merged('projecao'));
+    const ref = Object.assign({ base:10, ticket:278 }, P.referencia);
+    const vendas = num('vendas'), ticket = num('ticket');
+    const fator = P.conta === 'extra' ? P.multiplicador - 1 : P.multiplicador;
+    const base = vendas > 0 ? Math.max(1, Math.round(vendas * fator)) : ref.base;
+    const Tk = ticket > 0 ? ticket : ref.ticket;
+    const mensal = base * Tk;
+    const serie = n => Array.from({ length:n }, (_, i) => mensal * (i + 1));
+    const total = n => P.recorrente ? mensal * n * (n + 1) / 2 : mensal * n;
     return {
-      P, leads, vendas, ticket, midia, V, Tk, usaRef, extra, mensal, serie, total, espera,
-      conv: leads > 0 && vendas > 0 ? vendas / leads * 100 : null,
-      cpl: leads > 0 && midia > 0 ? midia / leads : null,
-      cac: vendas > 0 && midia > 0 ? midia / vendas : null,
-      porPonto: leads > 0 && ticket > 0 ? leads * 0.01 * ticket : null
+      P, vendas, ticket, base, Tk, mensal, serie, total,
+      ref: !(vendas > 0 && ticket > 0),
+      rot: plain(P.baseRotulo, { n:nf1.format(base) }),
+      expl: vendas > 0 ? plain(P.explicacao, { hoje:nf1.format(vendas) }) : ''
     };
   }
-  function fraseEspera(e){
-    if(!e) return '';
-    const per = e.M === 1 ? '1 mês' : e.M + ' meses';
-    if(e.semReceita) return `Em <b>${per}</b> foram <b>${brl(e.investido)}</b> investidos em comercial e marketing.`;
-    const inv = e.C > 0 ? ` e <b>${brl(e.investido)}</b> investidos em comercial e marketing` : '';
-    if(e.R1 < e.R0) return `Em <b>${per}</b>${inv}, a receita mensal <b>caiu ${brl(e.R0 - e.R1)}</b>.`;
-    if(e.R1 === e.R0) return `Em <b>${per}</b>${inv}, a receita mensal <b>ficou parada</b>.`;
-    return `Em <b>${per}</b>${inv}, a receita mensal subiu <b>${brl(e.R1 - e.R0)}</b>${e.varPct != null ? ` (<b>+${nf1.format(e.varPct)}%</b>)` : ''}.`;
-  }
-  function leitura(aprov, piores){
-    if(aprov == null) return 'Ainda sem respostas suficientes para a leitura.';
-    const emp = termo('empresa');
-    let t;
-    if(aprov < 34) t = `A ${emp} aproveita hoje ${aprov}% do potencial comercial que já tem. A maior parte do resultado depende de esforço individual, não de processo.`;
-    else if(aprov < 66) t = `A ${emp} aproveita hoje ${aprov}% do potencial comercial que já tem. Parte do processo existe, mas convive com etapas que dependem de memória e improviso.`;
-    else t = `A ${emp} aproveita hoje ${aprov}% do potencial comercial que já tem, com processo presente na maior parte das áreas. Ainda dá para destravar o resto.`;
-    if(piores.length) t += ` Os maiores pontos de atenção estão em ${piores.join(' e ')}.`;
-    return t;
-  }
-  function piores(g){ return g.st.filter(x => x.s.aprov < 66).sort((a, b) => a.s.aprov - b.s.aprov).slice(0, 2).map(x => plain(raw('categorias.' + catIndex(x.c) + '.nome'))); }
+  function secaoDoCampo(id){ return secoes().findIndex(s => (s.campos || []).some(c => c.id === id)); }
+  function paginaDoCampo(id){ const si = secaoDoCampo(id); return si < 0 ? '' : plain(raw('raiox.' + si + '.titulo')); }
+  function rotuloDoCampo(id){ const si = secaoDoCampo(id); if(si < 0) return id; const fi = secoes()[si].campos.findIndex(c => c.id === id); return plain(raw('raiox.' + si + '.campos.' + fi + '.rotulo')).replace(/\?$/, ''); }
 
   // ============ slides ============
-  function campo(grupo, id, tipo){
-    const b = grupo + '.campos.' + id;
-    const pre = raw(b + '.pre');
-    return `<div class="field">
-      ${T(b + '.rotulo', 'label', '')}
-      ${raw(b + '.hint') != null ? T(b + '.hint', 'div', 'fhint') : ''}
-      <div class="inwrap">${pre ? `<span class="pre">${esc(pre)}</span>` : ''}<input id="n-${id}" data-num="${id}" type="${tipo || 'number'}" inputmode="decimal" placeholder="0" autocomplete="off"></div>
-      ${T(b + '.suf', 'div', 'suf')}
-    </div>`;
-  }
-  function stats(path){
-    return `<div class="stats reveal">${list(path).map((s, i) => `<div class="stat">${T(path + '.' + i + '.valor', 'div', 'n count')}${T(path + '.' + i + '.rotulo', 'div', 'l')}</div>`).join('')}</div>`;
+  function stats(path, cls){
+    return `<div class="stats ${cls == null ? 'reveal' : cls}">${list(path).map((s, i) => `<div class="stat">${T(path + '.' + i + '.valor', 'div', 'n count')}${T(path + '.' + i + '.rotulo', 'div', 'l')}</div>`).join('')}</div>`;
   }
   function foto(path, nomePath){
     const src = raw(path);
@@ -237,26 +245,31 @@
     const ini = nome.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
     return `<div class="photo" aria-hidden="true">${esc(ini)}</div>`;
   }
+  function shot(imgPath, capPath, vazio){
+    const src = raw(imgPath);
+    return `<div class="shot">${src ? `<img src="${esc(src)}" alt="">` : `<div class="vazio"><div>${vazio}<br>Coloque a imagem em <b>assets/</b> e informe o caminho em <b>${esc(imgPath)}</b>.</div></div>`}${capPath && raw(capPath) ? T(capPath, 'div', 'cap') : ''}</div>`;
+  }
+  function campo(si, fi){
+    const f = secoes()[si].campos[fi], b = 'raiox.' + si + '.campos.' + fi;
+    return `<div class="field">
+      ${T(b + '.rotulo', 'label')}
+      ${f.sub != null ? T(b + '.sub', 'div', 'fhint') : ''}
+      <div class="inwrap">${f.pre ? `<span class="pre">${esc(f.pre)}</span>` : ''}<input id="n-${esc(f.id)}" data-num="${esc(f.id)}" type="number" inputmode="decimal" placeholder="0" autocomplete="off"></div>
+      ${T(b + '.suf', 'div', 'suf')}
+    </div>`;
+  }
 
   const B = {
     capa: () => `
       <img class="logo-big reveal" src="${esc(MARCA.logo || '')}" alt="${esc(MARCA.nome || '')}">
-      ${T('capa.kicker', 'div', 'kicker reveal')}
-      ${T('capa.titulo', 'h1', 'h1 reveal')}
-      <div class="capa-line reveal"></div>
-      ${T('capa.sub', 'p', 'sub reveal')}`,
+      <div class="rule reveal"></div>
+      ${T('capa.tagline', 'div', 'tagline reveal')}`,
 
     especialista: () => `
       ${T('especialista.kicker', 'div', 'kicker reveal')}
-      <div class="row reveal">
-        ${foto('especialista.foto', 'especialista.nome')}
-        <div style="display:flex;flex-direction:column;gap:.6cqw;min-width:0">
-          ${T('especialista.nome', 'h2', 'h2')}
-          ${T('especialista.cargo', 'div', 'sub')}
-          ${T('especialista.local', 'div', 'small')}
-        </div>
-      </div>
-      ${stats('especialista.numeros')}`,
+      ${T('especialista.nome', 'h2', 'h2 reveal')}
+      ${T('especialista.local', 'div', 'sub reveal')}
+      <div class="row reveal">${foto('especialista.foto', 'especialista.nome')}${stats('especialista.numeros', '')}</div>`,
 
     quemSomos: () => `
       ${T('quemSomos.kicker', 'div', 'kicker reveal')}
@@ -265,88 +278,67 @@
       <div class="chips reveal">${list('publico').map((p, i) => T('publico.' + i, 'div', 'chip')).join('')}</div>
       ${stats('quemSomos.numeros')}`,
 
-    problema: () => `
-      ${T('problema.kicker', 'div', 'kicker reveal')}
-      ${T('problema.titulo', 'h2', 'h2 reveal')}
-      ${T('problema.texto', 'p', 'sub reveal')}
-      <div class="pillars reveal">${list('problema.pilares').map((p, i) => `<div class="pillar">${T('problema.pilares.' + i + '.nome', 'div', 'pn')}${T('problema.pilares.' + i + '.texto', 'div', 'pt')}</div>`).join('')}</div>`,
-
-    raiox: () => `
-      ${T('raiox.kicker', 'div', 'kicker reveal')}
-      ${T('raiox.titulo', 'h2', 'h2 reveal')}
-      <div class="rx-steps reveal">${cats().map((c, i) => `<div class="rx-step"><i>${i + 1}</i>${T('categorias.' + i + '.nome')}</div>`).join('')}</div>
-      ${T('raiox.sub', 'p', 'sub reveal')}
+    antes: () => `
+      ${T('antes.kicker', 'div', 'kicker reveal')}
+      ${T('antes.titulo', 'h2', 'h2 reveal')}
+      <div class="rx-line reveal"><div class="trk"></div><div class="fil"></div>
+        <div class="nodes">${list('antes.etapas').map((e, i) => `<div class="rx-node"><i></i>${T('antes.etapas.' + i)}</div>`).join('')}</div></div>
+      ${T('antes.sub', 'p', 'sub reveal')}
       <div class="ident reveal">
         <div class="field"><label for="id-empresa">${esc(termo('Empresa'))}</label><div class="inwrap"><input class="txt" id="id-empresa" data-id="empresa" type="text" placeholder="Nome" autocomplete="off"></div></div>
-        <div class="field"><label for="id-responsavel">Responsável</label><div class="inwrap"><input class="txt" id="id-responsavel" data-id="responsavel" type="text" placeholder="Quem decide" autocomplete="off"></div></div>
-        <div class="field"><label for="id-whatsapp">WhatsApp</label><div class="inwrap"><input class="txt" id="id-whatsapp" data-id="whatsapp" type="tel" inputmode="tel" placeholder="(00) 00000-0000" autocomplete="off"></div></div>
+        <div class="field"><label for="id-whatsapp">WhatsApp do lead</label><div class="inwrap"><input class="txt" id="id-whatsapp" data-id="whatsapp" type="tel" inputmode="tel" placeholder="(00) 00000-0000" autocomplete="off"></div></div>
         <div class="field"><label for="id-data">Data</label><div class="inwrap"><input class="txt" id="id-data" data-id="data" type="date"></div></div>
       </div>
       <div class="btn-row reveal"><button class="btn ghost" type="button" data-act="novo">Novo diagnóstico</button></div>`,
 
-    categoria: (c, ci) => {
-      const total = cats().length;
+    secao: (s, si) => {
+      const b = 'raiox.' + si, cs = s.campos || [], ps = s.perguntas || [];
       return `
-      <div class="kicker reveal">Raio-X · ${ci + 1} de ${total}</div>
-      ${T('categorias.' + ci + '.titulo', 'h2', 'h2 reveal')}
-      ${T('categorias.' + ci + '.sub', 'p', 'sub reveal')}
-      <div class="qgrid reveal">${(c.perguntas || []).map((q, qi) => {
-        const qp = 'categorias.' + ci + '.perguntas.' + qi;
-        const multi = q.tipo === 'multipla';
-        return `<div class="q" data-q="${esc(qkey(c, q, qi))}" data-multi="${multi ? 1 : 0}">
+      ${T(b + '.kicker', 'div', 'kicker reveal')}
+      ${T(b + '.titulo', 'h2', 'h2 reveal')}
+      ${s.sub != null ? T(b + '.sub', 'p', 'sub reveal') : ''}
+      ${cs.length ? `<div class="fields ${cs.length === 1 ? 'um' : ''} reveal">${cs.map((c, fi) => campo(si, fi)).join('')}</div>` : ''}
+      ${ps.length ? `<div class="qgrid ${ps.length <= 2 ? 'uma' : ''} reveal">${ps.map((q, qi) => {
+        const multi = q.tipo === 'multipla', qp = qPath(si, qi);
+        return `<div class="q" data-q="${esc(qkey(s, q, qi))}" data-multi="${multi ? 1 : 0}">
           ${T(qp + '.texto', 'div', 'q-t')}
-          ${q.sub != null || multi ? (q.sub != null ? T(qp + '.sub', 'div', 'q-s') : '<div class="q-s">Pode marcar mais de um</div>') : ''}
+          ${q.sub != null ? T(qp + '.sub', 'div', 'q-s') : (multi ? '<div class="q-s">Pode marcar mais de um</div>' : '')}
           <div class="opts">${(q.opcoes || []).map((o, oi) => {
             const ob = optObj(o);
-            return `<div class="opt" role="button" tabindex="0" data-oi="${oi}">${T(optPath(c, q, qi, oi))}${ob.campo ? ` <input class="opt-in" type="text" data-campo="${oi}" placeholder="${esc(ob.campo)}" aria-label="${esc(ob.campo)}">` : ''}</div>`;
+            return `<div class="opt" role="button" tabindex="0" data-oi="${oi}">${T(optPath(si, qi, oi))}${ob.campo ? ` <input class="opt-in" type="text" data-campo="${oi}" placeholder="${esc(ob.campo)}" aria-label="${esc(ob.campo)}">` : ''}</div>`;
           }).join('')}</div>
         </div>`;
-      }).join('')}</div>`;
+      }).join('')}</div>` : ''}`;
     },
-
-    numeros: () => `
-      ${T('numeros.kicker', 'div', 'kicker reveal')}
-      ${T('numeros.titulo', 'h2', 'h2 reveal')}
-      ${T('numeros.sub', 'p', 'sub reveal')}
-      <div class="fields f4 reveal">${['leads', 'vendas', 'ticket', 'midia'].map(id => campo('numeros', id)).join('')}</div>
-      <div class="derived reveal" id="derived"></div>`,
-
-    tempo: () => `
-      ${T('tempo.kicker', 'div', 'kicker reveal')}
-      ${T('tempo.titulo', 'h2', 'h2 reveal')}
-      ${T('tempo.sub', 'p', 'sub reveal')}
-      <div class="fields reveal">${['meses', 'custo', 'receitaIni', 'receitaHoje'].map(id => campo('tempo', id)).join('')}</div>`,
 
     painel: () => `
       ${T('painel.kicker', 'div', 'kicker reveal')}
       ${T('painel.titulo', 'h2', 'h2 reveal')}
       <div class="dash reveal">
-        <div class="dash-left">
+        <div class="dash-col">
+          <div class="card hero"><div class="phrase" id="dFrase"></div><div class="flag" id="dFlag" hidden></div></div>
+          <div class="cmp" id="dCmp">
+            <div class="card">${T('painel.mine', 'div', 'label')}<div class="val" id="dMine">--</div><div class="small" id="dMineS"></div></div>
+            <div class="card nosso">${T('painel.nosso', 'div', 'label')}<div class="val" id="dNosso">--</div><div class="small" id="dNossoS"></div></div>
+          </div>
+        </div>
+        <div class="dash-col">
           <div class="card ov">
             <div class="gauge" id="gGeral"><svg viewBox="0 0 120 120"><circle class="trk" cx="60" cy="60" r="52"/><circle class="fil" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="326.73"/></svg>
               <div class="ctr"><div class="pct" id="gPct">--</div><div class="pl">de aproveitamento comercial</div></div></div>
             <div class="ov-side"><div class="tier" id="gTier">Sem dados</div><div class="small" id="gTxt"></div></div>
           </div>
-          <div class="card cats" id="dCats"></div>
-        </div>
-        <div class="dash-right">
-          <div class="card"><div class="label" style="margin-bottom:.5cqw">O custo de esperar</div><div class="phrase" id="dEspera"></div></div>
-          <div class="card"><div class="label" style="margin-bottom:.5cqw">Leads na mesa</div><div class="phrase" id="dMesa"></div></div>
-          <div class="cmp" id="dCmp">
-            <div class="card"><div class="label">Você, no período</div><div class="val" id="dMine">--</div><div class="small" id="dMineS"></div></div>
-            <div class="card nosso"><div class="label">${T('painel.nosso')}</div><div class="val" id="dNosso">--</div><div class="small" id="dNossoS"></div></div>
-          </div>
-          <div class="flag" id="dFlag" hidden></div>
+          <div class="card areas" id="dAreas"></div>
         </div>
       </div>`,
 
-    metodo: () => {
-      const et = list('metodo.etapas');
+    resolvemos: () => {
+      const et = list('resolvemos.etapas');
       return `
-      ${T('metodo.kicker', 'div', 'kicker reveal')}
-      ${T('metodo.titulo', 'h2', 'h2 reveal')}
-      <div class="flow reveal" style="--n:${et.length}">${et.map((e, i) => `<div class="fstep">${T('metodo.etapas.' + i + '.nome', 'div', 'fn')}${T('metodo.etapas.' + i + '.texto', 'div', 'ft')}</div>`).join('')}</div>
-      ${T('metodo.fecho', 'p', 'sub reveal')}`;
+      ${T('resolvemos.kicker', 'div', 'kicker reveal')}
+      ${T('resolvemos.titulo', 'h2', 'h2 reveal')}
+      <div class="flow reveal">${et.map((e, i) => `${i ? '<div class="farrow" aria-hidden="true">→</div>' : ''}<div class="fstep"><div class="circ">${i + 1}</div><div>${T('resolvemos.etapas.' + i + '.nome', 'div', 'fn')}${T('resolvemos.etapas.' + i + '.texto', 'div', 'ft')}</div></div>`).join('')}</div>
+      ${T('resolvemos.fecho', 'p', 'sub reveal')}`;
     },
 
     perfis: () => `
@@ -354,56 +346,64 @@
       ${T('perfis.titulo', 'h2', 'h2 reveal')}
       <div class="prof reveal">${list('perfis.itens').map((p, i) => `<div class="prow">${T('perfis.itens.' + i + '.perfil', 'div', 'pp')}<div class="pa" aria-hidden="true">→</div>${T('perfis.itens.' + i + '.dor', 'div', 'pd')}</div>`).join('')}</div>`,
 
-    case: () => {
-      const img = raw('case.imagem');
-      return `
-      ${T('case.kicker', 'div', 'kicker reveal')}
-      ${T('case.cliente', 'h2', 'h2 reveal')}
-      <div class="case reveal">
-        <div class="case-shot">${img ? `<img src="${esc(img)}" alt="">` : '<div>Espaço para o print do resultado.<br>Coloque a imagem em assets/ e informe o caminho em <b>case.imagem</b> (marca.js ou no nicho).</div>'}</div>
-        <div style="display:flex;flex-direction:column;gap:1.2cqw;min-width:0">
-          ${T('case.segmento', 'div', 'label')}
-          ${T('case.texto', 'p', 'sub')}
-          ${stats('case.numeros').replace('stats reveal', 'stats')}
-        </div>
-      </div>`;
-    },
+    marcas: () => `
+      ${T('marcas.kicker', 'div', 'kicker reveal')}
+      ${T('marcas.titulo', 'h2', 'h2 reveal')}
+      <div class="feature reveal">${T('marcas.tag', 'div', 'kicker')}${T('case.nome', 'div', 'h1')}${T('case.descricao', 'div', 'sub')}</div>
+      ${T('case.insight', 'div', 'insight reveal')}`,
 
-    entregas: () => {
-      const it = list('entregas.itens');
-      return `
-      ${T('entregas.kicker', 'div', 'kicker reveal')}
-      ${T('entregas.titulo', 'h2', 'h2 reveal')}
-      <div class="deliv reveal" style="--n:${it.length}">${it.map((d, i) => `<div class="dcol">${T('entregas.itens.' + i + '.nome', 'div', 'h3')}<ul>${(d.itens || []).map((b, j) => T('entregas.itens.' + i + '.itens.' + j, 'li')).join('')}</ul></div>`).join('')}</div>`;
-    },
+    case: () => `
+      ${T('case.kicker', 'div', 'kicker reveal')}
+      ${T('case.nome', 'h2', 'h2 reveal')}
+      <div class="proof reveal">${shot('case.imagem', 'case.legenda', 'Espaço para o print do resultado.')}${stats('case.numeros', '')}</div>
+      ${T('case.rodape', 'div', 'label reveal')}`,
+
+    mkt: () => `
+      ${T('mkt.kicker', 'div', 'kicker reveal')}
+      ${T('mkt.titulo', 'h2', 'h2 reveal')}
+      <div class="split reveal">
+        <div><ul class="blist">${list('mkt.itens').map((x, i) => T('mkt.itens.' + i, 'li')).join('')}</ul>
+          <div class="big-stat">${T('mkt.destaque.valor', 'div', 'n count')}${T('mkt.destaque.rotulo', 'div', 'l')}</div></div>
+        ${shot('mkt.imagem', '', 'Espaço para o print do Instagram de um cliente.')}
+      </div>`,
+
+    ferramenta: () => `
+      ${T('ferramenta.kicker', 'div', 'kicker reveal')}
+      ${T('ferramenta.titulo', 'h2', 'h2 reveal')}
+      <div class="split empilha reveal">
+        <ul class="blist">${list('ferramenta.itens').map((x, i) => T('ferramenta.itens.' + i, 'li')).join('')}</ul>
+        ${shot('ferramenta.imagem', '', 'Espaço para o print do pipeline no CRM.')}
+      </div>`,
 
     time: () => {
       const ps = list('time.pessoas');
       return `
       ${T('time.kicker', 'div', 'kicker reveal')}
       ${T('time.titulo', 'h2', 'h2 reveal')}
+      ${T('time.sub', 'p', 'sub reveal')}
       <div class="team reveal" style="--n:${ps.length}">${ps.map((p, i) => `<div class="person">${foto('time.pessoas.' + i + '.foto', 'time.pessoas.' + i + '.nome')}${T('time.pessoas.' + i + '.nome', 'div', 'h3')}${T('time.pessoas.' + i + '.cargo', 'div', 'role')}${T('time.pessoas.' + i + '.texto', 'p')}</div>`).join('')}</div>`;
     },
 
-    projecao: n => `
-      ${T('projecao.kicker' + n, 'div', 'kicker reveal')}
-      ${T('projecao.titulo' + n, 'h2', 'h2 reveal')}
-      <div class="proj reveal">
-        <div><div class="bars" id="bars${n}">${Array.from({ length:n }, (_, i) => `<div class="bar-c"><div class="bar-t"><div class="bar-f"><span class="bar-v"></span></div></div><div class="bar-l">${n <= 6 ? 'Mês ' + (i + 1) : i + 1}</div></div>`).join('')}</div>
-          <div class="basis" id="barsL${n}" style="margin-top:.6cqw"></div></div>
-        <div class="proj-side">
-          <div class="label">Somando os ${n} meses <span class="tag-est">Estimativa</span></div>
-          <div class="total-v" id="tot${n}">--</div>
-          <div class="basis" id="base${n}"></div>
-          ${T('projecao.nota', 'div', 'basis')}
+    empilhamento: n => `
+      ${T('empilhamento.kicker' + n, 'div', 'kicker reveal')}
+      ${T('empilhamento.titulo' + n, 'h2', 'h2 reveal')}
+      <div class="bars reveal" id="bars${n}">${Array.from({ length:n }, (_, i) => `<div class="bar-c"><div class="bar-t"><div class="bar-f"><span class="bar-v"></span></div></div><div class="bar-l">${n <= 6 ? 'Mês ' + (i + 1) : i + 1}</div></div>`).join('')}</div>
+      <div class="stack-foot reveal">
+        <div class="card total"><div class="tl">Somando os ${n} meses <span class="tag-est">Estimativa</span></div><div class="tv" id="tot${n}">--</div><div class="basis" id="base${n}"></div></div>
+        <div class="card evol">
+          ${T('empilhamento.evolucao', 'div', 'label')}
+          <div class="seg-bar" id="seg${n}"></div><div class="seg-lbls" id="segL${n}"></div>
+          ${T('empilhamento.partida', 'div', 'label')}
+          <div class="lead-bar"><div class="base" id="lb${n}"></div><div class="cres" id="lc${n}"></div></div>
+          <div class="lead-txt" id="you${n}"></div><div class="lead-txt" id="rec${n}"></div>
         </div>
       </div>`,
 
     valores: () => `
       ${T('valores.kicker', 'div', 'kicker reveal')}
       ${T('valores.titulo', 'h2', 'h2 reveal')}
-      <div class="vstack reveal">${list('valores.itens').map((v, i) => `<div class="vrow">${T('valores.itens.' + i + '.nome', 'span', 'vn')}<span class="dots"></span>${T('valores.itens.' + i + '.valor', 'span', 'vv')}</div>`).join('')}
-        <div class="vrow tot"><span>${T('valores.totalRotulo')} <span class="tag-est">Estimativa</span></span><span class="dots"></span>${T('valores.total', 'span', 'vv')}</div></div>`,
+      <div class="vstack reveal">${list('valores.itens').map((v, i) => `<div class="vrow">${T('valores.itens.' + i + '.nome', 'span', 'vn')}${T('valores.itens.' + i + '.valor', 'span', 'vv')}</div>`).join('')}
+        <div class="vrow tot"><span class="vn">${T('valores.totalRotulo')} <span class="tag-est">Estimativa</span></span>${T('valores.total', 'span', 'vv')}</div></div>`,
 
     planos: () => {
       const ps = list('planos.itens');
@@ -416,16 +416,17 @@
           <div class="pv">${T(b + '.preco')}<small>${T(b + '.per')}</small></div>${T(b + '.detalhe', 'div', 'pd')}
           <ul>${(p.beneficios || []).map((x, j) => T(b + '.beneficios.' + j, 'li')).join('')}</ul></div>`;
       }).join('')}</div>
+      ${T('planos.nota', 'div', 'note reveal')}
       ${T('planos.implantacao', 'div', 'note reveal')}`;
     },
 
     garantia: () => `
       ${T('garantia.kicker', 'div', 'kicker reveal')}
       ${T('garantia.titulo', 'h2', 'h2 reveal')}
-      ${T('garantia.texto', 'p', 'sub reveal')}
+      ${T('garantia.sub', 'p', 'sub reveal')}
       <div class="plans reveal" style="--n:2">
-        <div class="plan"><div class="pn">6 meses</div><div class="pv" id="gar6" style="font-size:clamp(20px,2.4cqw,38px)">--</div>${T('garantia.meta6', 'div', 'pd')}</div>
-        <div class="plan hi"><div class="badge">Estimativa</div><div class="pn">12 meses</div><div class="pv" id="gar12" style="font-size:clamp(20px,2.4cqw,38px)">--</div>${T('garantia.meta12', 'div', 'pd')}</div>
+        <div class="plan"><div class="pn">6 meses</div><div class="pv" id="gar6" style="font-size:clamp(18px,2.2cqw,36px)">--</div>${T('garantia.meta6', 'div', 'pd')}</div>
+        <div class="plan hi"><div class="badge">Estimativa</div><div class="pn">12 meses</div><div class="pv" id="gar12" style="font-size:clamp(18px,2.2cqw,36px)">--</div>${T('garantia.meta12', 'div', 'pd')}</div>
       </div>
       ${T('garantia.rodape', 'p', 'note reveal')}`,
 
@@ -434,52 +435,50 @@
       ${T('fechamento.titulo', 'h1', 'h1 reveal')}
       ${T('fechamento.texto', 'p', 'sub reveal')}
       <div class="bonus reveal">${T('fechamento.bonusRotulo', 'div', 'label')}${T('fechamento.bonus', 'div', 'h3')}</div>
-      <div class="contact reveal"><span>WhatsApp ${T('contato.whatsapp', 'b')}</span><span>${T('contato.site', 'b')}</span><span>${T('contato.instagram', 'b')}</span></div>
       <img class="logo-small reveal" src="${esc(MARCA.logo || '')}" alt="${esc(MARCA.nome || '')}">`,
 
     salvar: () => `
       ${T('salvar.kicker', 'div', 'kicker reveal')}
       ${T('salvar.titulo', 'h2', 'h2 reveal')}
       <div class="save reveal">
-        <div class="card" style="display:flex;flex-direction:column;gap:.6cqw">
+        <div class="card" style="display:flex;flex-direction:column;gap:.5cqw">
           <div class="save-name" id="sNome"></div>
           <div class="small" id="sMeta"></div>
-          <div class="cats" id="sCats"></div>
-          <div class="btn-row" style="margin-top:.8cqw">
+          <div class="btn-row" style="margin-top:.5cqw">
             <button class="btn" type="button" data-act="pdf-plano">Relatório + plano de ação</button>
             <button class="btn ghost" type="button" data-act="pdf">Relatório</button>
             <button class="btn ghost" type="button" data-act="copiar">Copiar resumo</button>
             <button class="btn ghost" type="button" data-act="novo">Novo diagnóstico</button>
           </div>
+          <div class="placar" id="sPlacar"></div>
         </div>
-        <div class="card"><div class="label" style="margin-bottom:.7cqw">Pontos de atenção</div><ul class="alerts" id="sAlerts"></ul></div>
+        <div class="acc-list" id="sAcc"></div>
       </div>`
   };
 
   function defs(){
     const d = [
-      { id:'capa', html:B.capa, cls:'capa' },
+      { id:'capa', html:B.capa, cls:'centro' },
       { id:'especialista', html:B.especialista },
       { id:'quem-somos', html:B.quemSomos },
-      { id:'problema', html:B.problema },
-      { id:'raiox', html:B.raiox }
+      { id:'antes', html:B.antes }
     ];
-    cats().forEach((c, ci) => d.push({ id:'rx-' + c.id, html:() => B.categoria(c, ci) }));
+    secoes().forEach((s, si) => d.push({ id:'rx-' + s.id, html:() => B.secao(s, si) }));
     d.push(
-      { id:'numeros', html:B.numeros },
-      { id:'tempo', html:B.tempo },
       { id:'painel', html:B.painel },
-      { id:'metodo', html:B.metodo },
+      { id:'resolvemos', html:B.resolvemos },
       { id:'perfis', html:B.perfis },
+      { id:'marcas', html:B.marcas },
       { id:'case', html:B.case },
-      { id:'entregas', html:B.entregas },
+      { id:'mkt', html:B.mkt },
+      { id:'ferramenta', html:B.ferramenta },
       { id:'time', html:B.time },
-      { id:'projecao-6', html:() => B.projecao(6) },
-      { id:'projecao-12', html:() => B.projecao(12) },
+      { id:'empilhamento-6', html:() => B.empilhamento(6) },
+      { id:'empilhamento-12', html:() => B.empilhamento(12) },
       { id:'valores', html:B.valores },
       { id:'planos', html:B.planos },
       { id:'garantia', html:B.garantia },
-      { id:'fechamento', html:B.fechamento },
+      { id:'fechamento', html:B.fechamento, cls:'centro' },
       { id:'salvar', html:B.salvar }
     );
     return d;
@@ -501,15 +500,13 @@
     slides.forEach(s => $$('.reveal', s.el).forEach((r, i) => r.style.setProperty('--i', i)));
     preencherCampos();
     if(editing) entrarEdicao();
-    const dots = $('#dots');
-    dots.innerHTML = slides.map((s, i) => `<button class="dot" type="button" aria-label="Ir para o slide ${i + 1}" data-go="${i}"></button>`).join('');
-    let novo = manterId ? slides.findIndex(s => s.id === manterId) : 0;
+    $('#dots').innerHTML = slides.map((s, i) => `<button class="dot" type="button" aria-label="Ir para o slide ${i + 1}" data-go="${i}"></button>`).join('');
+    const novo = manterId ? slides.findIndex(s => s.id === manterId) : 0;
     idx = -1;
     ir(novo < 0 ? 0 : novo, true);
     $('#nichoNome').textContent = N ? N.nome : 'Escolher';
-    computar(false);
+    computar();
   }
-
   function preencherCampos(){
     $$('[data-id]', slidesEl).forEach(inp => { inp.value = dx.ident[inp.dataset.id] || ''; });
     $$('[data-num]', slidesEl).forEach(inp => { const v = dx.nums[inp.dataset.num]; inp.value = v == null ? '' : v; });
@@ -563,120 +560,156 @@
     $$('.count', el).forEach(c => setTimeout(() => contar(c), 450));
     $$('.bar-f', el).forEach(b => { b.style.transition = 'none'; b.style.height = '0'; });
     $$('.gauge .fil', el).forEach(c => { c.style.transition = 'none'; c.style.strokeDashoffset = '326.73'; });
-    $$('.cb .bar i', el).forEach(b => { b.style.transition = 'none'; b.style.width = '0'; });
     void el.offsetWidth;
     setTimeout(() => {
-      $$('.bar-f', el).forEach((b, i) => { b.style.transition = ''; b.style.transitionDelay = (i * 60) + 'ms'; b.style.height = b.dataset.h || '0'; });
+      $$('.bar-f', el).forEach((b, i) => { b.style.transition = ''; b.style.transitionDelay = (i * 70) + 'ms'; b.style.height = b.dataset.h || '0'; });
       $$('.gauge .fil', el).forEach(c => { c.style.transition = ''; c.style.strokeDashoffset = c.dataset.off || '326.73'; });
-      $$('.cb .bar i', el).forEach(b => { b.style.transition = ''; b.style.width = b.dataset.w || '0'; });
+      $$('[data-to]', el).forEach(tween);
     }, 380);
+  }
+  function tween(el){
+    const to = parseFloat(el.dataset.to), kind = el.dataset.fmt;
+    if(!isFinite(to) || editing) return;
+    const f = kind === 'pct' ? v => Math.round(v) + '%' : kind === 'brlS' ? brlS : brl;
+    const t0 = performance.now(), dur = 950;
+    (function frame(now){
+      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = f(to * e);
+      if(k < 1) requestAnimationFrame(frame); else el.textContent = f(to);
+    })(t0);
+  }
+  function setVal(id, v, kind){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.dataset.to = v; el.dataset.fmt = kind || 'brl';
+    el.textContent = kind === 'pct' ? Math.round(v) + '%' : kind === 'brlS' ? brlS(v) : brl(v);
   }
 
   // ============ cálculo na tela ============
-  function setGauge(el, aprov){
+  function setGauge(el, aprov, animar){
     const C = 326.73, off = aprov == null ? C : C * (1 - aprov / 100);
     el.classList.remove('red', 'yellow', 'green');
     if(aprov != null) el.classList.add(tier(aprov));
     const c = $('.fil', el);
     c.dataset.off = off.toFixed(2);
-    c.style.strokeDashoffset = off.toFixed(2);
+    if(animar !== false) c.style.strokeDashoffset = off.toFixed(2);
   }
-  function catBars(alvo){
-    if(!alvo) return;
-    alvo.innerHTML = cats().map((c, i) => {
-      const s = catStats(c), t = tier(s.aprov);
-      return `<div class="cb"><span>${fmt(raw('categorias.' + i + '.nome'))}</span><span class="bar"><i class="${t}" data-w="${s.aprov == null ? 0 : s.aprov}%" style="width:${s.aprov == null ? 0 : s.aprov}%"></i></span><span class="v">${s.aprov == null ? '--' : s.aprov + '%'}</span></div>`;
-    }).join('');
-  }
+  const gaugeHtml = (id, mini) => `<div class="gauge${mini ? ' mini' : ''}" id="${id}"><svg viewBox="0 0 120 120"><circle class="trk" cx="60" cy="60" r="52"/><circle class="fil" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="326.73"/></svg><div class="ctr"><div class="pct">--</div></div></div>`;
+
   function computar(){
     if(!N) return;
-    const k = calc(), g = geral();
     const set = (id, h) => { const el = document.getElementById(id); if(el) el.innerHTML = h; };
-
-    // campos derivados
-    const der = [];
-    if(k.conv != null) der.push(`Conversão: <b>${pct(k.conv)}</b>`);
-    if(k.cpl != null) der.push(`Custo por lead: <b>${brl(k.cpl)}</b>`);
-    if(k.cac != null) der.push(`Custo por ${esc(termo('venda'))}: <b>${brl(k.cac)}</b>`);
-    if(k.vendas > 0 && k.ticket > 0) der.push(`Receita das ${esc(termo('vendas'))} do mês: <b>${brl(k.vendas * k.ticket)}</b>`);
-    set('derived', der.map(d => `<span class="dchip">${d}</span>`).join(''));
+    const pr = proj(), ce = custoEsperar(), g = geral();
+    const M = Math.round(num('meses'));
+    const naTela = el => !!(el && slides[idx] && slides[idx].el.contains(el));
 
     // textos ao vivo
-    $$('.live[data-live="meses"]').forEach(s => { s.textContent = k.espera ? (k.espera.M === 1 ? '1 mês' : k.espera.M + ' meses') : '___ meses'; });
-    const r = k.total(12) / Math.max(1, k.total(6));
-    $$('.live[data-live="fator12"]').forEach(s => { s.textContent = r >= 3 ? 'mais que triplica' : r > 2.05 ? 'mais que dobra' : 'dobra'; });
+    $$('.live[data-live="meses"]').forEach(s => { s.textContent = M > 0 ? (M === 1 ? '1 mês' : M + ' meses') : '___ meses'; });
+    const r12 = pr.total(12) / Math.max(1, pr.total(6));
+    $$('.live[data-live="fator12"]').forEach(s => { s.textContent = r12 >= 3 ? 'mais que triplica' : r12 > 2.05 ? 'mais que dobra' : 'dobra'; });
 
-    // painel
-    const gg = $('#gGeral');
-    if(gg){
-      setGauge(gg, g.aprov);
-      set('gPct', g.aprov == null ? '--' : g.aprov + '%');
-      const t = tier(g.aprov), tEl = $('#gTier');
-      tEl.className = 'tier ' + t;
-      tEl.textContent = g.aprov == null ? 'Sem dados' : ({ red:'No vermelho', yellow:'Dá pra melhorar muito', green:'No caminho certo' })[t];
-      set('gTxt', esc(g.aprov == null ? 'Marque as respostas do raio-x para ver o placar aqui.' : leitura(g.aprov, piores(g))));
-      catBars($('#dCats'));
-      const e = k.espera;
-      set('dEspera', e ? fraseEspera(e) : `<span class="empty" style="display:block">Preencha tempo, custo e receita na página <b>${esc(plain(raw('tempo.titulo')))}</b>.</span>`);
-      set('dMesa', k.conv != null
-        ? `De <b>${nf0.format(k.leads)} leads</b> por mês, <b>${nf1.format(k.vendas)}</b> viram ${esc(termo('venda'))} (<b>${pct(k.conv)}</b>).` +
-          (k.porPonto != null ? ` Cada <b>+1 ponto</b> de conversão vale <b>${brl(k.porPonto)}</b> a mais por mês.` : '')
-        : `<span class="empty" style="display:block">Preencha leads e ${esc(termo('vendas'))} por mês na página <b>${esc(plain(raw('numeros.titulo')))}</b>.</span>`);
+    // ---- painel ----
+    if($('#gGeral')){
+      const ticket = num('ticket');
       const cmp = $('#dCmp'), flag = $('#dFlag');
-      if(e && !e.semReceita){
+      if(M <= 0 || ticket <= 0){
+        const falta = [];
+        if(M <= 0) falta.push(rotuloDoCampo('meses').toLowerCase() + ' (página "' + paginaDoCampo('meses') + '")');
+        if(ticket <= 0) falta.push(rotuloDoCampo('ticket').toLowerCase() + ' (página "' + paginaDoCampo('ticket') + '")');
+        set('dFrase', '<span class="empty">Falta preencher: ' + esc(falta.join(' e ')) + '. Sem isso não dá pra calcular o comparativo.</span>');
+        cmp.style.display = 'none'; flag.hidden = true;
+      } else {
         cmp.style.display = '';
-        set('dMine', (e.ganho < 0 ? '−' : '') + brl(Math.abs(e.ganho)));
-        set('dMineS', esc(e.inc === 0 ? 'sem crescimento de receita no período' : `de receita ${e.ganho < 0 ? 'perdida' : 'a mais'}, somando mês a mês em ${e.M} ${e.M === 1 ? 'mês' : 'meses'}`));
-        set('dNosso', brl(e.nosso));
-        set('dNossoS', esc(`estimativa com +${k.extra} ${termo('vendas')}/mês × ${brl(k.Tk)}, no mesmo prazo`));
-        const ratio = e.nosso / Math.max(e.ganho, 1);
+        const C = num('custo');
+        set('dFrase', ce ? ce.html : `Você já faz <b>${M} ${M === 1 ? 'mês' : 'meses'}</b> tentando ajustar isso. Gastou <b>${brl(C)}</b> por mês, <b>${brl(C * M)}</b> no total.`);
+        const mine = ce ? ce.ganhoFinal : 0, nosso = pr.total(M);
+        setVal('dMine', mine, 'brlS'); setVal('dNosso', nosso);
+        set('dMineS', esc((!ce || ce.inc === 0) ? 'sem crescimento de ' + termo('receita') + ' no período' : brl(Math.abs(ce.inc)) + (ce.inc > 0 ? ' a mais' : ' a menos') + ' a cada mês, empilhado em ' + M + (M === 1 ? ' mês' : ' meses')));
+        set('dNossoS', esc('Com ' + pr.rot + ' e ' + termo('ticket') + ' de ' + brl(pr.Tk) + ', empilhado em ' + M + (M === 1 ? ' mês' : ' meses') + (pr.expl ? ' (' + pr.expl + ')' : '')));
+        const ratio = nosso / Math.max(mine, 1);
         flag.hidden = false;
         flag.className = 'flag ' + (ratio > 3 ? 'red' : ratio > 1.5 ? 'yellow' : 'green');
-        flag.textContent = ratio > 3 ? 'Muita receita ficando na mesa' : ratio > 1.5 ? 'Dá pra crescer bem mais' : 'Vocês estão no caminho certo';
-      } else {
-        cmp.style.display = 'none';
-        flag.hidden = true;
+        flag.textContent = ratio > 3 ? 'Muita oportunidade perdida' : ratio > 1.5 ? 'Dá pra crescer bem mais' : 'Você está no caminho certo';
       }
+      const gg = $('#gGeral'), t = tier(g.aprov), tEl = $('#gTier'), anima = naTela(gg);
+      setGauge(gg, g.aprov, anima);
+      if(g.aprov == null){ const p = $('#gPct'); delete p.dataset.to; p.textContent = '--'; } else setVal('gPct', g.aprov, 'pct');
+      tEl.className = 'tier ' + t;
+      const emp = termo('empresa'), Emp = termo('Empresa');
+      const piores = g.st.filter(x => x.s.dor > 0.34).sort((a, b) => b.s.dor - a.s.dor).slice(0, 2).map(x => nomeArea(x.a));
+      let txt;
+      if(g.aprov == null){ tEl.textContent = 'Sem dados'; txt = 'Preencha o raio-x pra ver o placar geral da ' + emp + ' aqui.'; }
+      else if(t === 'red'){ tEl.textContent = Emp + ' no vermelho'; txt = 'A ' + emp + ' está aproveitando só ' + g.aprov + '% do potencial comercial hoje' + (piores.length ? '. O maior ponto de dor agora é ' + piores.join(' e ') + '.' : '.'); }
+      else if(t === 'yellow'){ tEl.textContent = 'Dá pra melhorar muito'; txt = 'A ' + emp + ' está aproveitando ' + g.aprov + '% do potencial comercial' + (piores.length ? ', com atenção em ' + piores.join(' e ') + '.' : '.'); }
+      else { tEl.textContent = 'No caminho certo'; txt = 'A ' + emp + ' já aproveita ' + g.aprov + '% do potencial comercial. Ainda dá pra destravar o resto.'; }
+      set('gTxt', esc(txt));
+      const ar = $('#dAreas'), aps = areasQuePontuam();
+      ar.innerHTML = aps.map((a, i) => `<div class="area">${gaugeHtml('gA' + i, true)}<div class="an">${esc(nomeArea(a))}</div><div class="ac" id="gAc${i}"></div><div class="tier" id="gAt${i}"></div></div>`).join('');
+      aps.forEach((a, i) => {
+        const s = areaStats(a.id), el = document.getElementById('gA' + i);
+        setGauge(el, s.aprov, true);
+        if(!anima) $('.fil', el).style.strokeDashoffset = '326.73';
+        $('.pct', el).textContent = s.aprov == null ? '--' : s.aprov + '%';
+        set('gAc' + i, s.n ? s.alertas + ' de ' + s.total + ' em alerta' : 'sem dados');
+        const te = document.getElementById('gAt' + i); te.className = 'tier ' + tier(s.aprov); te.textContent = TIER[tier(s.aprov)];
+      });
     }
 
-    // projeções
+    // ---- empilhamento ----
     [6, 12].forEach(n => {
       const bars = document.getElementById('bars' + n);
       if(!bars) return;
-      const s = k.serie(n), mx = Math.max.apply(null, s.concat([1]));
+      const s = pr.serie(n), mx = Math.max.apply(null, s.concat([1])), soma = s.reduce((a, b) => a + b, 0) || 1;
+      const ativo = naTela(bars);
       $$('.bar-f', bars).forEach((b, i) => {
         const h = (s[i] / mx * 100).toFixed(1) + '%';
         b.dataset.h = h;
-        if(b.style.height && b.style.height !== '0px' && b.style.height !== '0') b.style.height = h;
-        $('.bar-v', b).textContent = brlK(s[i]);
-        b.title = (k.P.recorrente ? 'Receita extra no mês ' : 'Acumulado até o mês ') + (i + 1) + ': ' + brl(s[i]);
+        if(ativo) b.style.height = h;
+        $('.bar-v', b).textContent = nf0.format(Math.round(s[i]));
       });
-      set('barsL' + n, esc(k.P.recorrente ? 'Cada barra: receita a mais naquele mês. Os novos ' + termo('clientes') + ' continuam pagando, então soma.' : 'Cada barra: receita a mais acumulada até aquele mês.'));
-      set('tot' + n, brl(k.total(n)));
-      set('base' + n, esc(`Base: +${k.extra} ${termo('vendas')}/mês (${Math.round(k.P.ganho * 100)}% sobre ${nf1.format(k.V)} de hoje) × ${termo('ticket')} de ${brl(k.Tk)}.`) +
-        (k.usaRef ? ' <span class="ph">[valores de referência: preencha a página de números]</span>' : ''));
-      set('gar' + n, brl(k.total(n)));
+      setVal('tot' + n, pr.total(n));
+      set('base' + n, esc('Base: ' + pr.rot + ' × ' + termo('ticket') + ' de ' + brl(pr.Tk)) + (pr.ref ? ' <span class="ph">[referência: preencha os números do raio-x]</span>' : '') +
+        '<br>' + esc(pr.P.recorrente ? 'Cada mês soma os ' + termo('clientes') + ' novos dos meses anteriores.' : 'Cada barra mostra o acumulado até aquele mês.'));
+      set('seg' + n, s.map((v, i) => `<div class="seg" title="Mês ${i + 1}: ${brl(v)}" style="width:${(v / soma * 100).toFixed(3)}%;background:rgba(59,142,243,${(0.22 + (i + 1) / n * 0.78).toFixed(2)})"></div>`).join(''));
+      set('segL' + n, s.map((v, i) => `<span>${n <= 6 ? 'Mês ' + (i + 1) : i + 1}</span>`).join(''));
+      const R0 = num('receitaIni'), R1 = num('receitaHoje'), tem = M > 0 && (R0 > 0 || R1 > 0), ref = Math.max(R1, R0, 1);
+      const bw = tem ? Math.min(100, Math.max(R0, 0) / ref * 100) : 0, cw = tem ? Math.max(0, Math.min(100 - bw, Math.max(R1 - R0, 0) / ref * 100)) : 0;
+      document.getElementById('lb' + n).style.width = bw.toFixed(2) + '%';
+      document.getElementById('lc' + n).style.width = cw.toFixed(2) + '%';
+      set('you' + n, ce ? 'Você, sozinho, ' + (ce.ganhoFinal >= 0 ? 'empilhou' : 'perdeu') + ' <b>' + brl(Math.abs(ce.ganhoFinal)) + '</b> em ' + ce.M + ' ' + (ce.M === 1 ? 'mês' : 'meses') + '. É daqui que a ' + esc(termo('marca')) + ' parte.'
+        : 'Assim que você preencher seus números (página "' + esc(paginaDoCampo('meses')) + '"), mostramos aqui o seu ponto de partida.');
+      const v = num('vendas'), tk = num('ticket');
+      set('rec' + n, v > 0 && tk > 0 ? 'Hoje suas ' + esc(termo('vendas')) + ' geram <b>' + brl(v * tk) + '</b> por mês. São ' + nf1.format(v) + ' ' + esc(termo('vendas')) + ' a ' + brl(tk) + ' de ' + esc(termo('ticket')) + '.' : '');
     });
+    setVal('gar6', pr.total(6)); setVal('gar12', pr.total(12));
 
-    // salvar
-    const sn = $('#sNome');
-    if(sn){
-      sn.textContent = dx.ident.empresa || (termo('Empresa') + ' sem nome');
-      set('sMeta', esc([N.nome, dataBR(dx.ident.data), dx.ident.responsavel, dx.ident.whatsapp].filter(Boolean).join(' · ')) +
-        (g.aprov != null ? ` · <b style="color:var(--tx)">${g.aprov}% de aproveitamento (${TIER[tier(g.aprov)]})</b>` : ''));
-      catBars($('#sCats'));
-      const al = alertas();
-      set('sAlerts', al.length ? al.map(a => `<li class="${a.dor >= 0.99 ? 'd1' : ''}">${esc(a.cat)}: ${esc(a.q)} <b style="color:var(--tx)">${esc(a.resp)}</b></li>`).join('') : '<li style="padding-left:0">Nenhum ponto marcado ainda.</li>');
+    // ---- salvar ----
+    if($('#sNome')){
+      $('#sNome').textContent = dx.ident.empresa || (termo('Empresa') + ' sem nome');
+      set('sMeta', esc([dataBR(dx.ident.data || hojeISO()), dx.ident.whatsapp].filter(Boolean).join(' · ')));
+      const pcs = areasQuePontuam().map(a => { const s = areaStats(a.id); return { nome:nomeArea(a), v:s.aprov, sub:s.n ? s.alertas + ' de ' + s.total + ' em alerta' : 'sem dados' }; });
+      pcs.push({ nome:'Geral', v:g.aprov, sub:g.aprov == null ? 'sem dados' : 'aproveitamento' });
+      set('sPlacar', pcs.map(p => `<div class="pc ${tier(p.v)}"><div class="pn">${esc(p.nome)}</div><div class="pv">${p.v == null ? '--' : p.v + '%'}</div><div class="ps">${esc(p.sub)}</div></div>`).join(''));
+      let h = areas().map(a => {
+        const s = areaStats(a.id), itens = [];
+        cadaPergunta((sc, si, q, qi) => {
+          if((sc.area || 'comercial') !== a.id) return;
+          const r = respostaTexto(si, qi); if(!r) return;
+          const d = dorQ(sc, q, qi);
+          itens.push(`<div class="ans ${d === 1 ? 'd1' : d === 0.5 ? 'd05' : d === 0 ? 'd0' : ''}"><i></i><div><div class="aq">${esc(plain(raw(qPath(si, qi) + '.texto')))}</div><div class="ar2">${esc(r)}</div></div></div>`);
+        });
+        const k = 'a:' + a.id, ab = abertos.has(k) && itens.length;
+        return `<div class="acc-item" data-aberto="${ab ? 1 : 0}"><button type="button" data-acc="${esc(k)}" ${itens.length ? '' : 'disabled'}><span class="an">${esc(nomeArea(a))}</span>
+          <span class="ar"><b>${s.aprov == null ? (s.total ? '--' : 'informativo') : s.aprov + '%'}</b> · ${s.respondidas}/${s.perguntas} · ${itens.length ? (ab ? 'ocultar' : 'ver respostas') : 'nada marcado'}</span></button>
+          <div class="acc-body">${itens.join('')}</div></div>`;
+      }).join('');
+      if(ce){
+        const ab = abertos.has('custo');
+        h += `<div class="acc-item" data-aberto="${ab ? 1 : 0}"><button type="button" data-acc="custo"><span class="an">O custo de esperar</span><span class="ar"><b>saldo ${brlS(ce.saldoFinal)}</b> · ${ab ? 'ocultar' : (ce.linhas.length ? 'ver tabela' : 'ver')}</span></button>
+          <div class="acc-body"><div class="phrase">${ce.html}</div>${ce.linhas.length ? `<table class="tbl"><thead><tr><th>Mês</th><th>Ganho acumulado</th><th>Investido acumulado</th><th>Saldo</th></tr></thead><tbody>${ce.linhas.map(l => `<tr class="${l.mes === ce.payback ? 'pb' : ''}"><td>${l.mes}</td><td>${brlS(l.ganho)}</td><td>${brlS(l.investido)}</td><td class="${l.saldo < 0 ? 'neg' : ''}">${brlS(l.saldo)}</td></tr>`).join('')}</tbody></table>` : ''}</div></div>`;
+      }
+      set('sAcc', h);
     }
-  }
-  function alertas(){
-    const out = [];
-    cats().forEach((c, ci) => (c.perguntas || []).forEach((q, qi) => {
-      const d = dorQ(c, q, qi);
-      if(d == null || d === 0) return;
-      out.push({ dor:d, cat:plain(raw('categorias.' + ci + '.nome')), q:plain(raw(qPath(c, qi) + '.texto')), resp:respostaTexto(c, q, qi), acao:plain(raw(qPath(c, qi) + '.acao')) });
-    }));
-    return out.sort((a, b) => b.dor - a.dor);
   }
   function dataBR(iso){ if(!iso) return ''; const p = String(iso).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso; }
 
@@ -684,23 +717,21 @@
   slidesEl.addEventListener('click', e => {
     const act = e.target.closest('[data-act]');
     if(act){ acao(act.dataset.act, act); return; }
+    const acc = e.target.closest('[data-acc]');
+    if(acc){ const k = acc.dataset.acc; abertos.has(k) ? abertos.delete(k) : abertos.add(k); computar(); return; }
     if(editing) return;
     if(e.target.closest('.opt-in')) return;
     const opt = e.target.closest('.opt');
     if(!opt) return;
     const q = opt.closest('.q'), key = q.dataset.q, oi = +opt.dataset.oi;
     const r = dx.resp[key] = dx.resp[key] || { sel:[], campos:{} };
-    if(q.dataset.multi === '1'){
-      r.sel = r.sel.includes(oi) ? r.sel.filter(x => x !== oi) : r.sel.concat(oi);
-    } else {
-      r.sel = r.sel[0] === oi ? [] : [oi];
-    }
+    r.sel = q.dataset.multi === '1' ? (r.sel.includes(oi) ? r.sel.filter(x => x !== oi) : r.sel.concat(oi)) : (r.sel[0] === oi ? [] : [oi]);
     $$('.opt', q).forEach(o => o.classList.toggle('sel', r.sel.includes(+o.dataset.oi)));
     salvarDx(); computar();
   });
   slidesEl.addEventListener('input', e => {
     const t = e.target;
-    if(t.dataset.k !== undefined && editing){ const [sc, ...p] = t.dataset.k.split(':'); setEdit(sc, p.join(':'), t.textContent); return; }
+    if(t.dataset.k !== undefined && editing){ const p = t.dataset.k.split(':'); setEdit(p[0], p.slice(1).join(':'), t.textContent); return; }
     if(t.dataset.num){ dx.nums[t.dataset.num] = t.value; salvarDx(); computar(); return; }
     if(t.dataset.id){ dx.ident[t.dataset.id] = t.value; salvarDx(); computar(); return; }
     if(t.dataset.campo){
@@ -729,8 +760,8 @@
     }
     if(!$('#picker').hidden){ if(e.key === 'Escape' && N) fecharPicker(); return; }
     if((e.key === ' ' || e.key === 'Enter') && t && t.closest && t.closest('button,[role="button"],a')) return;
-    if(['ArrowRight', 'PageDown', ' '].includes(e.key)){ e.preventDefault(); next(); }
-    else if(['ArrowLeft', 'PageUp'].includes(e.key)){ e.preventDefault(); prev(); }
+    if(['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)){ e.preventDefault(); next(); }
+    else if(['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)){ e.preventDefault(); prev(); }
     else if(e.key === 'Home') ir(0);
     else if(e.key === 'End') ir(slides.length - 1);
     else if(e.key === 'f' || e.key === 'F') telaCheia();
@@ -760,15 +791,14 @@
   function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
   setTimeout(() => $('#hint').classList.add('off'), 5000);
 
-  // confirmação em dois cliques (o visualizador não mostra confirm())
+  // confirmação em dois cliques (o visualizador do claude.ai não mostra confirm())
   function confirmar(btn, rotulo, fn){
     if(btn.dataset.conf){ delete btn.dataset.conf; btn.textContent = btn.dataset.orig; fn(); return; }
     btn.dataset.orig = btn.textContent; btn.dataset.conf = 1; btn.textContent = rotulo;
     setTimeout(() => { if(btn.dataset.conf){ delete btn.dataset.conf; btn.textContent = btn.dataset.orig; } }, 3500);
   }
-
   function acao(a, btn){
-    if(a === 'novo') return confirmar(btn, 'Clique de novo para apagar', () => { dx = novoDx(); store.del(dxKey()); const id = slides[idx] && slides[idx].id; montar(id); toast('Diagnóstico zerado.'); });
+    if(a === 'novo') return confirmar(btn, 'Clique de novo para apagar', () => { dx = novoDx(); store.del(dxKey()); abertos.clear(); montar(slides[idx] && slides[idx].id); toast('Diagnóstico zerado.'); });
     if(a === 'pdf') return gerarPdf(false, btn);
     if(a === 'pdf-plano') return gerarPdf(true, btn);
     if(a === 'copiar') return copiarResumo();
@@ -777,9 +807,9 @@
   // ============ seletor de nicho ============
   function abrirPicker(){
     $('#pkGrid').innerHTML = NICHOS.map(n => {
-      const nq = (n.categorias || []).reduce((s, c) => s + (c.perguntas || []).length, 0);
+      const nq = (n.raiox || []).reduce((s, c) => s + (c.perguntas || []).length, 0);
       return `<button class="pk-card${N && N.id === n.id ? ' cur' : ''}" type="button" data-nicho="${esc(n.id)}">
-        <div class="pk-meta">${(n.categorias || []).length} áreas · ${nq} perguntas</div>
+        <div class="pk-meta">${(n.raiox || []).length} telas de raio-x · ${nq} perguntas</div>
         <div class="h3">${esc(n.nome)}</div><div class="small">${esc(n.descricao || '')}</div></button>`;
     }).join('') || '<p class="sub">Nenhum nicho carregado. Confira as linhas &lt;script src="nichos/..."&gt; no index.html.</p>';
     $('#pkClose').hidden = !N;
@@ -793,10 +823,12 @@
   function escolherNicho(id){
     const n = NICHOS.find(x => x.id === id);
     if(!n) return;
+    if(saveT) gravarDx();
     N = n;
     store.set('rb:nicho', id);
     try{ history.replaceState(null, '', '#' + id); }catch(e){}
     dx = Object.assign(novoDx(), store.get(dxKey()) || {});
+    abertos.clear();
     montar();
     if(dx.ident && dx.ident.empresa) toast('Diagnóstico de ' + dx.ident.empresa + ' retomado.');
   }
@@ -804,10 +836,10 @@
   // ============ modo edição ============
   function entrarEdicao(){
     $$('[data-k]', slidesEl).forEach(el => {
-      const [sc, ...p] = el.dataset.k.split(':');
-      const v = raw(p.join(':'));
+      const p = el.dataset.k.split(':');
+      const v = raw(p.slice(1).join(':'));
       el.textContent = v == null ? '' : String(v);
-      try{ el.contentEditable = 'plaintext-only'; }catch(e){ el.contentEditable = 'true'; }
+      try{ el.contentEditable = 'plaintext-only'; }catch(e){}
       if(el.contentEditable !== 'plaintext-only') el.contentEditable = 'true';
       el.spellcheck = true;
     });
@@ -828,8 +860,7 @@
   });
   $('#ebDone').addEventListener('click', alternarEdicao);
   $('#ebHide').addEventListener('click', () => {
-    const id = slides[idx].id, h = ocultos().slice();
-    const i = h.indexOf(id);
+    const id = slides[idx].id, h = ocultos().slice(), i = h.indexOf(id);
     if(i >= 0) h.splice(i, 1); else h.push(id);
     localEd.nichos[N.id] = localEd.nichos[N.id] || {};
     localEd.nichos[N.id]._ocultos = h;
@@ -852,7 +883,7 @@
   $('#ebHtml').addEventListener('click', () => {
     const json = JSON.stringify(todasEdicoes()).replace(/</g, '\\u003c');
     const html = PRISTINE.replace(/(<script id="edicoes-embutidas" type="application\/json">)[\s\S]*?(<\/script>)/, (m, a, b) => a + json + b);
-    salvarArquivo('apresentacao-' + (MARCA.curto || 'raio-x').toLowerCase() + '.html', html, 'text/html');
+    salvarArquivo('apresentacao-' + slug(MARCA.curto || 'raio-x') + '.html', html, 'text/html');
   });
 
   // ============ arquivos ============
@@ -876,27 +907,47 @@
   function slug(s){ return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase(); }
 
   // ============ resumo e relatório ============
+  function camposInformados(){
+    const out = [];
+    secoes().forEach((s, si) => (s.campos || []).forEach((c, fi) => {
+      const v = dx.nums[c.id];
+      if(v == null || v === '') return;
+      const n = parseFloat(String(v).replace(',', '.'));
+      if(!isFinite(n)) return;
+      const val = c.pre === 'R$' ? brl(n) : nf1.format(n) + (c.unidade ? ' ' + c.unidade : '');
+      out.push([plain(raw('raiox.' + si + '.campos.' + fi + '.rotulo')).replace(/\?$/, ''), val]);
+    }));
+    return out;
+  }
+  function acoesPorArea(){
+    return areasQuePontuam().map(a => {
+      const s = areaStats(a.id), itens = [];
+      cadaPergunta((sc, si, q, qi) => {
+        if((sc.area || 'comercial') !== a.id) return;
+        const d = dorQ(sc, q, qi), acao = plain(raw(qPath(si, qi) + '.acao'));
+        if(d == null || d === 0 || !acao) return;
+        itens.push({ acao, pergunta:plain(raw(qPath(si, qi) + '.texto')), dor:d });
+      });
+      itens.sort((x, y) => y.dor - x.dor);
+      return { nome:nomeArea(a), pct:s.aprov, itens };
+    }).filter(a => a.itens.length).sort((x, y) => (x.pct == null ? 999 : x.pct) - (y.pct == null ? 999 : y.pct));
+  }
   function resumoTexto(){
-    const k = calc(), g = geral(), L = [];
-    L.push('Raio-X de Receita · ' + (dx.ident.empresa || termo('Empresa')) + (dx.ident.data ? ' · ' + dataBR(dx.ident.data) : ''));
-    L.push(N.nome + (dx.ident.responsavel ? ' · ' + dx.ident.responsavel : ''));
+    const g = geral(), ce = custoEsperar(), pr = proj(), L = [];
+    L.push('Raio-X Comercial · ' + (dx.ident.empresa || termo('Empresa')) + ' · ' + dataBR(dx.ident.data || hojeISO()));
+    L.push(N.nome);
     L.push('');
     if(g.aprov != null){
-      L.push('Aproveitamento comercial: ' + g.aprov + '% (' + TIER[tier(g.aprov)] + ')');
-      cats().forEach((c, i) => { const s = catStats(c); if(s.aprov != null) L.push('- ' + plain(raw('categorias.' + i + '.nome')) + ': ' + s.aprov + '%'); });
+      L.push('Aproveitamento geral: ' + g.aprov + '% (' + TIER[tier(g.aprov)] + ')');
+      areasQuePontuam().forEach(a => { const s = areaStats(a.id); if(s.aprov != null) L.push('- ' + nomeArea(a) + ': ' + s.aprov + '% · ' + s.alertas + ' de ' + s.total + ' em alerta'); });
       L.push('');
     }
-    const nums = [];
-    if(k.leads) nums.push(nf0.format(k.leads) + ' leads/mês');
-    if(k.vendas) nums.push(nf1.format(k.vendas) + ' ' + termo('vendas') + '/mês' + (k.conv != null ? ' (' + pct(k.conv) + ')' : ''));
-    if(k.ticket) nums.push(termo('ticket') + ' ' + brl(k.ticket));
-    if(k.midia) nums.push('anúncios ' + brl(k.midia) + '/mês');
-    if(nums.length){ L.push('Números: ' + nums.join(' · ')); }
-    if(k.porPonto != null) L.push('Cada +1 ponto de conversão: ' + brl(k.porPonto) + ' a mais por mês.');
-    if(k.espera) L.push(fraseEspera(k.espera).replace(/<[^>]+>/g, ''));
-    L.push('Projeção (estimativa): 6 meses ' + brl(k.total(6)) + ' · 12 meses ' + brl(k.total(12)));
-    const al = alertas();
-    if(al.length){ L.push(''); L.push('Pontos de atenção:'); al.slice(0, 8).forEach(a => L.push('- ' + a.q + ' → ' + a.resp)); }
+    const cs = camposInformados();
+    if(cs.length){ cs.forEach(c => L.push(c[0] + ': ' + c[1])); L.push(''); }
+    if(ce) L.push(ce.texto);
+    L.push('Empilhamento estimado: 6 meses ' + brl(pr.total(6)) + ' · 12 meses ' + brl(pr.total(12)));
+    const ac = acoesPorArea();
+    if(ac.length){ L.push(''); L.push('Por onde começar:'); ac.flatMap(a => a.itens).slice(0, 5).forEach(i => L.push('- ' + i.acao)); }
     L.push(''); L.push(MARCA.nome || '');
     return L.join('\n');
   }
@@ -911,50 +962,134 @@
     try{ navigator.clipboard.writeText(txt).then(() => toast('Resumo copiado. Cole no WhatsApp ou no CRM.'), fallback); }catch(e){ fallback(); }
   }
 
+  // Monta o documento A4. Paginação por medição: cada bloco entra, a folha é medida e,
+  // se passou da altura, o bloco abre folha nova. Nenhum bloco é cortado no meio.
   function montarRelatorio(comPlano){
-    const k = calc(), g = geral(), rel = $('#rel');
+    const g = geral(), ce = custoEsperar(), rel = $('#rel');
     const emp = dx.ident.empresa || (termo('Empresa') + ' sem nome');
+    const dataTxt = dataBR(dx.ident.data || hojeISO());
     const logo = MARCA.logoRelatorio || MARCA.logo || '';
-    const head = titulo => `<div class="rp-head"><div><div class="rp-kick">${esc(titulo)} · ${esc(N.nome)}</div><div class="rp-name">${esc(emp)}</div>
-      <div class="rp-meta">${esc([dx.ident.data ? 'Diagnóstico realizado em ' + dataBR(dx.ident.data) : '', dx.ident.responsavel, dx.ident.whatsapp].filter(Boolean).join(' · '))}</div></div>
-      ${logo ? `<img src="${esc(logo)}" alt="">` : ''}</div>`;
-    const foot = n => `<div class="rp-foot"><span>${esc(MARCA.nome || '')}${raw('contato.whatsapp') ? ' · ' + esc(plain(raw('contato.whatsapp'))) : ''}</span><span>Página ${n}</span></div>`;
-    const t = tier(g.aprov);
-    const catsH = cats().map((c, i) => { const s = catStats(c), tt = tier(s.aprov); return `<div class="rp-cb"><span>${esc(plain(raw('categorias.' + i + '.nome')))}</span><span class="b"><i class="${tt}" style="width:${s.aprov || 0}%"></i></span><span class="v">${s.aprov == null ? '--' : s.aprov + '%'}</span></div>`; }).join('');
-    const kpi = (rot, v) => `<div class="rp-kpi"><div class="k">${esc(rot)}</div><div class="v">${v}</div></div>`;
-    const p1 = `<div class="rp">${head('Raio-X de Receita')}
-      <div class="rp-score"><div class="rp-pct ${t}">${g.aprov == null ? '--' : g.aprov + '%'}</div><div><div class="rp-tier ${t}">${TIER[t]}</div><div class="rp-read">${esc(leitura(g.aprov, piores(g)))}</div></div></div>
-      <div><div class="rp-h">Aproveitamento por área</div><div class="rp-cats">${catsH}</div></div>
-      <div><div class="rp-h">Números de hoje</div><div class="rp-grid">
-        ${kpi('Leads por mês', k.leads ? nf0.format(k.leads) : '--')}
-        ${kpi(termo('Vendas') + ' por mês', k.vendas ? nf1.format(k.vendas) : '--')}
-        ${kpi('Conversão', k.conv != null ? pct(k.conv) : '--')}
-        ${kpi(plain(raw('numeros.campos.ticket.rotulo')) || termo('Ticket'), k.ticket ? brl(k.ticket) : '--')}
-        ${kpi('Custo por lead', k.cpl != null ? brl(k.cpl) : '--')}
-        ${kpi('Custo por ' + termo('venda'), k.cac != null ? brl(k.cac) : '--')}
-      </div></div>
-      ${k.porPonto != null ? `<div class="rp-box">Dos <b>${nf0.format(k.leads)} leads</b> que chegam por mês, <b>${nf1.format(k.vendas)}</b> viram ${esc(termo('venda'))}. Cada <b>+1 ponto</b> de conversão vale <b>${brl(k.porPonto)}</b> a mais por mês, sem gastar mais em anúncio.</div>` : ''}
-      ${k.espera ? `<div class="rp-box">${fraseEspera(k.espera)}</div>` : ''}
-      <div class="rp-box acc"><b>Projeção com o ${esc(plain(raw('metodo.nome')) || 'método')}</b>: 6 meses <b>${brl(k.total(6))}</b> · 12 meses <b>${brl(k.total(12))}</b>
-        <div class="rp-est">Estimativa. Base: +${k.extra} ${esc(termo('vendas'))}/mês × ${esc(termo('ticket'))} de ${brl(k.Tk)}${k.usaRef ? ' (valores de referência)' : ''}. ${esc(plain(raw('projecao.nota')))}</div></div>
-      ${foot(1)}</div>`;
-    const qs = cats().map((c, ci) => `<div class="rp-cat"><h4>${esc(plain(raw('categorias.' + ci + '.nome')))}</h4>${(c.perguntas || []).map((q, qi) => {
-      const d = dorQ(c, q, qi), r = respostaTexto(c, q, qi);
-      return `<div class="rp-q">${esc(plain(raw(qPath(c, qi) + '.texto')))}<div class="a ${!r ? 'na' : d === 1 ? 'd1' : d === 0.5 ? 'd05' : ''}">${esc(r || 'Sem resposta')}</div></div>`;
-    }).join('')}</div>`).join('');
-    const p2 = `<div class="rp">${head('Respostas do raio-x')}<div class="rp-qs">${qs}</div>${foot(2)}</div>`;
-    let p3 = '';
-    if(comPlano){
-      const al = alertas().filter(a => a.acao);
-      const prox = list('relatorio.proximos');
-      p3 = `<div class="rp">${head('Plano de ação')}
-        <div class="rp-read">Prioridades a partir das respostas, da mais urgente para a menos urgente.</div>
-        <div>${al.length ? al.map(a => `<div class="rp-act"><div class="rp-pri ${a.dor >= 0.99 ? 'alta' : 'media'}">${a.dor >= 0.99 ? 'Alta' : 'Média'}</div><div>${esc(a.acao)}<div class="qq">${esc(a.cat)} · ${esc(a.q)} → ${esc(a.resp)}</div></div></div>`).join('') : '<div class="rp-box">Nenhum ponto crítico marcado no raio-x.</div>'}</div>
-        ${prox.length ? `<div><div class="rp-h">Próximos passos</div><ol>${prox.map((p, i) => `<li>${esc(plain(raw('relatorio.proximos.' + i)))}</li>`).join('')}</ol></div>` : ''}
-        ${foot(3)}</div>`;
+    const LIM = 1123 - 46 - 50; // altura útil: folha menos padding inferior e rodapé
+    rel.innerHTML = '';
+    const folhas = [];
+    let f;
+    const nova = titulo => {
+      f = document.createElement('div');
+      f.className = 'rp'; f.style.minHeight = '0';
+      f.innerHTML = `<div class="rp-head"><div><div class="rp-kick">${esc(titulo)}</div><div class="rp-name">${esc(emp)}</div><div class="rp-meta">Diagnóstico realizado em ${esc(dataTxt)}${dx.ident.whatsapp ? ' · ' + esc(dx.ident.whatsapp) : ''}</div></div>${logo ? `<img src="${esc(logo)}" alt="">` : ''}</div>`;
+      rel.appendChild(f); folhas.push(f);
+    };
+    const criar = html => { const tmp = document.createElement('div'); tmp.innerHTML = html.trim(); return tmp.firstElementChild; };
+    const add = (html, titulo) => {
+      const el = criar(html);
+      f.appendChild(el);
+      if(f.offsetHeight > LIM && f.children.length > 2){ el.remove(); nova(titulo); f.appendChild(el); }
+    };
+    // bloco com linhas: quebra entre folhas linha a linha, repetindo o cabeçalho com "continuação"
+    const addBloco = (cab, linhas, titulo) => {
+      let bloco = criar(`<div class="rp-bloco">${cab(false)}</div>`);
+      f.appendChild(bloco);
+      if(f.offsetHeight > LIM && f.children.length > 2){ bloco.remove(); nova(titulo); f.appendChild(bloco); }
+      linhas.forEach(h => {
+        const el = criar(h);
+        bloco.appendChild(el);
+        if(f.offsetHeight > LIM && bloco.children.length > 2){
+          el.remove(); nova(titulo);
+          bloco = criar(`<div class="rp-bloco">${cab(true)}</div>`);
+          f.appendChild(bloco); bloco.appendChild(el);
+        }
+      });
+    };
+
+    // página 1: panorama
+    const t1 = 'Raio-X Comercial · ' + N.nome;
+    nova(t1);
+    const piores = g.st.filter(x => x.s.aprov < 50).sort((a, b) => a.s.aprov - b.s.aprov).slice(0, 2).map(x => nomeArea(x.a));
+    add(`<div class="rp-geral"><div class="rp-pct ${tier(g.aprov)}">${g.aprov == null ? '--' : g.aprov + '%'}</div><div><div class="rp-lab">Aproveitamento geral</div><div class="rp-read">${esc(leitura(g.aprov, piores))}</div></div></div>`, t1);
+    add(`<div class="rp-h">Resultado por área</div>`, t1);
+    areasQuePontuam().forEach(a => {
+      const s = areaStats(a.id);
+      add(`<div class="rp-area"><div class="top"><span>${esc(nomeArea(a))}</span><span>${s.aprov == null ? '--' : s.aprov + '%'}</span></div><div class="b"><i class="${tier(s.aprov)}" style="width:${s.aprov || 0}%"></i></div>
+        <div class="sb">${s.alertas} de ${s.total} pontos de atenção · ${s.respondidas} respondidas</div></div>`, t1);
+    });
+    const cs = camposInformados();
+    if(cs.length){
+      add(`<div class="rp-h">Números informados pela ${esc(termo('empresa'))}</div>`, t1);
+      add(`<div class="rp-grid">${cs.map(c => `<div class="rp-kpi"><div class="k">${esc(c[0])}</div><div class="v">${esc(c[1])}</div></div>`).join('')}</div>`, t1);
     }
-    rel.innerHTML = p1 + p2 + p3;
+    add(`<div class="rp-box">${fmtRel(raw('relatorio.legenda'))}</div>`, t1);
+
+    // o custo de esperar
+    if(ce){
+      const tc = 'O custo de esperar';
+      nova(tc);
+      add(`<div class="rp-frase">${ce.html}</div>`, tc);
+      if(ce.linhas.length){
+        let tb = null;
+        const novaTabela = () => { const t = document.createElement('table'); t.className = 'rp-tbl'; t.innerHTML = '<thead><tr><th>Mês</th><th>Ganho acumulado</th><th>Investido acumulado</th><th>Saldo</th></tr></thead><tbody></tbody>'; f.appendChild(t); tb = t.tBodies[0]; };
+        novaTabela();
+        ce.linhas.forEach(l => {
+          const tr = document.createElement('tr');
+          if(l.mes === ce.payback) tr.className = 'pb';
+          tr.innerHTML = `<td>${l.mes}</td><td>${brlS(l.ganho)}</td><td>${brlS(l.investido)}</td><td class="${l.saldo < 0 ? 'neg' : ''}">${brlS(l.saldo)}</td>`;
+          tb.appendChild(tr);
+          if(f.offsetHeight > LIM && tb.children.length > 1){ tr.remove(); nova(tc); novaTabela(); tb.appendChild(tr); }
+        });
+      }
+    }
+
+    // plano de ação
+    if(comPlano){
+      const porArea = acoesPorArea(), tp = 'Plano de ação';
+      if(porArea.length){
+        nova(tp);
+        add(`<div class="rp-read">${fmtRel(raw('relatorio.planoIntro'))}</div>`, tp);
+        const top = porArea.flatMap(a => a.itens.map(i => ({ area:a.nome, acao:i.acao }))).slice(0, 3);
+        add(`<div class="rp-prio"><div class="t">Por onde começar</div>${top.map((t, i) => `<div class="it"><div class="n">${i + 1}</div><div>${esc(t.acao)}<div class="ar">${esc(t.area)}</div></div></div>`).join('')}</div>`, tp);
+        porArea.forEach(a => addBloco(cont => `<div class="bh"><span class="bn">${esc(a.nome)}${cont ? ' (continuação)' : ''}</span><span class="bp ${tier(a.pct)}">${a.pct == null ? '--' : a.pct + '%'}</span></div>`,
+          a.itens.map(i => `<div class="rp-act"><div class="m">›</div><div>${esc(i.acao)}<div class="sb">a partir de: ${esc(i.pergunta)}</div></div></div>`), tp));
+        add(`<div class="rp-box">${fmtRel(raw('relatorio.planoFecho'))}</div>`, tp);
+      }
+    }
+
+    // respostas
+    const tr = 'Respostas do diagnóstico';
+    nova(tr);
+    areas().forEach(a => {
+      const s = areaStats(a.id), itens = [];
+      cadaPergunta((sc, si, q, qi) => {
+        if((sc.area || 'comercial') !== a.id) return;
+        const r = respostaTexto(si, qi); if(!r) return;
+        const d = dorQ(sc, q, qi), dot = d === 1 ? 'r' : d === 0.5 ? 'a' : d === 0 ? 'v' : '';
+        itens.push(`<div class="rp-item"><div class="rp-q">${dot ? `<span class="rp-dot ${dot}"></span>` : ''}${esc(plain(raw(qPath(si, qi) + '.texto')))}</div><div class="rp-r">${esc(r)}</div></div>`);
+      });
+      if(!itens.length) return;
+      addBloco(cont => `<div class="bh"><span class="bn">${esc(nomeArea(a))}${cont ? ' (continuação)' : ''}</span><span class="bp ${tier(s.aprov)}">${s.aprov == null ? '' : s.aprov + '%'}</span></div>`, itens, tr);
+    });
+    add(`<div class="rp-box">${esc(plain(raw('relatorio.rodape'), { data:dataTxt }))}</div>`, tr);
+
+    folhas.forEach((p, i) => {
+      p.style.minHeight = '';
+      const ft = document.createElement('div'); ft.className = 'rp-foot';
+      ft.innerHTML = `<span>${esc(MARCA.nome || '')}</span><span>Página ${i + 1} de ${folhas.length}</span>`;
+      p.appendChild(ft);
+    });
     return rel;
+  }
+  // negrito com *asteriscos* e bolinhas (ponto vermelho/amarelo/verde) nos textos do relatório
+  function fmtRel(s){
+    return esc(plain(String(s || '').replace(/\*([^*]+)\*/g, '§$1§'))).replace(/§([^§]+)§/g, '<b>$1</b>')
+      .replace(/\(ponto vermelho\)/g, '<span class="rp-dot r"></span>').replace(/\(ponto amarelo\)/g, '<span class="rp-dot a"></span>').replace(/\(ponto verde\)/g, '<span class="rp-dot v"></span>');
+  }
+  function leitura(aprov, piores){
+    if(aprov == null) return 'Diagnóstico ainda sem respostas suficientes para leitura.';
+    const emp = termo('empresa');
+    let t;
+    if(aprov < 34) t = 'A ' + emp + ' opera hoje com ' + aprov + '% do potencial comercial que já tem instalado. A maior parte do resultado depende de esforço individual, não de processo.';
+    else if(aprov < 66) t = 'A ' + emp + ' opera hoje com ' + aprov + '% do potencial comercial que já tem instalado. Parte do processo existe, mas convive com etapas que dependem de memória e improviso.';
+    else t = 'A ' + emp + ' opera hoje com ' + aprov + '% do potencial comercial que já tem instalado, com processo presente na maior parte das áreas.';
+    if(piores.length) t += ' As áreas com mais pontos de atenção são ' + piores.join(' e ') + '.';
+    return t;
   }
   function carregar(src){
     return new Promise((ok, erro) => {
@@ -971,19 +1106,21 @@
     const rotulo = btn.textContent;
     btn.disabled = true; btn.textContent = 'Gerando PDF…';
     const rel = montarRelatorio(comPlano);
-    const nome = 'raio-x-' + slug(dx.ident.empresa || N.id) + (comPlano ? '-plano-de-acao' : '') + (dx.ident.data ? '-' + dx.ident.data : '') + '.pdf';
+    const nome = 'raio-x-comercial-' + slug(dx.ident.empresa || N.id) + (comPlano ? '-com-plano-de-acao' : '') + '-' + (dx.ident.data || hojeISO()).split('-').reverse().join('-') + '.pdf';
     try{
       await biblioteca('html2canvas', 'html2canvas.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
       await biblioteca('jspdf', 'jspdf.umd.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
       if(document.fonts && document.fonts.ready) await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 3000))]);
-      const telas = [];
-      for(const p of $$('.rp', rel)) telas.push(await window.html2canvas(p, { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false }));
-      const alt = c => 210 * c.height / c.width;
-      const pdf = new window.jspdf.jsPDF({ unit:'mm', format:[210, alt(telas[0])] });
-      telas.forEach((c, i) => { if(i) pdf.addPage([210, alt(c)]); pdf.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, alt(c)); });
+      const pdf = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
+      const folhas = $$('.rp', rel);
+      for(let i = 0; i < folhas.length; i++){
+        const c = await window.html2canvas(folhas[i], { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false });
+        if(i) pdf.addPage('a4');
+        pdf.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, Math.min(297, 210 * c.height / c.width));
+      }
       await salvarArquivo(nome, pdf.output('blob'), 'application/pdf');
     }catch(err){
-      // sem as bibliotecas (offline) ou imagem bloqueada: usa a impressão do navegador
+      // sem as bibliotecas ou com imagem bloqueada: usa a impressão do navegador
       const tit = document.title; document.title = nome.replace(/\.pdf$/, '');
       setTimeout(() => { window.print(); setTimeout(() => { document.title = tit; }, 1000); }, 60);
     }finally{
@@ -993,7 +1130,7 @@
 
   // ============ início ============
   $('#miniLogo').src = MARCA.icone || MARCA.logo || '';
-  window.RB = { calc, geral, resumoTexto, escolherNicho, get dx(){ return dx; }, get nicho(){ return N; }, ir, montarRelatorio };
+  window.RB = { proj, custoEsperar, geral, areaStats, resumoTexto, escolherNicho, ir, montarRelatorio, get dx(){ return dx; }, get nicho(){ return N; } };
   const hash = (location.hash || '').replace('#', '');
   const inicial = NICHOS.find(n => n.id === hash) || NICHOS.find(n => n.id === store.get('rb:nicho')) || (NICHOS.length === 1 ? NICHOS[0] : null);
   if(inicial) escolherNicho(inicial.id);

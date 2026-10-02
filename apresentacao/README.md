@@ -1,18 +1,31 @@
-# Raio-X de Receita · Ribeker
+# Raio-X Comercial · Ribeker
 
-Apresentação comercial dinâmica com diagnóstico ao vivo, para usar em reunião de venda.
-Um só motor (visual, animações, perguntas, placar, projeção, relatório) e um arquivo por nicho.
+Apresentação comercial com diagnóstico ao vivo, para usar na reunião de venda.
+Segue o pitch original (raio-x comercial + marketing e tráfego pago, painel, empilhamento, planos, fechamento)
+com a identidade da Ribeker. Um só motor e um arquivo por nicho.
 
 ## Como abrir
 
-- **Arquivo único:** `dist/ribeker-apresentacao.html`. Abre com dois cliques no Chrome, funciona offline
-  (só a fonte vem da internet; sem ela, usa a fonte do sistema). É esse arquivo que você manda ou leva para a reunião.
+- **Arquivo único:** `dist/ribeker-apresentacao.html`. Abre com dois cliques no Chrome e funciona offline
+  (só a fonte vem da internet; sem ela, usa a fonte do sistema). É esse arquivo que você leva para a reunião.
 - **Versão de trabalho:** `index.html` (lê `marca.js`, `nichos/*.js` e `motor.js`). Depois de mudar qualquer
   arquivo, gere de novo o arquivo único:
 
   ```bash
   python3 build.py
   ```
+
+## Roteiro (26 slides)
+
+1. Capa · Especialista · Quem somos
+2. Antes de tudo: nome, WhatsApp do lead e data
+3. Raio-X em 7 telas: Vendas e Prospecção · Marketing e Tráfego Pago · Geração de Leads e Marketing · Ferramentas ·
+   Atendimento e Follow-up · Resultados · Tempo, investimento e resultado
+4. O que o diagnóstico mostrou: custo de esperar, "o que você empilhou sozinho" x estimativa da Ribeker, placar
+5. Vendas Ribeker · Quem atendemos · Case (2 slides) · Mkt · Ferramenta · Time
+6. Resultado empilhado em 6 e 12 meses
+7. Valores de mercado · Planos · Acordo · Fechamento
+8. Salvar o raio-X: placar, respostas por área, custo de esperar, PDF e resumo
 
 ## Durante a reunião
 
@@ -21,77 +34,71 @@ Um só motor (visual, animações, perguntas, placar, projeção, relatório) e 
 | ← → ou espaço | Volta / avança |
 | F | Tela cheia |
 | E | Liga e desliga o modo edição |
-| Esc | Sai do modo edição |
 
 - **Nicho:** o botão no canto inferior esquerdo troca o nicho. Também dá para abrir direto: `...html#escolas`, `...html#veiculos`.
-- **Respostas:** clique para marcar e clique de novo para desmarcar. A resposta marcada fica sempre azul, inclusive a negativa: o julgamento aparece só no painel de resultado, não na frente do cliente durante as perguntas.
-- **Salvamento:** tudo fica gravado no navegador, separado por nicho. Fechou sem querer? Abre de novo e continua.
-- **Último slide:** "Relatório" e "Relatório + plano de ação" geram o PDF. "Copiar resumo" copia um texto pronto para colar no WhatsApp ou no CRM. "Novo diagnóstico" zera para o próximo cliente.
+- **Respostas:** clique para marcar e de novo para desmarcar. A resposta marcada fica sempre azul, inclusive a
+  negativa: o julgamento aparece só no painel, não na frente do cliente durante as perguntas.
+- **Salvamento:** fica gravado no navegador, separado por nicho. Fechou sem querer? Abre de novo e continua.
+- **Último slide:** "Relatório" e "Relatório + plano de ação" geram o PDF. "Copiar resumo" copia um texto para colar
+  no WhatsApp ou no CRM. "Novo diagnóstico" zera para o próximo cliente.
 
 ## Editar sem programar (modo edição)
 
 Aperte **E** ou clique em **Editar**. Todo texto com contorno tracejado pode ser alterado com um clique.
 
-- `*palavra*` destaca em azul.
-- `[texto]` marca o que falta preencher. Aparece com contorno amarelo **também na apresentação**, para você não esquecer.
-- `~~texto~~` deixa riscado (preço "de").
-- `{venda}`, `{vendas}`, `{cliente}`, `{empresa}`, `{ticket}` trocam pela palavra do nicho
-  (escola: "matrícula", "aluno"; veículos: "venda", "comprador"). Com maiúscula: `{Venda}`, `{Empresa}`.
-- **Ocultar slide** esconde o slide atual só neste nicho.
-- **Baixar cópia** gera um novo `.html` com as suas edições já dentro.
-- **Baixar alterações** gera um `.json` com só o que você mudou. Para deixar as mudanças fixas no projeto,
-  entregue esse arquivo ao Claude Code: *"aplique este alteracoes-apresentacao.json em marca.js e nos nichos"*.
-
-As edições ficam neste navegador. Em outro computador, use a cópia baixada.
+- `*palavra*` destaca em azul · `[texto]` marca o que falta preencher (aparece com contorno amarelo também na apresentação)
+- `~~texto~~` deixa riscado (preço "de")
+- `{venda}`, `{vendas}`, `{cliente}`, `{empresa}`, `{ticket}`, `{receita}` trocam pela palavra do nicho
+- **Ocultar slide** esconde o slide atual só neste nicho
+- **Baixar cópia** gera um novo `.html` com as suas edições dentro
+- **Baixar alterações** gera um `.json` com o que você mudou. Para deixar fixo no projeto, entregue ao Claude Code:
+  *"aplique este alteracoes-apresentacao.json em marca.js e nos nichos"*
 
 ## Criar um nicho novo com o Claude Code
 
-Os nichos ficam em `nichos/`. `escolas.js` é o modelo comentado. Peça assim:
+Os nichos ficam em `nichos/`. `escolas.js` é o pitch original e o modelo comentado; `veiculos.js` mostra como adaptar.
+Peça assim:
 
-> Crie o nicho **clínicas de estética** em `apresentacao/nichos/`, seguindo o modelo de `escolas.js`.
-> Termos: cliente = paciente, venda = procedimento fechado, ticket = valor médio do procedimento.
-> A receita não é recorrente. Use 4 áreas no raio-x com 4 ou 5 perguntas cada, cada pergunta com a sua ação.
-> Registre o arquivo no `index.html` e rode `python3 build.py`.
+> Crie o nicho **clínicas de estética** em `apresentacao/nichos/`, seguindo a mesma estrutura de `veiculos.js`
+> (as mesmas 7 telas do raio-x, adaptando as perguntas ao nicho). Termos: cliente = paciente, venda = procedimento fechado.
+> A venda não é recorrente. Registre o arquivo no `index.html` e rode `python3 build.py`.
 
-O que muda de um nicho para outro:
-
-| Campo | Para que serve |
+| Campo do nicho | Para que serve |
 |---|---|
-| `termos` | Palavras usadas em todos os textos da marca |
-| `publico`, `perfis.itens` | Chips de "Quem atendemos" e o slide perfil → dor |
-| `categorias` | As telas do raio-x: perguntas, pesos (`dor`) e ação do plano |
-| `projecao.recorrente` | `true` quando o cliente paga todo mês (escola, academia, SaaS): a receita empilha. `false` para venda única (veículo, imóvel) |
-| `projecao.ganho` | Quanto a mais de vendas o método traz com os mesmos leads (0.3 = +30%) |
-| `projecao.referencia` | Números usados enquanto o cliente não informa os dele |
-| Qualquer chave de `marca.js` | Pode ser sobrescrita no nicho (planos, case, textos) |
+| `termos` | Palavras usadas nos textos da marca (`receita: 'lucro'` em veículos, por exemplo) |
+| `capa.tagline`, `publico`, `perfis.itens`, `case` | Conteúdo dos slides deste nicho |
+| `areas` | Áreas do placar. Só as que têm pergunta com peso entram na nota (Marketing e Tráfego Pago é informativo, como no original) |
+| `raiox` | As telas do raio-x, com `campos` (números) e `perguntas` (com `dor` 0 / 0,5 / 1 e `acao` para o plano) |
+| `projecao.recorrente` | `true`: o cliente paga todo mês (escola), a receita empilha. `false`: venda única (veículo), acumula |
+| `projecao.multiplicador` e `conta` | Escolas: o dobro das matrículas, contando todas (`total`). Veículos: 50% a mais, contando só as vendas a mais (`extra`) |
+| Qualquer chave de `marca.js` | Pode ser sobrescrita no nicho |
 
-## Como as contas funcionam
+Ids de campo que entram nas contas: `vendas`, `ticket`, `meses`, `custo`, `receitaIni`, `receitaHoje`.
 
-- **Aproveitamento comercial:** cada resposta vale 0 (bom), 0,5 (atenção) ou 1 (problema). A média de cada área
-  vira `100% − média`. O placar geral é a média das áreas. Abaixo de 34% é crítico; de 34% a 65%, atenção; de 66% em diante, sob controle.
-- **Leads na mesa:** conversão = vendas ÷ leads. Cada +1 ponto de conversão = leads × 1% × ticket.
-- **Projeção:** vendas a mais por mês = vendas de hoje × ganho. Em nicho recorrente, cada mês soma os clientes
-  novos de todos os meses anteriores. Em venda única, acumula mês a mês.
-- **Custo de esperar:** compara o crescimento da receita nos meses informados (somado mês a mês) com a projeção
-  do método no mesmo prazo.
+## Como as contas funcionam (iguais ao original)
 
-Toda projeção aparece com a etiqueta "Estimativa".
+- **Placar:** cada resposta vale 0 (estruturado), 0,5 (parcial) ou 1 (ponto de atenção). Aproveitamento = 100% − média.
+  Abaixo de 34% é crítico; até 65%, atenção; acima, sob controle. Funis de lead: 3 ou mais = estruturado, 2 = parcial, 1 = atenção.
+- **Custo de esperar:** com meses, custo mensal e receita no início e hoje, o ganho sobe em rampa
+  (incremento × m(m+1)/2). Saldo = ganho acumulado − investido. A tabela mês a mês destaca o mês do payback.
+- **Empilhamento:** clientes novos por mês × ticket. Recorrente: o mês m soma m levas (6 meses = 21 × a base; 12 meses = 78 ×).
+  Venda única: acumula (6 meses = 6 × a base).
 
 ## Antes da primeira reunião
 
-Os campos entre colchetes ainda precisam do seu conteúdo:
+O que está entre colchetes precisa do seu conteúdo:
 
-- `marca.js`: cargo, cidade e números do especialista, números de "Quem somos", time, valores de mercado, planos e preços, garantia, bônus, contato.
-- Case de cada nicho (`case` em `nichos/*.js`), com o print do resultado em `assets/`.
-- Foto: coloque em `assets/` e informe o caminho em `especialista.foto` (ex.: `'assets/lucas.jpg'`).
+- `marca.js`: cidade e números do especialista, números de "Quem somos", time, case (nome, print e números),
+  destaque do marketing, valores de mercado, bônus do acordo, e confirmar o item "Agente de IA 24h" da ferramenta.
+- Prints: coloque em `assets/` e informe o caminho em `case.imagem`, `mkt.imagem`, `ferramenta.imagem`, `especialista.foto`.
 
 ## Arquivos
 
 ```
 apresentacao/
   index.html        página (estrutura e visual)
-  motor.js          lógica: slides, raio-x, cálculos, edição, PDF
-  marca.js          textos e dados da Ribeker, iguais em todo nicho
+  motor.js          lógica: slides, raio-x, contas, edição, PDF
+  marca.js          pitch e dados da Ribeker, iguais em todo nicho
   nichos/*.js       um arquivo por nicho
   assets/           logo e imagens
   vendor/           bibliotecas do PDF (html2canvas, jsPDF), para funcionar offline

@@ -1,12 +1,13 @@
-/* Marca: tudo que é igual em todos os nichos.
+/* Marca: o pitch da Ribeker, igual em todos os nichos.
    Qualquer chave daqui pode ser sobrescrita dentro de um arquivo de nicho (mesmo nome, mesmo formato).
 
    Convenções nos textos:
      *palavra*      destaca em azul
      [texto]        marca o que ainda falta preencher (aparece com contorno tracejado)
      ~~texto~~      riscado (ex.: preço "de")
-     {venda}        troca pelo termo do nicho: {empresa} {empresas} {cliente} {clientes} {venda} {vendas} {ticket}
-                    com inicial maiúscula: {Venda} {Vendas} {Empresa}...
+     {venda}        troca pelo termo do nicho: {empresa} {cliente} {clientes} {venda} {vendas} {ticket}
+                    {receita} {suaReceita} {fimJornada}; com maiúscula: {Empresa} {Vendas}...
+     {marca}        nome curto da marca (Ribeker)
      {meses}        mostra ao vivo o tempo informado no raio-x
      {fator12}      mostra ao vivo "dobra", "mais que dobra" ou "mais que triplica" */
 window.MARCA = {
@@ -25,212 +26,197 @@ window.MARCA = {
     suave: '#a3b5d4'
   },
 
-  // slides que começam escondidos (ids: capa, especialista, quem-somos, problema, raiox, numeros, tempo,
-  // painel, metodo, perfis, case, entregas, time, projecao-6, projecao-12, valores, planos, garantia, fechamento, salvar)
+  // slides que começam escondidos. Ids: capa, especialista, quem-somos, antes, rx-<id da tela>, painel,
+  // resolvemos, perfis, marcas, case, mkt, ferramenta, time, empilhamento-6, empilhamento-12,
+  // valores, planos, garantia, fechamento, salvar
   ocultar: [],
 
   capa: {
-    kicker: 'Raio-X de Receita',
-    titulo: 'Onde a sua receita *se perde* entre o clique e a {venda}',
-    sub: 'Um diagnóstico feito junto com você, com os seus números, em menos de 30 minutos.'
+    tagline: 'Sistema comercial para empresas que vendem através de leads'
   },
 
   especialista: {
-    kicker: 'Quem conduz',
+    kicker: 'Especialista',
     nome: 'Lucas Ribeker',
-    cargo: '[Fundador da Ribeker · Estrategista de receita]',
     local: '[Cidade, UF]',
     foto: '',                           // ex.: assets/lucas.jpg (coloque o arquivo na pasta assets)
     numeros: [
-      { valor: '[10+]', rotulo: 'anos em marketing e vendas' },
-      { valor: '[100+]', rotulo: 'empresas atendidas' },
-      { valor: '[R$ 0 mi]', rotulo: 'em receita acompanhada' }
+      { valor: '[00]', rotulo: '[Anos em marketing e vendas]' },
+      { valor: '[00]', rotulo: '[Estados atendidos]' },
+      { valor: '[000+]', rotulo: '[Empresas atendidas]' }
     ]
   },
 
   quemSomos: {
     kicker: 'Quem somos',
-    titulo: 'Assessoria de *receita* para empresas que vendem através de leads',
+    titulo: 'Especialistas em *captação, qualificação e conversão* de leads',
     publicoTitulo: 'Quem atendemos',
     numeros: [
-      { valor: '[100+]', rotulo: 'empresas atendidas' },
-      { valor: '[10]', rotulo: 'estados' },
-      { valor: '[4]', rotulo: 'nichos com método próprio' }
+      { valor: '[000+]', rotulo: '[Empresas atendidas]' },
+      { valor: '[00+]', rotulo: '[Estados]' },
+      { valor: '[0000]', rotulo: '[Desde]' }
     ]
   },
 
-  problema: {
-    kicker: 'Para empresas que vendem através de leads',
-    titulo: 'Dos leads que você paga, *quantos viram {venda} de verdade?*',
-    texto: 'Você investe em anúncio todo mês, mas a {venda} não acompanha. Na maioria das vezes, o problema não está no tráfego. Está na operação entre o clique e a {venda}.',
-    pilares: [
-      { nome: 'Atendimento', texto: 'Quanto tempo o lead espera e o que ouve quando é atendido.' },
-      { nome: 'CRM', texto: 'Onde o lead fica registrado e quem é responsável por ele.' },
-      { nome: 'Follow-up', texto: 'O que acontece com quem não respondeu ou não decidiu.' },
-      { nome: 'Medição', texto: 'Quanto custa cada lead e cada {venda}, por canal.' }
-    ]
-  },
-
-  raiox: {
+  antes: {
     kicker: 'Antes de tudo',
-    titulo: 'Vamos entender *onde a receita se perde*',
-    sub: 'Algumas perguntas rápidas sobre como funciona hoje. Vamos marcando juntos.'
-  },
-
-  numeros: {
-    kicker: 'Raio-X · Números',
-    titulo: 'Os números de *hoje*',
-    sub: 'Viram a base da conta que aparece mais à frente. Pode ser aproximado.',
-    campos: {
-      leads:  { rotulo: 'Leads por mês', hint: 'Contatos novos, de todos os canais', suf: 'leads / mês' },
-      vendas: { rotulo: '{Vendas} por mês', hint: 'Média dos últimos meses', suf: '{vendas} / mês' },
-      ticket: { rotulo: '{Ticket}', pre: 'R$', suf: 'por {venda}' },
-      midia:  { rotulo: 'Investimento em anúncios', hint: 'Meta, Google, portais', pre: 'R$', suf: 'por mês' }
-    }
-  },
-
-  tempo: {
-    kicker: 'Raio-X · O custo de esperar',
-    titulo: 'Tempo, investimento e *resultado*',
-    sub: 'Essas respostas viram o comparativo da próxima tela.',
-    campos: {
-      meses:       { rotulo: 'Há quantos meses vocês tentam aumentar as {vendas}?', suf: 'meses' },
-      custo:       { rotulo: 'Custo mensal de comercial e marketing', hint: 'Equipe, anúncios, ferramentas, agência', pre: 'R$', suf: 'por mês' },
-      receitaIni:  { rotulo: 'Há {meses}, a receita mensal era de', pre: 'R$', suf: 'por mês, no início' },
-      receitaHoje: { rotulo: 'E hoje a receita mensal está em', pre: 'R$', suf: 'por mês, hoje' }
-    }
+    titulo: 'Vamos te entender *melhor*',
+    etapas: ['Comercial', 'Marketing e Tráfego Pago'],
+    sub: 'Algumas perguntas rápidas pra entender exatamente onde vocês estão hoje. Vamos marcando juntos.'
   },
 
   painel: {
     kicker: 'Raio-X · Resultado',
     titulo: 'O que o *diagnóstico* mostrou',
-    nosso: 'Com o Método Receita Real'
+    mine: 'O que você conseguiu empilhar sozinho',
+    nosso: 'A estimativa que a Ribeker entrega no mesmo prazo'
   },
 
-  metodo: {
-    kicker: 'Como resolvemos',
-    nome: 'Método Receita Real',
-    titulo: 'Método *Receita Real*',
+  resolvemos: {
+    kicker: 'O que resolvemos',
+    titulo: 'Vendas Ribeker',
     etapas: [
-      { nome: 'Diagnóstico', texto: 'Mapeamos onde a receita vaza, do clique à {venda}.' },
-      { nome: 'Atendimento', texto: 'Resposta em minutos, roteiro claro e o lead conduzido até a decisão.' },
-      { nome: 'CRM e automação', texto: 'Todo lead registrado, distribuído e lembrado. Nada fica perdido no WhatsApp.' },
-      { nome: 'Follow-up', texto: 'Cadência para quem não respondeu, não decidiu ou esfriou.' },
-      { nome: 'Medição', texto: 'Custo por lead, conversão e receita por canal, toda semana.' }
+      { nome: 'Social mídia', texto: 'Gera permanência e atenção do seu lead' },
+      { nome: 'Tráfego pago', texto: 'Atrai o lead para nível de convivência e cadastro' },
+      { nome: 'CRM / IA', texto: 'Organiza e atende' },
+      { nome: 'Venda', texto: 'Lead organizado e acompanhado até o fechamento' }
     ],
-    fecho: 'Primeiro a gente transforma em {venda} o lead que você já paga. Depois, se fizer sentido, aumenta a verba.'
+    fecho: 'Isso é o que resolvemos: sua {empresa} nunca mais perde lead por falta de processo, do primeiro clique até {fimJornada}.'
   },
 
   perfis: {
     kicker: 'Quem atendemos',
-    titulo: 'Cada perfil perde receita *num ponto diferente*'
+    titulo: 'Cinco perfis, cada um com uma dor específica'
+  },
+
+  marcas: {
+    kicker: 'Quem confia na Ribeker',
+    titulo: 'O mesmo padrão se repete em marcas fortes',
+    tag: 'Case em destaque'
   },
 
   case: {
-    kicker: 'Resultado real',
-    cliente: '[Nome do cliente]',
-    segmento: '[Segmento · cidade]',
-    texto: '[Em duas linhas: como era antes e o que mudou depois do método.]',
+    kicker: 'Resultado real · [12 meses]',
+    nome: '[Nome do cliente]',
+    descricao: '[Segmento do cliente.] O resultado real vem na próxima página.',
+    insight: '[Atendemos empresas em todo o Brasil, incluindo marcas que você conhece.] A armadilha silenciosa de toda marca forte é acreditar que a marca vende sozinha.',
     imagem: '',                         // ex.: assets/case-print.jpg
+    legenda: 'Print real do sistema · [balanço dos últimos 12 meses]',
     numeros: [
-      { valor: '[+00%]', rotulo: '[em {vendas} no período]' },
-      { valor: '[0 min]', rotulo: '[tempo médio de resposta]' },
-      { valor: '[R$ 0]', rotulo: '[de receita a mais]' }
-    ]
+      { valor: '[R$ 0,00]', rotulo: 'Total recebido' },
+      { valor: '[R$ 0,00]', rotulo: 'Total de despesas' },
+      { valor: '[R$ 0,00]', rotulo: 'Lucro líquido' },
+      { valor: '[00,00%]', rotulo: 'Lucro líquido em %' }
+    ],
+    rodape: 'Esse é o balanço real, direto do sistema. Sem estimativa.'
   },
 
-  entregas: {
-    kicker: 'Você não fica sozinho',
-    titulo: 'O que a Ribeker *faz por você*',
+  mkt: {
+    kicker: 'Você não vai ficar sozinho · Mkt',
+    titulo: 'Tudo que o marketing faz por você',
     itens: [
-      { nome: 'Atendimento', itens: ['Roteiro de atendimento até o fechamento', 'Treinamento do time', 'Meta de tempo de resposta'] },
-      { nome: 'CRM e automação', itens: ['CRM implantado com o seu funil', 'Distribuição automática dos leads', 'Mensagens automáticas e lembretes'] },
-      { nome: 'Follow-up', itens: ['Cadência para quem não respondeu', 'Reativação da base antiga', 'Recuperação de quem não decidiu'] },
-      { nome: 'Tráfego e medição', itens: ['Gestão de anúncios', 'Painel com custo por lead e por {venda}', 'Reunião de resultado todo mês'] }
-    ]
+      'Posicionamento de marca',
+      'Atração e conversão de leads',
+      'Tráfego pago (Meta Ads)',
+      'Social mídia: até 8 posts por mês (criativos, carrosséis, conteúdo)'
+    ],
+    destaque: { valor: '[0.000]', rotulo: '[seguidores a mais em 10 meses, só de conteúdo orgânico + tráfego (case)]' },
+    imagem: ''                          // ex.: assets/instagram-case.png
+  },
+
+  ferramenta: {
+    kicker: 'Você não vai ficar sozinho · Ferramenta',
+    titulo: 'CRM e automação rodando 24h',
+    itens: [
+      'CRM com pipeline de vendas organizado',
+      '[Agente de IA 24h rodando o funil no WhatsApp]',
+      'Automação de entrada de leads, disparo de mensagens, follow-up e confirmação',
+      'Implementação completa, sem trabalho técnico pra você'
+    ],
+    imagem: ''                          // ex.: assets/crm-pipeline.jpg
   },
 
   time: {
-    kicker: 'Quem te acompanha',
-    titulo: 'Gente que já fez isso *antes*',
+    kicker: 'Você não vai ficar sozinho · Especialista',
+    titulo: 'Quem te acompanha de perto',
+    sub: 'O time que [já rodou o método em mais de 000 empresas] fica com você, não como consultor de fora dando palpite.',
     pessoas: [
-      { nome: 'Lucas Ribeker', cargo: '[Estratégia de receita]', texto: '[O que faz no projeto, em uma linha.]', foto: '' },
-      { nome: '[Nome]', cargo: '[CRM e automação]', texto: '[O que faz no projeto, em uma linha.]', foto: '' },
-      { nome: '[Nome]', cargo: '[Tráfego pago]', texto: '[O que faz no projeto, em uma linha.]', foto: '' }
+      { nome: 'Lucas Ribeker', cargo: 'Estrategista em captação', texto: 'Cuida do posicionamento da empresa e da atração pra captação de leads.', foto: '' },
+      { nome: '[Nome]', cargo: '[Cargo]', texto: '[O que faz no projeto, em uma linha.]', foto: '' },
+      { nome: '[Nome]', cargo: '[Cargo]', texto: '[O que faz no projeto, em uma linha.]', foto: '' }
     ]
   },
 
-  projecao: {
-    // parâmetros da conta (cada nicho define os seus):
-    recorrente: false,                  // true = cada cliente novo paga todo mês (a receita empilha)
-    ganho: 0.3,                         // 0.3 = +30% sobre as vendas de hoje, vindas dos mesmos leads
-    referencia: { vendas: 10, ticket: 300 }, // usada enquanto os números não forem preenchidos
-    // textos:
+  empilhamento: {
     kicker6: 'O que já é seu, mês a mês',
-    titulo6: 'Resultado em *6 meses*',
-    kicker12: 'Se o compromisso for de 12 meses',
-    titulo12: 'Em 12 meses, o resultado *{fator12}*',
-    nota: 'Conta só as {vendas} a mais vindas dos leads que você já recebe. Não considera aumento de verba.'
+    titulo6: 'Resultado empilhado em *6 meses*',
+    kicker12: 'Mantendo o trabalho por 12 meses',
+    titulo12: 'O resultado empilhado *{fator12}*',
+    evolucao: 'Estimativa · evolução mês a mês',
+    partida: 'Seu ponto de partida, sozinho'
+  },
+
+  // parâmetros da conta do empilhamento (cada nicho define os seus em "projecao")
+  projecao: {
+    recorrente: true,                   // true: cada cliente novo paga todo mês, a receita empilha
+    multiplicador: 2,                   // 2 = o dobro das vendas de hoje
+    conta: 'total',                     // 'total' conta todas as vendas da meta; 'extra' só as que passam de hoje
+    referencia: { base: 10, ticket: 278 },  // usado enquanto o cliente não informa os números
+    baseRotulo: '{n} {clientes} novos/mês',
+    explicacao: 'o dobro das {hoje} que você faz hoje'
   },
 
   valores: {
     kicker: 'Valores de mercado',
-    titulo: 'Contratando cada peça *separada*',
+    titulo: 'Contratando cada peça separada',
     itens: [
-      { nome: 'Gestão de tráfego', valor: '[R$ 0.000/mês]' },
-      { nome: 'CRM e automação', valor: '[R$ 0.000/mês]' },
-      { nome: 'Consultoria comercial', valor: '[R$ 0.000/mês]' },
-      { nome: 'Treinamento do time', valor: '[R$ 0.000]' }
+      { nome: 'Social mídia', valor: '[R$ 0.000,00/mês]' },
+      { nome: 'Tráfego pago', valor: '[R$ 0.000,00/mês]' },
+      { nome: 'CRM + ferramenta', valor: '[R$ 0.000,00/mês]' }
     ],
     totalRotulo: 'Total separado',
-    total: '[R$ 00.000/mês]'
+    total: '[R$ 0.000,00/mês]'
   },
 
   planos: {
     kicker: 'Seu investimento',
-    titulo: 'Qual plano faz *sentido pra você*',
+    titulo: 'Hoje qual plano faz sentido pra você',
     itens: [
-      { nome: '6 meses', preco: '[R$ 0.000]', per: '/mês', detalhe: '[6x de R$ 0.000 = R$ 00.000]',
-        beneficios: ['Método Receita Real completo', '[Benefício]'] },
-      { nome: '12 meses', selo: 'Mais vantajoso', destaque: true, preco: '[R$ 0.000]', per: '/mês', detalhe: '[12x de R$ 0.000 = R$ 00.000]',
-        beneficios: ['Tudo do plano de 6 meses', 'Mensalidade mais baixa', '[Benefício]'] }
+      { nome: 'Tráfego + CRM', preco: 'R$ 2.989', per: ',00/mês', detalhe: 'Sem redes sociais',
+        beneficios: ['Tráfego pago', 'CRM'] },
+      { nome: 'Completo', selo: 'Mais completo', destaque: true, preco: 'R$ 3.489', per: ',00/mês', detalhe: 'Redes sociais + tráfego + CRM',
+        beneficios: ['Redes sociais: até 8 posts por mês', 'Tráfego pago', 'CRM com a ferramenta inclusa'] }
     ],
-    implantacao: 'Implantação: [~~R$ 0.000~~] *[R$ 000]*'
+    nota: 'Contrato *sem fidelidade*: só 30 dias de aviso prévio.',
+    implantacao: ''                     // ex.: 'Implementação: ~~R$ 0.000,00~~ *R$ 000,00*'
   },
 
   garantia: {
     kicker: 'Acordo entre as partes',
-    titulo: 'O risco fica *com a gente*',
-    texto: '[Descreva o seu acordo de resultado. Os valores abaixo são a estimativa calculada para esta {empresa}.]',
-    meta6: '[Batendo a estimativa: bônus de R$ 0.000 para a Ribeker]',
-    meta12: '[Batendo a estimativa: bônus de R$ 0.000 para a Ribeker]',
-    rodape: '[Se a gente não bater a estimativa, não tem bônus nenhum.]'
+    titulo: 'Vamos pro *tudo.*',
+    sub: 'Porque o nada não faz parte da nossa trajetória.',
+    meta6: '[Empilhamento batido conforme estimado: a Ribeker leva R$ 0.000,00 de bônus]',
+    meta12: '[Empilhamento batido conforme estimado: a Ribeker leva R$ 0.000,00 de bônus]',
+    rodape: 'Sem fidelidade: se não fizer sentido, você sai com 30 dias de aviso. O risco é nosso, não seu.'
   },
 
   fechamento: {
     kicker: 'Fechando hoje',
-    titulo: 'Hoje é *o dia*.',
-    texto: 'Quanto antes começar, antes os leads que você já paga viram {vendas}.',
-    bonusRotulo: 'Bônus para quem fecha hoje',
-    bonus: '[Ex.: auditoria completa do seu WhatsApp comercial]'
-  },
-
-  contato: {
-    whatsapp: '[(00) 00000-0000]',
-    site: '[ribeker.com.br]',
-    instagram: '[@ribeker]'
+    titulo: 'Hoje é *o dia.*',
+    texto: 'Quanto mais cedo você começar, mais cedo o empilhamento vira resultado real no seu bolso.',
+    bonusRotulo: 'Bônus exclusivo',
+    bonus: 'Avaliação setorizada com nossos especialistas'
   },
 
   salvar: {
     kicker: 'Diagnóstico',
-    titulo: 'Salvar o *raio-X*'
+    titulo: 'Salvar o *raio-X* desta {empresa}'
   },
 
   relatorio: {
-    proximos: [
-      'Reunião de devolutiva com o plano completo',
-      'Implantação do CRM e do roteiro de atendimento em [00] dias',
-      'Primeira leitura de resultado em [30] dias'
-    ]
+    legenda: '*Como ler este relatório.* O percentual de cada área mostra o quanto dela já funciona por processo, e não por esforço individual. Quanto mais alto, menos a operação depende de alguém lembrar de fazer. Nas respostas: (ponto vermelho) ponto de atenção · (ponto amarelo) parcialmente resolvido · (ponto verde) já estruturado.',
+    planoIntro: 'As ações abaixo saem direto das respostas dadas no diagnóstico. Elas estão organizadas da área mais crítica para a menos crítica, e dentro de cada área o que trava mais vem primeiro. Não é uma lista para fazer tudo ao mesmo tempo, é a ordem em que faz diferença.',
+    planoFecho: '*Uma observação sobre esta lista.* Nenhuma dessas ações depende de mais {cliente} entrando na {empresa}. Todas dependem de organizar o que já existe. É por isso que o resultado costuma mudar antes de qualquer aumento de investimento.',
+    rodape: 'Este relatório foi montado a partir das respostas dadas pela própria {empresa} durante o diagnóstico. Ele retrata o cenário de {data} e serve como referência para acompanhar a evolução ao longo do tempo.'
   }
 };
