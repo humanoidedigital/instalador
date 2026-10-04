@@ -29,7 +29,7 @@ window.MARCA = {
   // slides que começam escondidos. Ids: capa, especialista, quem-somos, antes, rx-<id da tela>, painel,
   // resolvemos, perfis, marcas, case, mkt, ferramenta, time, empilhamento-6, empilhamento-12,
   // valores, planos, garantia, fechamento, salvar
-  ocultar: [],
+  ocultar: ['garantia'],               // o acordo com bônus não faz parte da operação
 
   capa: {
     tagline: 'Sistema comercial para empresas que vendem através de leads'
@@ -101,7 +101,7 @@ window.MARCA = {
       { nome: 'DUA', segmento: 'Arquitetura', logo: '' },
       { nome: 'Duran Esquadrias', segmento: 'Esquadrias', logo: '' },
       { nome: 'Multi Mármore', segmento: 'Mármores', logo: '' },
-      { nome: 'Univerplast', segmento: '[segmento]', logo: '' },
+      { nome: 'Univerplast', segmento: 'Indústria de plásticos', logo: '' },
       { nome: 'Tango', segmento: 'Fantasias', logo: '' }
     ],
     frentesTitulo: 'O que roda nessas operações',
@@ -162,11 +162,9 @@ window.MARCA = {
   time: {
     kicker: 'Você não vai ficar sozinho · Especialista',
     titulo: 'Quem te acompanha de perto',
-    sub: 'O time que já aplicou o Método Receita Real em mais de 20 operações fica com você, não como consultor de fora dando palpite.',
+    sub: 'Você fala direto com quem desenhou o Método Receita Real e já aplicou em mais de 20 operações, não com um consultor de fora dando palpite.',
     pessoas: [
-      { nome: 'Lucas Ribeker', cargo: 'Fundador · Revenue Operations', texto: 'Conecta aquisição, atendimento, vendas e gestão para transformar investimento em receita mensurável.', foto: 'assets/lucas.jpg' },
-      { nome: '[Nome]', cargo: '[Cargo]', texto: '[O que faz no projeto, em uma linha.]', foto: '' },
-      { nome: '[Nome]', cargo: '[Cargo]', texto: '[O que faz no projeto, em uma linha.]', foto: '' }
+      { nome: 'Lucas Ribeker', cargo: 'Fundador · Revenue Operations', texto: 'Conduz pessoalmente o seu projeto: estratégia, aquisição, CRM, atendimento e gestão da receita, com meta, responsável e cobrança por resultado em cada frente.', foto: 'assets/lucas.jpg' }
     ]
   },
 
@@ -206,11 +204,11 @@ window.MARCA = {
     titulo: 'Hoje qual plano faz sentido pra você',
     itens: [
       { nome: 'Tráfego + CRM', preco: 'R$ 2.989', per: ',00/mês', detalhe: 'Sem redes sociais',
-        beneficios: ['Tráfego pago', 'CRM'] },
+        beneficios: ['Tráfego pago', 'CRM com a ferramenta inclusa durante o contrato', '1 conexão de WhatsApp e 1 de Instagram', '3 usuários'] },
       { nome: 'Completo', selo: 'Mais completo', destaque: true, preco: 'R$ 3.489', per: ',00/mês', detalhe: 'Redes sociais + tráfego + CRM',
-        beneficios: ['Redes sociais: até 8 posts por mês', 'Tráfego pago', 'CRM com a ferramenta inclusa'] }
+        beneficios: ['Tudo do plano Tráfego + CRM', 'Redes sociais: até 8 posts por mês'] }
     ],
-    nota: 'Contrato *sem fidelidade*: só 30 dias de aviso prévio.',
+    nota: 'Contrato *sem fidelidade*: só 30 dias de aviso prévio. Conexões e usuários extras: valor sob consulta.',
     implantacao: ''                     // ex.: 'Implementação: ~~R$ 0.000,00~~ *R$ 000,00*'
   },
 
@@ -227,8 +225,8 @@ window.MARCA = {
     kicker: 'Fechando hoje',
     titulo: 'Hoje é *o dia.*',
     texto: 'Quanto mais cedo você começar, mais cedo o empilhamento vira resultado real no seu bolso.',
-    bonusRotulo: 'Bônus exclusivo',
-    bonus: 'Avaliação setorizada com nossos especialistas'
+    bonusRotulo: '',
+    bonus: ''                           // sem bônus na operação; preencha para voltar a mostrar o card
   },
 
   salvar: {

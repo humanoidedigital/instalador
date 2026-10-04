@@ -419,7 +419,7 @@
       ${T('time.kicker', 'div', 'kicker reveal')}
       ${T('time.titulo', 'h2', 'h2 reveal')}
       ${T('time.sub', 'p', 'sub reveal')}
-      <div class="team reveal" style="--n:${ps.length}">${ps.map((p, i) => `<div class="person">${foto('time.pessoas.' + i + '.foto', 'time.pessoas.' + i + '.nome')}${T('time.pessoas.' + i + '.nome', 'div', 'h3')}${T('time.pessoas.' + i + '.cargo', 'div', 'role')}${T('time.pessoas.' + i + '.texto', 'p')}</div>`).join('')}</div>`;
+      <div class="team${ps.length === 1 ? ' solo' : ''} reveal" style="--n:${ps.length}">${ps.map((p, i) => `<div class="person">${foto('time.pessoas.' + i + '.foto', 'time.pessoas.' + i + '.nome')}<div class="pinfo">${T('time.pessoas.' + i + '.nome', 'div', 'h3')}${T('time.pessoas.' + i + '.cargo', 'div', 'role')}${T('time.pessoas.' + i + '.texto', 'p')}</div></div>`).join('')}</div>`;
     },
 
     empilhamento: n => `
@@ -472,7 +472,7 @@
       ${T('fechamento.kicker', 'div', 'kicker reveal')}
       ${T('fechamento.titulo', 'h1', 'h1 reveal')}
       ${T('fechamento.texto', 'p', 'sub reveal')}
-      <div class="bonus reveal">${T('fechamento.bonusRotulo', 'div', 'label')}${T('fechamento.bonus', 'div', 'h3')}</div>
+      ${raw('fechamento.bonus') || editing ? `<div class="bonus reveal">${T('fechamento.bonusRotulo', 'div', 'label')}${T('fechamento.bonus', 'div', 'h3')}</div>` : ''}
       <img class="logo-small reveal" src="${esc(MARCA.logo || '')}" alt="${esc(MARCA.nome || '')}">`,
 
     salvar: () => `

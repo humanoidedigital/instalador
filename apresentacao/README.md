@@ -15,7 +15,7 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
   python3 build.py
   ```
 
-## Roteiro (26 slides)
+## Roteiro (25 slides)
 
 1. Capa · Especialista · Quem somos
 2. Antes de tudo: nome, WhatsApp do lead e data
@@ -24,7 +24,7 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
 4. O que o diagnóstico mostrou: custo de esperar, "o que você empilhou sozinho" x estimativa da Ribeker, placar
 5. Vendas Ribeker · Quem atendemos · Marcas que já rodam com a gente · Case Isentei · Mkt · Ferramenta · Time
 6. Resultado empilhado em 6 e 12 meses
-7. Valores de mercado · Planos · Acordo · Fechamento
+7. Valores de mercado · Planos (sem fidelidade) · Fechamento
 8. Salvar o raio-X: placar, respostas por área, custo de esperar, PDF e resumo
 
 ## Durante a reunião
@@ -116,7 +116,8 @@ Ids de campo que entram nas contas: `vendas`, `ticket`, `leads`, `midia`, `meses
 Já preenchido a partir do PDF Revenue Operations: foto, números e frase do fundador, posicionamento, case Isentei e IA no WhatsApp.
 O que ainda está entre colchetes:
 
-- `marca.js`: segmento da Univerplast, as outras duas pessoas do time, valores de mercado e bônus do acordo.
+- `marca.js`: valores de mercado (slide "Contratando cada peça separada").
+- O slide do acordo com bônus ("Vamos pro tudo") fica oculto (`ocultar: ['garantia']`), porque não faz parte da operação.
 - Logos das marcas: coloque em `assets/marcas/` e informe em `marcas.lista[].logo` (sem logo aparece o nome).
 - Prints: `mkt.imagem` (Instagram de cliente) e `ferramenta.imagem` (pipeline no CRM), opcionais.
 
