@@ -95,11 +95,11 @@ window.MARCA = {
     sub: 'Projetos e operações em diferentes segmentos.',
     // logo: coloque o arquivo em assets/marcas/ e informe o caminho (ex.: assets/marcas/isentei.png); sem logo aparece o nome
     lista: [
-      { nome: 'isentei', segmento: 'Isenção de IR', logo: '' },
-      { nome: 'isentoo', segmento: 'Isenção de IR', logo: '' },
-      { nome: 'isente Já', segmento: 'Isenção de IR', logo: '' },
-      { nome: 'DUA', segmento: 'Arquitetura', logo: '' },
-      { nome: 'Duran Esquadrias', segmento: 'Esquadrias', logo: '' },
+      { nome: 'isentei', segmento: 'Isenção de IR', logo: 'assets/marcas/isentei.png' },
+      { nome: 'isentoo', segmento: 'Isenção de IR', logo: 'assets/marcas/isentoo.png' },
+      { nome: 'isente Já', segmento: 'Isenção de IR', logo: 'assets/marcas/isente-ja.png' },
+      { nome: 'DUA', segmento: 'Arquitetura', logo: 'assets/marcas/dua.png' },
+      { nome: 'Duran Esquadrias', segmento: 'Esquadrias', logo: 'assets/marcas/duran.png' },
       { nome: 'Multi Mármore', segmento: 'Mármores', logo: '' },
       { nome: 'Univerplast', segmento: 'Indústria de plásticos', logo: '' },
       { nome: 'Tango', segmento: 'Fantasias', logo: '' }
