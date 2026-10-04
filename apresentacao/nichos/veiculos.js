@@ -33,12 +33,6 @@ NICHO({
     ]
   },
 
-  case: {
-    nome: '[Nome da loja]',
-    descricao: '[Revenda multimarcas.] O resultado real vem na próxima página.',
-    insight: '[Atendemos revendas e concessionárias em todo o Brasil.] A armadilha silenciosa de toda loja forte é acreditar que o estoque vende sozinho.'
-  },
-
   areas: [
     { id: 'comercial', nome: 'Comercial' },
     { id: 'marketing', nome: 'Marketing e Tráfego Pago' }
@@ -170,12 +164,26 @@ NICHO({
       id: 'resultados', area: 'comercial',
       kicker: 'Raio-X · Comercial',
       titulo: '*Resultados*',
-      sub: 'Os números de hoje viram a base do comparativo mostrado mais à frente.',
+      sub: 'Os números de hoje viram a base do comparativo mostrado mais à frente. Pode ser aproximado.',
+      // conversão, custo por lead e custo por venda são calculados a partir destes campos
       campos: [
         { id: 'vendas', rotulo: 'Média de veículos vendidos por mês', suf: 'vendas / mês', unidade: 'vendas/mês' },
-        { id: 'ticket', rotulo: 'Lucro médio por veículo', sub: 'Margem + retorno de financiamento e seguro', pre: 'R$', suf: 'R$ por venda' },
-        { id: 'cac', rotulo: 'Custo por venda (anúncios e portais)', pre: 'R$', suf: 'R$' },
-        { id: 'conversao', rotulo: 'Taxa de conversão de leads', suf: '%', unidade: '%' }
+        { id: 'leads', rotulo: 'Quantos contatos novos chegam por mês?', sub: 'Portais, anúncios, Instagram, WhatsApp e telefone', suf: 'contatos / mês', unidade: 'contatos/mês',
+          atalhos: [{ t: 'Não sei', v: null }] },
+        { id: 'ticket', rotulo: 'Lucro médio por veículo', sub: 'Margem + retorno de financiamento e seguro', pre: 'R$', suf: 'R$ por venda',
+          medias: [
+            { t: 'Seminovos', v: 9700, fonte: 'Margem bruta média de 11% sobre o ticket médio de R$ 88.030 dos seminovos (maio de 2025): cerca de R$ 9.700 por veículo. Estudo Megadealer de Performance de Veículos Usados, AutoAvaliar.' }
+          ] },
+        { id: 'midia', rotulo: 'Quanto investe por mês em anúncios e portais?', pre: 'R$', suf: 'R$ / mês',
+          atalhos: [{ t: 'Não investe', v: 0 }] }
+      ],
+      calculos: {
+        conversao: { v: 3, fonte: 'Taxa média de conversão de leads em vendas das concessionárias brasileiras: 3%. Followize, citado pela AutoForce (estudo do 1º semestre de 2018).' }
+      },
+      perguntas: [
+        { texto: 'De onde vêm esses números?', tipo: 'unica',
+          opcoes: [{ t: 'Do CRM ou de relatório', dor: 0 }, { t: 'De cabeça, aproximado', dor: 0.5 }, { t: 'Não sabemos', dor: 1 }],
+          acao: 'Medir toda semana contatos, vendas e investimento por canal, para saber a conversão e o custo por venda de verdade.' }
       ]
     },
     {
@@ -196,7 +204,7 @@ NICHO({
     recorrente: false,                  // cada venda entra uma vez: o resultado acumula mês a mês
     multiplicador: 1.5,                 // 50% a mais de vendas com os mesmos leads
     conta: 'extra',                     // conta só as vendas a mais, não as que a loja já faz
-    referencia: { base: 5, ticket: 3000 },
+    referencia: { base: 5, ticket: 9700 },  // enquanto não preenchem: 5 vendas de exemplo e a média de seminovos
     baseRotulo: '+{n} vendas/mês',
     explicacao: '50% a mais que as {hoje} vendas de hoje'
   }

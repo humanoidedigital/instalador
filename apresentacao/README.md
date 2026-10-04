@@ -22,7 +22,7 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
 3. Raio-X em 7 telas: Vendas e Prospecção · Marketing e Tráfego Pago · Geração de Leads e Marketing · Ferramentas ·
    Atendimento e Follow-up · Resultados · Tempo, investimento e resultado
 4. O que o diagnóstico mostrou: custo de esperar, "o que você empilhou sozinho" x estimativa da Ribeker, placar
-5. Vendas Ribeker · Quem atendemos · Case (2 slides) · Mkt · Ferramenta · Time
+5. Vendas Ribeker · Quem atendemos · Marcas que já rodam com a gente · Case Isentei · Mkt · Ferramenta · Time
 6. Resultado empilhado em 6 e 12 meses
 7. Valores de mercado · Planos · Acordo · Fechamento
 8. Salvar o raio-X: placar, respostas por área, custo de esperar, PDF e resumo
@@ -41,6 +41,30 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
 - **Salvamento:** fica gravado no navegador, separado por nicho. Fechou sem querer? Abre de novo e continua.
 - **Último slide:** "Relatório" e "Relatório + plano de ação" geram o PDF. "Copiar resumo" copia um texto para colar
   no WhatsApp ou no CRM. "Novo diagnóstico" zera para o próximo cliente.
+
+## Quando o lead não sabe o número
+
+Na tela **Resultados** ninguém precisa saber taxa em %. As perguntas são simples (vendas por mês, contatos por mês,
+ticket, investimento) e a apresentação calcula na hora a **conversão**, o **custo por lead** e o **custo por venda**,
+mostrando ao lado a conversão média do mercado do nicho.
+
+- **"Média do mercado"** (no ticket): preenche com a referência do nicho. O "i" mostra a fonte. O campo fica marcado
+  como média de mercado no painel, nas projeções e no PDF, que lista todas as fontes usadas.
+- **"Não sei"** (contatos): o campo fica fora das contas, sem inventar número.
+- **"Não investe"** (anúncio): preenche 0.
+- **"De onde vêm esses números?"**: se a resposta for "não sabemos", isso entra no placar e no plano de ação.
+
+Referências atuais (todas com fonte no arquivo do nicho):
+
+| Nicho | Referência | Fonte |
+|---|---|---|
+| Escolas | Idiomas R$ 500/mês (meio da faixa R$ 300–700) | WorldStudy, jun/2026 |
+| Escolas | Faculdade presencial R$ 835 · EAD R$ 214 (medianas) | Hoper Educação e ABMES, 2026 |
+| Escolas | Conversão lead → matrícula ~1,8% | Panorama RD Station 2025 |
+| Veículos | Lucro bruto ~R$ 9.700 por veículo (11% de R$ 88.030) | Megadealer/AutoAvaliar, mai/2025 |
+| Veículos | Conversão lead → venda 3% | Followize/AutoForce, 2018 |
+
+Para um nicho novo, peça ao Claude Code para pesquisar as médias com fonte e colocar em `medias` e `calculos`.
 
 ## Editar sem programar (modo edição)
 
@@ -69,11 +93,14 @@ Peça assim:
 | `capa.tagline`, `publico`, `perfis.itens`, `case` | Conteúdo dos slides deste nicho |
 | `areas` | Áreas do placar. Só as que têm pergunta com peso entram na nota (Marketing e Tráfego Pago é informativo, como no original) |
 | `raiox` | As telas do raio-x, com `campos` (números) e `perguntas` (com `dor` 0 / 0,5 / 1 e `acao` para o plano) |
+| `campos[].medias` | Botões de média do mercado: `{ t, v, fonte }` |
+| `campos[].atalhos` | Botões rápidos: `{ t: 'Não sei', v: null }`, `{ t: 'Não investe', v: 0 }` |
+| `raiox[].calculos.conversao` | Conversão média do mercado mostrada ao lado da calculada: `{ v, fonte }` |
 | `projecao.recorrente` | `true`: o cliente paga todo mês (escola), a receita empilha. `false`: venda única (veículo), acumula |
 | `projecao.multiplicador` e `conta` | Escolas: o dobro das matrículas, contando todas (`total`). Veículos: 50% a mais, contando só as vendas a mais (`extra`) |
 | Qualquer chave de `marca.js` | Pode ser sobrescrita no nicho |
 
-Ids de campo que entram nas contas: `vendas`, `ticket`, `meses`, `custo`, `receitaIni`, `receitaHoje`.
+Ids de campo que entram nas contas: `vendas`, `ticket`, `leads`, `midia`, `meses`, `custo`, `receitaIni`, `receitaHoje`.
 
 ## Como as contas funcionam (iguais ao original)
 
@@ -86,11 +113,12 @@ Ids de campo que entram nas contas: `vendas`, `ticket`, `meses`, `custo`, `recei
 
 ## Antes da primeira reunião
 
-O que está entre colchetes precisa do seu conteúdo:
+Já preenchido a partir do PDF Revenue Operations: foto, números e frase do fundador, posicionamento, case Isentei e IA no WhatsApp.
+O que ainda está entre colchetes:
 
-- `marca.js`: cidade e números do especialista, números de "Quem somos", time, case (nome, print e números),
-  destaque do marketing, valores de mercado, bônus do acordo, e confirmar o item "Agente de IA 24h" da ferramenta.
-- Prints: coloque em `assets/` e informe o caminho em `case.imagem`, `mkt.imagem`, `ferramenta.imagem`, `especialista.foto`.
+- `marca.js`: segmento da Univerplast, as outras duas pessoas do time, valores de mercado e bônus do acordo.
+- Logos das marcas: coloque em `assets/marcas/` e informe em `marcas.lista[].logo` (sem logo aparece o nome).
+- Prints: `mkt.imagem` (Instagram de cliente) e `ferramenta.imagem` (pipeline no CRM), opcionais.
 
 ## Arquivos
 

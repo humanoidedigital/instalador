@@ -46,12 +46,6 @@ NICHO({
     ]
   },
 
-  case: {
-    nome: '[Nome da escola]',
-    descricao: '[Rede de escolas de idiomas.] O resultado real vem na próxima página.',
-    insight: '[Atendemos dezenas de escolas e redes de ensino em todo o Brasil, incluindo franquias que você conhece.] A armadilha silenciosa de toda marca forte é acreditar que a marca vende sozinha.'
-  },
-
   areas: [
     { id: 'comercial', nome: 'Comercial' },
     { id: 'marketing', nome: 'Marketing e Tráfego Pago' }
@@ -173,12 +167,28 @@ NICHO({
       id: 'resultados', area: 'comercial',
       kicker: 'Raio-X · Comercial',
       titulo: '*Resultados*',
-      sub: 'Os números de hoje viram a base do comparativo mostrado mais à frente.',
+      sub: 'Os números de hoje viram a base do comparativo mostrado mais à frente. Pode ser aproximado.',
+      // conversão, custo por lead e custo por matrícula são calculados a partir destes campos
       campos: [
-        { id: 'vendas', rotulo: 'Média de matrículas mensais', suf: 'alunos / mês', unidade: 'alunos/mês' },
-        { id: 'ticket', rotulo: 'Ticket médio', pre: 'R$', suf: 'R$ / mês' },
-        { id: 'cac', rotulo: 'CAC (custo de aquisição por aluno)', pre: 'R$', suf: 'R$' },
-        { id: 'conversao', rotulo: 'Taxa de conversão de leads', suf: '%', unidade: '%' }
+        { id: 'vendas', rotulo: 'Média de matrículas por mês', suf: 'alunos / mês', unidade: 'alunos/mês' },
+        { id: 'leads', rotulo: 'Quantos contatos novos chegam por mês?', sub: 'WhatsApp, Instagram, site e telefone', suf: 'contatos / mês', unidade: 'contatos/mês',
+          atalhos: [{ t: 'Não sei', v: null }] },
+        { id: 'ticket', rotulo: 'Ticket médio (mensalidade)', pre: 'R$', suf: 'R$ / mês',
+          medias: [
+            { t: 'Idiomas', v: 500, fonte: 'Escolas de idiomas cobram de R$ 300 a R$ 700 por mês em turmas regulares; usamos o meio da faixa. WorldStudy, junho de 2026.' },
+            { t: 'Faculdade presencial', v: 835, fonte: 'Mediana nacional da mensalidade presencial em 2026. Cenário de Precificação da Graduação 2026, Hoper Educação e ABMES.' },
+            { t: 'Faculdade EAD', v: 214, fonte: 'Mediana nacional da mensalidade EAD em 2026. Cenário de Precificação da Graduação 2026, Hoper Educação e ABMES.' }
+          ] },
+        { id: 'midia', rotulo: 'Quanto investe por mês em anúncio?', pre: 'R$', suf: 'R$ / mês',
+          atalhos: [{ t: 'Não investe', v: 0 }] }
+      ],
+      calculos: {
+        conversao: { v: 1.8, fonte: 'Panorama RD Station 2025, Educação e Ensino: 14% dos leads viram oportunidade e 13% das oportunidades viram venda, cerca de 1,8% do lead à matrícula. Base: empresas com RD Station Marketing e CRM integrados.' }
+      },
+      perguntas: [
+        { texto: 'De onde vêm esses números?', tipo: 'unica',
+          opcoes: [{ t: 'Do CRM ou de relatório', dor: 0 }, { t: 'De cabeça, aproximado', dor: 0.5 }, { t: 'Não sabemos', dor: 1 }],
+          acao: 'Medir toda semana contatos, matrículas e investimento, para saber a conversão e o custo por matrícula de verdade.' }
       ]
     },
     {
@@ -199,7 +209,7 @@ NICHO({
     recorrente: true,                   // cada aluno novo paga mensalidade todo mês: a receita empilha
     multiplicador: 2,                   // o dobro das matrículas de hoje
     conta: 'total',
-    referencia: { base: 10, ticket: 278 },
+    referencia: { base: 10, ticket: 500 },  // enquanto não preenchem: 10 alunos de exemplo e a média de idiomas
     baseRotulo: '{n} alunos novos/mês',
     explicacao: 'o dobro das {hoje} que você faz hoje'
   }

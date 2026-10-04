@@ -40,7 +40,7 @@
   const abertos = new Set();          // acordeões abertos no slide final
 
   function hojeISO(){ const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
-  function novoDx(){ return { ident:{ empresa:'', whatsapp:'', data:hojeISO() }, resp:{}, nums:{} }; }
+  function novoDx(){ return { ident:{ empresa:'', whatsapp:'', data:hojeISO() }, resp:{}, nums:{}, origem:{} }; }
   const dxKey = () => 'rb:dx:' + (N ? N.id : 'x');
   let saveT = null;
   function gravarDx(){ clearTimeout(saveT); saveT = null; dx.ts = Date.now(); store.set(dxKey(), dx); }
@@ -132,6 +132,7 @@
   const nf1 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits:1 });
   const brl = v => 'R$ ' + nf0.format(Math.round(v || 0));
   const brlS = v => (v < 0 ? '-' : '') + brl(Math.abs(v));
+  const pct = v => nf1.format(v) + '%';
   function num(id){ const v = parseFloat(String(dx.nums[id] == null ? '' : dx.nums[id]).replace(',', '.')); return isFinite(v) ? v : 0; }
 
   // ============ raio-x ============
@@ -226,12 +227,22 @@
     return {
       P, vendas, ticket, base, Tk, mensal, serie, total,
       ref: !(vendas > 0 && ticket > 0),
+      tkMedia: !!(ticket > 0 && origemDe('ticket') && origemDe('ticket').tipo === 'media'),
       rot: plain(P.baseRotulo, { n:nf1.format(base) }),
       expl: vendas > 0 ? plain(P.explicacao, { hoje:nf1.format(vendas) }) : ''
     };
   }
   function secaoDoCampo(id){ return secoes().findIndex(s => (s.campos || []).some(c => c.id === id)); }
   function paginaDoCampo(id){ const si = secaoDoCampo(id); return si < 0 ? '' : plain(raw('raiox.' + si + '.titulo')); }
+  function campoDef(id){ for(const s of secoes()) for(const c of (s.campos || [])) if(c.id === id) return c; return null; }
+  function valorCampo(f, v){ return f.pre === 'R$' ? brl(v) : nf1.format(v) + (f.unidade ? ' ' + f.unidade : ''); }
+  // de onde veio o número: digitado, média de mercado (com fonte) ou atalho ("Não sei", "Não investe")
+  function origemDe(id){
+    const o = dx.origem && dx.origem[id], f = campoDef(id);
+    if(!o || !f) return null;
+    if(o.tipo === 'media'){ const m = (f.medias || [])[o.i]; return m ? { tipo:'media', t:m.t, fonte:m.fonte } : null; }
+    const a = (f.atalhos || [])[o.i]; return a ? { tipo:'atalho', t:a.t, vazio:a.v == null } : null;
+  }
   function rotuloDoCampo(id){ const si = secaoDoCampo(id); if(si < 0) return id; const fi = secoes()[si].campos.findIndex(c => c.id === id); return plain(raw('raiox.' + si + '.campos.' + fi + '.rotulo')).replace(/\?$/, ''); }
 
   // ============ slides ============
@@ -256,7 +267,18 @@
       ${f.sub != null ? T(b + '.sub', 'div', 'fhint') : ''}
       <div class="inwrap">${f.pre ? `<span class="pre">${esc(f.pre)}</span>` : ''}<input id="n-${esc(f.id)}" data-num="${esc(f.id)}" type="number" inputmode="decimal" placeholder="0" autocomplete="off"></div>
       ${T(b + '.suf', 'div', 'suf')}
+      ${quick(f)}
     </div>`;
+  }
+  // botões "média do mercado" (com a fonte no i) e atalhos como "Não sei"
+  function quick(f){
+    const med = f.medias || [], ata = f.atalhos || [];
+    if(!med.length && !ata.length) return '';
+    return `<div class="quick" data-quick="${esc(f.id)}">
+        ${med.length ? '<span class="qk-l">Não sabe? Média do mercado:</span>' : ''}
+        ${med.map((m, mi) => `<span class="qk" role="button" tabindex="0" data-qk="m${mi}">${esc(m.t)} · ${esc(valorCampo(f, m.v))}<i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(m.fonte)}">i</i></span>`).join('')}
+        ${ata.map((a, ai) => `<span class="qk" role="button" tabindex="0" data-qk="a${ai}">${esc(a.t)}</span>`).join('')}
+      </div><div class="origem" id="og-${esc(f.id)}"></div>`;
   }
 
   const B = {
@@ -269,7 +291,8 @@
       ${T('especialista.kicker', 'div', 'kicker reveal')}
       ${T('especialista.nome', 'h2', 'h2 reveal')}
       ${T('especialista.local', 'div', 'sub reveal')}
-      <div class="row reveal">${foto('especialista.foto', 'especialista.nome')}${stats('especialista.numeros', '')}</div>`,
+      <div class="row reveal">${foto('especialista.foto', 'especialista.nome')}${stats('especialista.numeros', '')}</div>
+      ${raw('especialista.frase') ? T('especialista.frase', 'div', 'quote reveal') : ''}`,
 
     quemSomos: () => `
       ${T('quemSomos.kicker', 'div', 'kicker reveal')}
@@ -298,6 +321,7 @@
       ${T(b + '.titulo', 'h2', 'h2 reveal')}
       ${s.sub != null ? T(b + '.sub', 'p', 'sub reveal') : ''}
       ${cs.length ? `<div class="fields ${cs.length === 1 ? 'um' : ''} reveal">${cs.map((c, fi) => campo(si, fi)).join('')}</div>` : ''}
+      ${s.calculos ? `<div class="derived reveal" data-calc="${si}"></div>` : ''}
       ${ps.length ? `<div class="qgrid ${ps.length <= 2 ? 'uma' : ''} reveal">${ps.map((q, qi) => {
         const multi = q.tipo === 'multipla', qp = qPath(si, qi);
         return `<div class="q" data-q="${esc(qkey(s, q, qi))}" data-multi="${multi ? 1 : 0}">
@@ -346,17 +370,31 @@
       ${T('perfis.titulo', 'h2', 'h2 reveal')}
       <div class="prof reveal">${list('perfis.itens').map((p, i) => `<div class="prow">${T('perfis.itens.' + i + '.perfil', 'div', 'pp')}<div class="pa" aria-hidden="true">→</div>${T('perfis.itens.' + i + '.dor', 'div', 'pd')}</div>`).join('')}</div>`,
 
-    marcas: () => `
+    marcas: () => {
+      const ls = list('marcas.lista');
+      return `
       ${T('marcas.kicker', 'div', 'kicker reveal')}
       ${T('marcas.titulo', 'h2', 'h2 reveal')}
-      <div class="feature reveal">${T('marcas.tag', 'div', 'kicker')}${T('case.nome', 'div', 'h1')}${T('case.descricao', 'div', 'sub')}</div>
-      ${T('case.insight', 'div', 'insight reveal')}`,
+      ${T('marcas.sub', 'p', 'sub reveal')}
+      <div class="brands reveal">${ls.map((m, i) => {
+        const b = 'marcas.lista.' + i, lg = raw(b + '.logo');
+        return `<div class="brand">${lg ? `<img src="${esc(lg)}" alt="${esc(plain(raw(b + '.nome')))}">` : T(b + '.nome', 'div', 'bn')}${T(b + '.segmento', 'div', 'bs')}</div>`;
+      }).join('')}</div>
+      <div class="frentes reveal">${T('marcas.frentesTitulo', 'span', 'label')}${list('marcas.frentes').map((f, i) => T('marcas.frentes.' + i, 'span', 'chip')).join('')}</div>
+      ${T('marcas.destaque', 'div', 'insight reveal')}`;
+    },
 
-    case: () => `
+    case: () => {
+      const antes = list('case.antes');
+      const esq = raw('case.imagem') || !antes.length ? shot('case.imagem', 'case.legenda', 'Espaço para o print do resultado.')
+        : `<div class="card antes">${T('case.antesTitulo', 'div', 'label')}<ul class="blist">${antes.map((x, i) => T('case.antes.' + i, 'li')).join('')}</ul>${T('case.antesRodape', 'div', 'small')}</div>`;
+      return `
       ${T('case.kicker', 'div', 'kicker reveal')}
       ${T('case.nome', 'h2', 'h2 reveal')}
-      <div class="proof reveal">${shot('case.imagem', 'case.legenda', 'Espaço para o print do resultado.')}${stats('case.numeros', '')}</div>
-      ${T('case.rodape', 'div', 'label reveal')}`,
+      ${T('case.insight', 'p', 'sub reveal')}
+      <div class="proof reveal">${esq}${stats('case.numeros', '')}</div>
+      ${T('case.rodape', 'div', 'label reveal')}`;
+    },
 
     mkt: () => `
       ${T('mkt.kicker', 'div', 'kicker reveal')}
@@ -507,7 +545,14 @@
     $('#nichoNome').textContent = N ? N.nome : 'Escolher';
     computar();
   }
+  function marcarQuick(){
+    $$('[data-quick]', slidesEl).forEach(q => {
+      const o = dx.origem && dx.origem[q.dataset.quick];
+      $$('.qk', q).forEach(k => k.classList.toggle('sel', !!o && k.dataset.qk === (o.tipo === 'media' ? 'm' : 'a') + o.i));
+    });
+  }
   function preencherCampos(){
+    marcarQuick();
     $$('[data-id]', slidesEl).forEach(inp => { inp.value = dx.ident[inp.dataset.id] || ''; });
     $$('[data-num]', slidesEl).forEach(inp => { const v = dx.nums[inp.dataset.num]; inp.value = v == null ? '' : v; });
     $$('.q', slidesEl).forEach(q => {
@@ -608,6 +653,23 @@
     const r12 = pr.total(12) / Math.max(1, pr.total(6));
     $$('.live[data-live="fator12"]').forEach(s => { s.textContent = r12 >= 3 ? 'mais que triplica' : r12 > 2.05 ? 'mais que dobra' : 'dobra'; });
 
+    // ---- origem dos números e taxas calculadas ----
+    $$('.origem', slidesEl).forEach(el => {
+      const o = origemDe(el.id.slice(3));
+      el.innerHTML = !o ? '' : o.tipo === 'media' ? 'Usando a média de mercado: ' + esc(o.t) + ' (fonte no i)'
+        : o.vazio ? 'Não sabe: fica fora das contas.' : '';
+    });
+    $$('[data-calc]', slidesEl).forEach(el => {
+      const cfg = (secoes()[+el.dataset.calc] || {}).calculos || {};
+      const L = num('leads'), V = num('vendas'), I = num('midia'), og = origemDe('leads'), out = [];
+      if(L > 0 && V > 0) out.push(`Conversão de vocês: <b>${pct(V / L * 100)}</b> (${nf1.format(V)} de ${nf0.format(L)} contatos)`);
+      else out.push('Conversão: ' + (og && og.vazio ? 'sem a contagem de contatos não dá pra calcular' : 'preencha contatos e ' + esc(termo('vendas'))));
+      if(cfg.conversao) out.push(`Média do mercado: <b>${pct(cfg.conversao.v)}</b><i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(cfg.conversao.fonte)}">i</i>`);
+      if(L > 0 && I > 0) out.push(`Custo por lead: <b>${brl(I / L)}</b>`);
+      if(V > 0 && I > 0) out.push(`Custo por ${esc(termo('venda'))}: <b>${brl(I / V)}</b>`);
+      el.innerHTML = '<span class="dl">Calculado na hora</span>' + out.map(x => `<span class="dchip">${x}</span>`).join('');
+    });
+
     // ---- painel ----
     if($('#gGeral')){
       const ticket = num('ticket');
@@ -625,7 +687,7 @@
         const mine = ce ? ce.ganhoFinal : 0, nosso = pr.total(M);
         setVal('dMine', mine, 'brlS'); setVal('dNosso', nosso);
         set('dMineS', esc((!ce || ce.inc === 0) ? 'sem crescimento de ' + termo('receita') + ' no período' : brl(Math.abs(ce.inc)) + (ce.inc > 0 ? ' a mais' : ' a menos') + ' a cada mês, empilhado em ' + M + (M === 1 ? ' mês' : ' meses')));
-        set('dNossoS', esc('Com ' + pr.rot + ' e ' + termo('ticket') + ' de ' + brl(pr.Tk) + ', empilhado em ' + M + (M === 1 ? ' mês' : ' meses') + (pr.expl ? ' (' + pr.expl + ')' : '')));
+        set('dNossoS', esc('Com ' + pr.rot + ' e ' + termo('ticket') + ' de ' + brl(pr.Tk) + (pr.tkMedia ? ' (média de mercado)' : '') + ', empilhado em ' + M + (M === 1 ? ' mês' : ' meses') + (pr.expl ? ' (' + pr.expl + ')' : '')));
         const ratio = nosso / Math.max(mine, 1);
         flag.hidden = false;
         flag.className = 'flag ' + (ratio > 3 ? 'red' : ratio > 1.5 ? 'yellow' : 'green');
@@ -668,7 +730,7 @@
         $('.bar-v', b).textContent = nf0.format(Math.round(s[i]));
       });
       setVal('tot' + n, pr.total(n));
-      set('base' + n, esc('Base: ' + pr.rot + ' × ' + termo('ticket') + ' de ' + brl(pr.Tk)) + (pr.ref ? ' <span class="ph">[referência: preencha os números do raio-x]</span>' : '') +
+      set('base' + n, esc('Base: ' + pr.rot + ' × ' + termo('ticket') + ' de ' + brl(pr.Tk) + (pr.tkMedia ? ' (média de mercado)' : '')) + (pr.ref ? ' <span class="ph">[referência: preencha os números do raio-x]</span>' : '') +
         '<br>' + esc(pr.P.recorrente ? 'Cada mês soma os ' + termo('clientes') + ' novos dos meses anteriores.' : 'Cada barra mostra o acumulado até aquele mês.'));
       set('seg' + n, s.map((v, i) => `<div class="seg" title="Mês ${i + 1}: ${brl(v)}" style="width:${(v / soma * 100).toFixed(3)}%;background:rgba(59,142,243,${(0.22 + (i + 1) / n * 0.78).toFixed(2)})"></div>`).join(''));
       set('segL' + n, s.map((v, i) => `<span>${n <= 6 ? 'Mês ' + (i + 1) : i + 1}</span>`).join(''));
@@ -720,6 +782,18 @@
     const acc = e.target.closest('[data-acc]');
     if(acc){ const k = acc.dataset.acc; abertos.has(k) ? abertos.delete(k) : abertos.add(k); computar(); return; }
     if(editing) return;
+    const qk = e.target.closest('.qk');
+    if(qk){
+      if(e.target.closest('.tip')) return;
+      const id = qk.closest('[data-quick]').dataset.quick, f = campoDef(id), k = qk.dataset.qk;
+      const tipo = k[0] === 'm' ? 'media' : 'atalho', i = +k.slice(1);
+      dx.origem = dx.origem || {};
+      const cur = dx.origem[id];
+      if(cur && cur.tipo === tipo && cur.i === i){ delete dx.origem[id]; dx.nums[id] = ''; }
+      else { const v = tipo === 'media' ? f.medias[i].v : f.atalhos[i].v; dx.origem[id] = { tipo, i }; dx.nums[id] = v == null ? '' : String(v); }
+      const inp = document.getElementById('n-' + id); if(inp) inp.value = dx.nums[id];
+      marcarQuick(); salvarDx(); computar(); return;
+    }
     if(e.target.closest('.opt-in')) return;
     const opt = e.target.closest('.opt');
     if(!opt) return;
@@ -732,7 +806,7 @@
   slidesEl.addEventListener('input', e => {
     const t = e.target;
     if(t.dataset.k !== undefined && editing){ const p = t.dataset.k.split(':'); setEdit(p[0], p.slice(1).join(':'), t.textContent); return; }
-    if(t.dataset.num){ dx.nums[t.dataset.num] = t.value; salvarDx(); computar(); return; }
+    if(t.dataset.num){ dx.nums[t.dataset.num] = t.value; if(dx.origem) delete dx.origem[t.dataset.num]; marcarQuick(); salvarDx(); computar(); return; }
     if(t.dataset.id){ dx.ident[t.dataset.id] = t.value; salvarDx(); computar(); return; }
     if(t.dataset.campo){
       const q = t.closest('.q'), key = q.dataset.q, oi = +t.dataset.campo;
@@ -748,7 +822,7 @@
   });
   slidesEl.addEventListener('keydown', e => {
     if(e.target.classList.contains('opt-in') && (e.key === ' ' || e.key === 'Enter')) e.stopPropagation();
-    if(!editing && e.target.classList.contains('opt') && (e.key === ' ' || e.key === 'Enter')){ e.preventDefault(); e.stopPropagation(); e.target.click(); }
+    if(!editing && (e.target.classList.contains('opt') || e.target.classList.contains('qk')) && (e.key === ' ' || e.key === 'Enter')){ e.preventDefault(); e.stopPropagation(); e.target.click(); }
   });
 
   document.addEventListener('keydown', e => {
@@ -776,6 +850,8 @@
     if(Math.abs(dxp) > 60 && Math.abs(dxp) > Math.abs(dyp) * 1.5 && !e.target.closest('input,[contenteditable="true"],[contenteditable="plaintext-only"]')) (dxp < 0 ? next() : prev());
     tx0 = null;
   });
+  // o palco nunca rola: um foco (ex.: no "i" da fonte) não pode deslocar o slide
+  ['#stage', '#slides'].forEach(sel => $(sel).addEventListener('scroll', e => { e.target.scrollTop = 0; e.target.scrollLeft = 0; }));
   $('#next').addEventListener('click', next);
   $('#prev').addEventListener('click', prev);
   $('#dots').addEventListener('click', e => { const d = e.target.closest('[data-go]'); if(d) ir(+d.dataset.go); });
@@ -910,13 +986,27 @@
   function camposInformados(){
     const out = [];
     secoes().forEach((s, si) => (s.campos || []).forEach((c, fi) => {
+      const rot = plain(raw('raiox.' + si + '.campos.' + fi + '.rotulo')).replace(/\?$/, ''), o = origemDe(c.id);
+      if(o && o.tipo === 'atalho' && o.vazio){ out.push([rot, 'Não sabe']); return; }
       const v = dx.nums[c.id];
       if(v == null || v === '') return;
       const n = parseFloat(String(v).replace(',', '.'));
       if(!isFinite(n)) return;
-      const val = c.pre === 'R$' ? brl(n) : nf1.format(n) + (c.unidade ? ' ' + c.unidade : '');
-      out.push([plain(raw('raiox.' + si + '.campos.' + fi + '.rotulo')).replace(/\?$/, ''), val]);
+      out.push([rot, valorCampo(c, n) + (o && o.tipo === 'media' ? ' (média de mercado)' : '')]);
     }));
+    const L = num('leads'), V = num('vendas'), I = num('midia');
+    if(L > 0 && V > 0) out.push(['Conversão (calculada)', pct(V / L * 100)]);
+    if(L > 0 && I > 0) out.push(['Custo por lead (calculado)', brl(I / L)]);
+    if(V > 0 && I > 0) out.push(['Custo por ' + termo('venda') + ' (calculado)', brl(I / V)]);
+    return out;
+  }
+  // referências de mercado que aparecem no diagnóstico, com a fonte
+  function fontesUsadas(){
+    const out = [];
+    secoes().forEach(s => {
+      (s.campos || []).forEach(c => { const o = origemDe(c.id); if(o && o.tipo === 'media') out.push(o.t + ': ' + o.fonte); });
+      if(s.calculos && s.calculos.conversao) out.push('Conversão média do mercado (' + pct(s.calculos.conversao.v) + '): ' + s.calculos.conversao.fonte);
+    });
     return out;
   }
   function acoesPorArea(){
@@ -1018,6 +1108,8 @@
       add(`<div class="rp-grid">${cs.map(c => `<div class="rp-kpi"><div class="k">${esc(c[0])}</div><div class="v">${esc(c[1])}</div></div>`).join('')}</div>`, t1);
     }
     add(`<div class="rp-box">${fmtRel(raw('relatorio.legenda'))}</div>`, t1);
+    const fu = fontesUsadas();
+    if(fu.length) add(`<div class="rp-box"><b>Referências de mercado usadas.</b> ${fu.map(esc).join(' · ')}</div>`, t1);
 
     // o custo de esperar
     if(ce){

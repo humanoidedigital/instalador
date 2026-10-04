@@ -36,25 +36,25 @@ window.MARCA = {
   },
 
   especialista: {
-    kicker: 'Especialista',
+    kicker: 'Fundador',
     nome: 'Lucas Ribeker',
-    local: '[Cidade, UF]',
-    foto: '',                           // ex.: assets/lucas.jpg (coloque o arquivo na pasta assets)
+    local: 'Fundador da Ribeker · Revenue Operations',
+    foto: 'assets/lucas.jpg',
     numeros: [
-      { valor: '[00]', rotulo: '[Anos em marketing e vendas]' },
-      { valor: '[00]', rotulo: '[Estados atendidos]' },
-      { valor: '[000+]', rotulo: '[Empresas atendidas]' }
-    ]
+      { valor: '11', rotulo: 'Anos de expertise' },
+      { valor: '20+', rotulo: 'Clientes atendidos' }
+    ],
+    frase: '"Quando uma empresa investe em crescimento, ela não coloca apenas verba em jogo. Coloca o próprio sonho. Por isso, cada frente precisa ter meta, responsável e cobrança por resultado."'
   },
 
   quemSomos: {
-    kicker: 'Quem somos',
-    titulo: 'Especialistas em *captação, qualificação e conversão* de leads',
+    kicker: 'Quem somos · Revenue Operations',
+    titulo: 'Conectamos aquisição, atendimento, vendas e gestão para transformar investimento em *receita mensurável*',
     publicoTitulo: 'Quem atendemos',
     numeros: [
-      { valor: '[000+]', rotulo: '[Empresas atendidas]' },
-      { valor: '[00+]', rotulo: '[Estados]' },
-      { valor: '[0000]', rotulo: '[Desde]' }
+      { valor: 'R$2M+', rotulo: 'Faturamento mensal dos clientes' },
+      { valor: 'R$150K+', rotulo: 'Mídia/mês sob gestão' },
+      { valor: '5', rotulo: 'Frentes, uma meta de receita' }
     ]
   },
 
@@ -91,24 +91,47 @@ window.MARCA = {
 
   marcas: {
     kicker: 'Quem confia na Ribeker',
-    titulo: 'O mesmo padrão se repete em marcas fortes',
-    tag: 'Case em destaque'
+    titulo: 'Marcas que já rodam com a gente',
+    sub: 'Projetos e operações em diferentes segmentos.',
+    // logo: coloque o arquivo em assets/marcas/ e informe o caminho (ex.: assets/marcas/isentei.png); sem logo aparece o nome
+    lista: [
+      { nome: 'isentei', segmento: 'Isenção de IR', logo: '' },
+      { nome: 'isentoo', segmento: 'Isenção de IR', logo: '' },
+      { nome: 'isente Já', segmento: 'Isenção de IR', logo: '' },
+      { nome: 'DUA', segmento: 'Arquitetura', logo: '' },
+      { nome: 'Duran Esquadrias', segmento: 'Esquadrias', logo: '' },
+      { nome: 'Multi Mármore', segmento: 'Mármores', logo: '' },
+      { nome: 'Univerplast', segmento: '[segmento]', logo: '' },
+      { nome: 'Tango', segmento: 'Fantasias', logo: '' }
+    ],
+    frentesTitulo: 'O que roda nessas operações',
+    frentes: ['Tráfego pago', 'CRM', 'Vendas', 'Analytics', 'Rede social'],
+    destaque: '*Case em destaque: Isentei.* De cerca de 1 para 10 a 15 reuniões por dia e R$ 1 milhão de faturamento mensal. Na próxima página.'
   },
 
   case: {
-    kicker: 'Resultado real · [12 meses]',
-    nome: '[Nome do cliente]',
-    descricao: '[Segmento do cliente.] O resultado real vem na próxima página.',
-    insight: '[Atendemos empresas em todo o Brasil, incluindo marcas que você conhece.] A armadilha silenciosa de toda marca forte é acreditar que a marca vende sozinha.',
-    imagem: '',                         // ex.: assets/case-print.jpg
-    legenda: 'Print real do sistema · [balanço dos últimos 12 meses]',
-    numeros: [
-      { valor: '[R$ 0,00]', rotulo: 'Total recebido' },
-      { valor: '[R$ 0,00]', rotulo: 'Total de despesas' },
-      { valor: '[R$ 0,00]', rotulo: 'Lucro líquido' },
-      { valor: '[00,00%]', rotulo: 'Lucro líquido em %' }
+    kicker: 'Resultado real · Case Isentei',
+    nome: 'Isentei',
+    descricao: 'Operação especializada em isenção de Imposto de Renda. O resultado real vem na próxima página.',
+    insight: 'Havia demanda. Faltava um sistema preparado para escalar. O problema não era o tamanho do nicho: era transformar dados em ICP, qualificação e execução coordenada.',
+    imagem: '',                         // com print (ex.: assets/case-print.jpg) ele aparece no lugar da lista "antes"
+    legenda: '',
+    antesTitulo: 'Antes da Ribeker',
+    antes: [
+      'Campanhas genéricas, leads fora do perfil',
+      'CRM sem organização ou follow-up consistente',
+      'Atendimento dependente de esforço manual',
+      'Pouca visibilidade sobre o que gerava receita',
+      'Marketing, atendimento e vendas desconectados'
     ],
-    rodape: 'Esse é o balanço real, direto do sistema. Sem estimativa.'
+    antesRodape: 'A escala foi construída etapa por etapa: ICP e qualificação, CRM e cadências, IA e automação, gestão e DRE.',
+    numeros: [
+      { valor: '~1', rotulo: 'Reunião por dia, antes' },
+      { valor: '10–15', rotulo: 'Reuniões por dia, depois' },
+      { valor: 'R$ 1 mi', rotulo: 'Faturamento mensal' },
+      { valor: '4', rotulo: 'Camadas, medidas uma a uma' }
+    ],
+    rodape: 'Cada melhoria foi medida antes da entrada da próxima camada.',
   },
 
   mkt: {
@@ -120,7 +143,7 @@ window.MARCA = {
       'Tráfego pago (Meta Ads)',
       'Social mídia: até 8 posts por mês (criativos, carrosséis, conteúdo)'
     ],
-    destaque: { valor: '[0.000]', rotulo: '[seguidores a mais em 10 meses, só de conteúdo orgânico + tráfego (case)]' },
+    destaque: { valor: 'R$150K+', rotulo: 'em mídia por mês sob gestão, somando os projetos ativos' },
     imagem: ''                          // ex.: assets/instagram-case.png
   },
 
@@ -129,7 +152,7 @@ window.MARCA = {
     titulo: 'CRM e automação rodando 24h',
     itens: [
       'CRM com pipeline de vendas organizado',
-      '[Agente de IA 24h rodando o funil no WhatsApp]',
+      'IA no WhatsApp: atendimento, scripts e SLAs automatizados',
       'Automação de entrada de leads, disparo de mensagens, follow-up e confirmação',
       'Implementação completa, sem trabalho técnico pra você'
     ],
@@ -139,9 +162,9 @@ window.MARCA = {
   time: {
     kicker: 'Você não vai ficar sozinho · Especialista',
     titulo: 'Quem te acompanha de perto',
-    sub: 'O time que [já rodou o método em mais de 000 empresas] fica com você, não como consultor de fora dando palpite.',
+    sub: 'O time que já aplicou o Método Receita Real em mais de 20 operações fica com você, não como consultor de fora dando palpite.',
     pessoas: [
-      { nome: 'Lucas Ribeker', cargo: 'Estrategista em captação', texto: 'Cuida do posicionamento da empresa e da atração pra captação de leads.', foto: '' },
+      { nome: 'Lucas Ribeker', cargo: 'Fundador · Revenue Operations', texto: 'Conecta aquisição, atendimento, vendas e gestão para transformar investimento em receita mensurável.', foto: 'assets/lucas.jpg' },
       { nome: '[Nome]', cargo: '[Cargo]', texto: '[O que faz no projeto, em uma linha.]', foto: '' },
       { nome: '[Nome]', cargo: '[Cargo]', texto: '[O que faz no projeto, em uma linha.]', foto: '' }
     ]
