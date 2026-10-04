@@ -118,7 +118,7 @@ O que ainda está entre colchetes:
 
 - `marca.js`: valores de mercado (slide "Contratando cada peça separada").
 - O slide do acordo com bônus ("Vamos pro tudo") fica oculto (`ocultar: ['garantia']`), porque não faz parte da operação.
-- Logos das marcas: coloque em `assets/marcas/` e informe em `marcas.lista[].logo` (sem logo aparece o nome).
+- Logos das marcas: já estão em `assets/marcas/`. Para trocar ou incluir, informe em `marcas.lista[].logo` (sem logo aparece o nome).
 - Prints: `mkt.imagem` (Instagram de cliente) e `ferramenta.imagem` (pipeline no CRM), opcionais.
 
 ## Arquivos

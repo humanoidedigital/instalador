@@ -100,9 +100,9 @@ window.MARCA = {
       { nome: 'isente Já', segmento: 'Isenção de IR', logo: 'assets/marcas/isente-ja.png' },
       { nome: 'DUA', segmento: 'Arquitetura', logo: 'assets/marcas/dua.png' },
       { nome: 'Duran Esquadrias', segmento: 'Esquadrias', logo: 'assets/marcas/duran.png' },
-      { nome: 'Multi Mármore', segmento: 'Mármores', logo: '' },
-      { nome: 'Univerplast', segmento: 'Indústria de plásticos', logo: '' },
-      { nome: 'Tango', segmento: 'Fantasias', logo: '' }
+      { nome: 'Multi Mármore', segmento: 'Mármores', logo: 'assets/marcas/multi-marmore.png' },
+      { nome: 'Univerplast', segmento: 'Indústria de plásticos', logo: 'assets/marcas/univerplast.png' },
+      { nome: 'Tango', segmento: 'Fantasias', logo: 'assets/marcas/tango.png' }
     ],
     frentesTitulo: 'O que roda nessas operações',
     frentes: ['Tráfego pago', 'CRM', 'Vendas', 'Analytics', 'Rede social'],
