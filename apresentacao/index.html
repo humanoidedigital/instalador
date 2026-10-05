@@ -98,6 +98,11 @@ s{opacity:.6}
 .photo{width:clamp(80px,11cqw,180px);aspect-ratio:1;border-radius:1.2cqw;object-fit:cover;border:1px solid var(--line);flex:none;
   display:grid;place-items:center;background:linear-gradient(150deg,var(--acc-strong),var(--bg2));font:800 clamp(24px,3.6cqw,58px)/1 var(--f-disp);color:#fff}
 .row{display:flex;gap:2cqw;align-items:center;flex-wrap:wrap}
+.slide.esp .esp-foto{position:absolute;top:0;right:0;bottom:0;width:41%;z-index:0;overflow:hidden}
+.slide.esp .esp-foto img{width:100%;height:100%;object-fit:cover;object-position:50% 28%}
+.slide.esp .esp-foto::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,var(--bg) 0%,rgba(5,19,48,.55) 18%,rgba(5,19,48,0) 42%),linear-gradient(0deg,rgba(3,12,32,.75) 0%,rgba(3,12,32,0) 22%)}
+.slide.esp > :not(.esp-foto){position:relative;z-index:1;max-width:55%}
+.slide.esp .esp-nome{font-size:clamp(30px,4.6cqw,74px)}
 
 /* ---------- capa / fechamento (centralizados) ---------- */
 .slide.centro{align-items:center;text-align:center}
@@ -124,6 +129,8 @@ s{opacity:.6}
 .qgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.3cqw 3.2cqw;width:100%}
 .qgrid.uma{grid-template-columns:minmax(0,1fr);max-width:62cqw}
 .q{display:flex;flex-direction:column;gap:.5cqw;min-width:0;padding-bottom:1cqw;border-bottom:1px solid rgba(150,190,255,.09)}
+.q-oculta{display:none!important}
+.editing .q-cond{outline:1px dashed rgba(246,181,68,.35);outline-offset:4px;border-radius:4px}
 .q-t{font:600 clamp(11px,1.02cqw,16.5px)/1.38 var(--f-body)}
 .q-s{font-size:clamp(9px,.76cqw,12px);color:var(--mut2);margin-top:-.25cqw}
 .opts{display:flex;flex-wrap:wrap;gap:.45cqw}
@@ -138,6 +145,7 @@ s{opacity:.6}
 /* ---------- campos numéricos ---------- */
 .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1cqw 1.4cqw;width:100%}
 .fields.um{grid-template-columns:minmax(0,1fr)}
+.fields.tres{grid-template-columns:repeat(3,minmax(0,1fr))}
 .field{display:flex;flex-direction:column;gap:.35cqw;padding:1cqw 1.3cqw;border:1px solid var(--line);border-radius:1cqw;background:var(--panel);min-width:0}
 .field label{font-size:clamp(10px,.86cqw,14px);font-weight:600;line-height:1.35;color:var(--mut)}
 .field .fhint{font-size:clamp(9px,.74cqw,12px);color:var(--mut2);line-height:1.4}
@@ -303,10 +311,11 @@ s{opacity:.6}
 .lead-txt b{color:var(--acc)}
 
 /* ---------- valores / planos / garantia ---------- */
-.vstack{display:flex;flex-direction:column;width:100%;max-width:56cqw}
+.vstack{position:relative;display:flex;flex-direction:column;width:100%;max-width:62cqw}
 .vrow{display:flex;justify-content:space-between;align-items:baseline;gap:1cqw;padding:1cqw 0;border-bottom:1px solid var(--line);font-size:clamp(11.5px,1.05cqw,17px)}
 .vrow .vn{color:var(--mut)}
-.vrow .vv{font-weight:700;font-variant-numeric:tabular-nums}
+.vrow .vv{display:inline-flex;align-items:center;gap:.5em;font-weight:700;font-variant-numeric:tabular-nums}
+.vrow .tip{font-size:.75em}
 .vrow.tot{border-bottom:0;padding-top:1.4cqw;align-items:center}
 .vrow.tot .vn{display:flex;align-items:center;gap:.7em;color:var(--tx);font-weight:700}
 .vrow.tot .vv{font:800 clamp(20px,2.5cqw,40px)/1 var(--f-disp);color:var(--acc)}
@@ -376,7 +385,7 @@ s{opacity:.6}
 .tb:hover{border-color:var(--acc)}
 .tb.on{background:var(--warn);border-color:var(--warn);color:#1b1300}
 .mini-logo{height:clamp(18px,1.7cqw,28px);width:auto;opacity:.9}
-.hint{position:absolute;top:1.4cqw;right:1.8cqw;z-index:15;font-size:clamp(9.5px,.78cqw,12px);color:var(--mut2);transition:opacity 1s}
+.hint{position:absolute;top:1.4cqw;right:1.8cqw;z-index:15;font-size:clamp(9.5px,.78cqw,12px);color:var(--mut2);transition:opacity 1s;text-shadow:0 1px 6px rgba(0,0,0,.85)}
 .hint.off{opacity:0}
 
 /* ---------- modo edição ---------- */
@@ -418,8 +427,10 @@ s{opacity:.6}
   .slide.before{transform:translateX(-30px)}
   .slide.centro{justify-content:center}
   .editing .slide{padding-top:150px}
-  .ident,.qgrid,.dash,.cmp,.proof,.split,.save,.fields,.plans,.stack-foot,.team{grid-template-columns:minmax(0,1fr)}
+  .ident,.qgrid,.dash,.cmp,.proof,.split,.save,.fields,.fields.tres,.plans,.stack-foot,.team{grid-template-columns:minmax(0,1fr)}
   .brands{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .slide.esp .esp-foto{position:relative;flex:none;align-self:stretch;width:calc(100% + 36px);max-width:none;height:320px;margin:-52px -18px 0}
+  .slide.esp > :not(.esp-foto){max-width:100%}
   .brand{min-height:64px}
   .ident,.fields,.plans,.vstack,.prof,.feature,.insight,.team,.qgrid.uma{max-width:none}
   .prow{grid-template-columns:minmax(0,1fr);gap:4px}

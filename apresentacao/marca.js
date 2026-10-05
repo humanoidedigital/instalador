@@ -40,6 +40,7 @@ window.MARCA = {
     nome: 'Lucas Ribeker',
     local: 'Fundador da Ribeker · Revenue Operations',
     foto: 'assets/lucas.jpg',
+    retrato: 'assets/lucas-retrato.jpg',   // foto em pé, ocupa a lateral do slide (sem ela, usa a foto redonda)
     numeros: [
       { valor: '11', rotulo: 'Anos de expertise' },
       { valor: '20+', rotulo: 'Clientes atendidos' }
@@ -190,13 +191,20 @@ window.MARCA = {
   valores: {
     kicker: 'Valores de mercado',
     titulo: 'Contratando cada peça separada',
+    // salário médio no Brasil (Glassdoor, 2026) e preço de tabela do CRM; o "i" mostra a fonte
     itens: [
-      { nome: 'Social mídia', valor: '[R$ 0.000,00/mês]' },
-      { nome: 'Tráfego pago', valor: '[R$ 0.000,00/mês]' },
-      { nome: 'CRM + ferramenta', valor: '[R$ 0.000,00/mês]' }
+      { nome: 'Social mídia', valor: 'R$ 3.000/mês',
+        fonte: 'Salário médio de Social Media no Brasil: R$ 3.000 por mês (faixa comum de R$ 2.150 a R$ 4.022). Glassdoor, 2026.' },
+      { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês',
+        fonte: 'Salário médio de Gestor de Tráfego Pago no Brasil: R$ 3.000 por mês. Glassdoor, abril de 2026.' },
+      { nome: 'Especialista em RevOps (orienta o time de vendas)', valor: 'R$ 9.150/mês',
+        fonte: 'Salário médio de RevOps Specialist no Brasil: R$ 9.150 por mês (faixa comum de R$ 5.375 a R$ 14.600). Glassdoor, junho de 2026.' },
+      { nome: 'CRM com WhatsApp e IA (3 usuários)', valor: 'R$ 387/mês',
+        fonte: 'Kommo, plano Avançado (automações, Salesbot e agente de IA): R$ 129 por usuário por mês no plano anual. 3 usuários = R$ 387. Tabela de 2026.' }
     ],
     totalRotulo: 'Total separado',
-    total: '[R$ 0.000,00/mês]'
+    total: 'R$ 15.537/mês',
+    nota: 'Salários médios, sem encargos e sem a verba de anúncio.'
   },
 
   planos: {

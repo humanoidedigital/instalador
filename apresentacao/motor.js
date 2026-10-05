@@ -143,9 +143,39 @@
   const qPath = (si, qi) => 'raiox.' + si + '.perguntas.' + qi;
   const optPath = (si, qi, oi) => { const o = (secoes()[si].perguntas || [])[qi].opcoes[oi]; return qPath(si, qi) + '.opcoes.' + oi + (o && typeof o === 'object' ? '.t' : ''); };
   function pontua(q){ return q.tipo === 'multipla' ? typeof q.bom === 'number' : (q.opcoes || []).some(o => typeof optObj(o).dor === 'number'); }
+  const areaDe = (s, q) => q.area || s.area || 'comercial';
+  // ---- perguntas condicionais ----
+  // depende: { q:'id' ou ['id1','id2'], oculta:[opções], semOpcao:opção, resposta:opção, motivo:'texto' }, ou uma lista disso.
+  // A pergunta some quando a de origem foi respondida com uma opção de "oculta" (com várias origens, só se todas
+  // indicarem) ou, numa múltipla, quando "semOpcao" não foi marcada. "resposta" passa a valer sozinha e entra no
+  // placar e no relatório (com o motivo); sem ela, a pergunta só sai da conta.
+  function acharPergunta(id){
+    let r = null;
+    secoes().forEach((s, si) => (s.perguntas || []).forEach((q, qi) => { if(!r && q.id === id) r = { s, si, q, qi }; }));
+    return r;
+  }
+  function estadoQ(s, q, qi, pilha){
+    if(!q.depende) return { oculta:false };
+    pilha = pilha || [];
+    const eu = q.id || qkey(s, q, qi);
+    if(pilha.includes(eu)) return { oculta:false };
+    for(const c of (Array.isArray(q.depende) ? q.depende : [q.depende])){
+      const sels = (Array.isArray(c.q) ? c.q : [c.q]).map(id => { const g = acharPergunta(id); return g ? respEfetiva(g.s, g.q, g.qi, pilha.concat(eu)).sel : null; });
+      const some = c.semOpcao != null
+        ? sels.every(sel => sel && sel.length && !sel.includes(c.semOpcao))
+        : sels.every(sel => sel && sel.length && (c.oculta || []).includes(sel[0]));
+      if(some) return { oculta:true, auto: c.resposta != null ? c.resposta : null, motivo: c.motivo || '' };
+    }
+    return { oculta:false };
+  }
+  function respEfetiva(s, q, qi, pilha){
+    const st = estadoQ(s, q, qi, pilha);
+    if(st.oculta) return { sel: st.auto != null ? [st.auto] : [], campos:{}, auto:true, oculta:true, motivo:st.motivo };
+    const r = dx.resp[qkey(s, q, qi)];
+    return { sel:(r && r.sel) || [], campos:(r && r.campos) || {} };
+  }
   function dorQ(s, q, i){
-    const r = dx.resp[qkey(s, q, i)];
-    const sel = (r && r.sel) || [];
+    const sel = respEfetiva(s, q, i).sel;
     if(q.tipo === 'multipla'){
       if(typeof q.bom !== 'number' || !sel.length) return null;
       return sel.length >= q.bom ? 0 : (sel.length >= q.bom - 1 ? 0.5 : 1);
@@ -158,7 +188,9 @@
   function areaStats(aid){
     let tot = 0, n = 0, alertas = 0, total = 0, respondidas = 0, perguntas = 0;
     cadaPergunta((s, si, q, qi) => {
-      if((s.area || 'comercial') !== aid) return;
+      if(areaDe(s, q) !== aid) return;
+      const ef = respEfetiva(s, q, qi);
+      if(ef.oculta && !ef.sel.length) return;   // fora do raio-x por causa de outra resposta
       perguntas++;
       if(respostaTexto(si, qi)) respondidas++;
       if(!pontua(q)) return;
@@ -180,14 +212,14 @@
   }
   function respostaTexto(si, qi){
     const s = secoes()[si], q = s.perguntas[qi];
-    const r = dx.resp[qkey(s, q, qi)];
-    const sel = (r && r.sel) || [];
+    const r = respEfetiva(s, q, qi), sel = r.sel;
     if(!sel.length) return '';
-    return sel.map(oi => {
+    const t = sel.map(oi => {
       const base = plain(raw(optPath(si, qi, oi))).replace(/,?\s*(qual|quais|quanto)\?$/i, '');
-      const campo = r.campos && r.campos[oi];
+      const campo = r.campos[oi];
       return campo ? base + ' (' + campo + ')' : base;
     }).join(' · ');
+    return r.auto && r.motivo ? t + ' (' + r.motivo + ')' : t;
   }
   const nomeArea = a => plain(raw('areas.' + areas().indexOf(a) + '.nome')) || a.nome;
 
@@ -195,8 +227,16 @@
   // O custo de esperar: M meses tentando, V custo operacional por mês, R0 receita no início, R1 hoje.
   // O ganho sobe em rampa: no mês m a receita está incremento × m acima do início, então o
   // acumulado é incremento × m(m+1)/2. Saldo = ganho acumulado − investido; payback = 1º mês com saldo ≥ 0.
+  // nichos com "projecao.margem": o cliente informa preço e faturamento (o que ele sabe) e a conta usa a margem
+  function margemPct(){
+    const P = merged('projecao');
+    if(!P.margem) return null;
+    const m = num(P.margem.campo);
+    return m > 0 ? m : P.margem.referencia;
+  }
   function custoEsperar(){
-    const M = Math.round(num('meses')), V = num('custo'), R0 = num('receitaIni'), R1 = num('receitaHoje');
+    const fm = margemPct() != null ? margemPct() / 100 : 1;
+    const M = Math.round(num('meses')), V = num('custo'), R0 = num('receitaIni') * fm, R1 = num('receitaHoje') * fm;
     if(M < 1 || (R0 <= 0 && R1 <= 0)) return null;
     const inc = (R1 - R0) / M, cresceu = R1 > R0, linhas = [];
     let payback = null;
@@ -210,6 +250,10 @@
     if(!cresceu) html = 'Você gastou ' + b(brl(V * M)) + ' em ' + b(per) + ' e ' + esc(termo('suaReceita')) + ' ' + (R1 < R0 ? b('caiu') : b('não cresceu')) + '.';
     else if(fim.saldo > 0) html = 'Em ' + b(per) + ' e ' + b(brl(V * M)) + ' investidos, você teve ' + b(brl(fim.saldo)) + ' de ganho líquido acumulado de ' + esc(termo('receita')) + '.';
     else html = 'Em ' + b(per) + ' e ' + b(brl(V * M)) + ' investidos, você ainda não recuperou o que gastou. Seu saldo está ' + b(brl(Math.abs(fim.saldo)) + ' negativo') + '.';
+    if(margemPct() != null){
+      const P = merged('projecao'), om = origemDe(P.margem.campo);
+      html += ' (' + esc(termo('receita')) + ' = faturamento × ' + pct(margemPct()) + ' de margem' + (!(num(P.margem.campo) > 0) || (om && om.tipo === 'media') ? ', média de mercado' : '') + ')';
+    }
     return { M, V, R0, R1, inc, cresceu, payback, linhas: cresceu ? linhas : [], ganhoFinal:fim.ganho, investidoFinal:V * M, saldoFinal:fim.saldo, html, texto:html.replace(/<[^>]+>/g, '') };
   }
   // Empilhamento: clientes novos por mês × ticket. Recorrente (escola): cada mês soma os anteriores.
@@ -220,13 +264,16 @@
     const vendas = num('vendas'), ticket = num('ticket');
     const fator = P.conta === 'extra' ? P.multiplicador - 1 : P.multiplicador;
     const base = vendas > 0 ? Math.max(1, Math.round(vendas * fator)) : ref.base;
-    const Tk = ticket > 0 ? ticket : ref.ticket;
+    const mg = margemPct(), preco = ticket > 0 ? ticket : ref.ticket;
+    const Tk = mg != null ? preco * mg / 100 : preco;
     const mensal = base * Tk;
     const serie = n => Array.from({ length:n }, (_, i) => mensal * (i + 1));
     const total = n => P.recorrente ? mensal * n * (n + 1) / 2 : mensal * n;
     return {
       P, vendas, ticket, base, Tk, mensal, serie, total,
-      ref: !(vendas > 0 && ticket > 0),
+      ref: !(vendas > 0 && ticket > 0) || !!(P.margem && !(num(P.margem.campo) > 0)),
+      margem: mg, preco,
+      tkDet: mg != null ? ' (' + brl(preco) + ' × ' + pct(mg) + ' de margem)' : '',
       tkMedia: !!(ticket > 0 && origemDe('ticket') && origemDe('ticket').tipo === 'media'),
       rot: plain(P.baseRotulo, { n:nf1.format(base) }),
       expl: vendas > 0 ? plain(P.explicacao, { hoje:nf1.format(vendas) }) : ''
@@ -235,7 +282,7 @@
   function secaoDoCampo(id){ return secoes().findIndex(s => (s.campos || []).some(c => c.id === id)); }
   function paginaDoCampo(id){ const si = secaoDoCampo(id); return si < 0 ? '' : plain(raw('raiox.' + si + '.titulo')); }
   function campoDef(id){ for(const s of secoes()) for(const c of (s.campos || [])) if(c.id === id) return c; return null; }
-  function valorCampo(f, v){ return f.pre === 'R$' ? brl(v) : nf1.format(v) + (f.unidade ? ' ' + f.unidade : ''); }
+  function valorCampo(f, v){ return f.pre === 'R$' ? brl(v) : f.unidade === '%' ? pct(v) : nf1.format(v) + (f.unidade ? ' ' + f.unidade : ''); }
   // de onde veio o número: digitado, média de mercado (com fonte) ou atalho ("Não sei", "Não investe")
   function origemDe(id){
     const o = dx.origem && dx.origem[id], f = campoDef(id);
@@ -287,12 +334,16 @@
       <div class="rule reveal"></div>
       ${T('capa.tagline', 'div', 'tagline reveal')}`,
 
-    especialista: () => `
+    especialista: () => {
+      const ret = raw('especialista.retrato');
+      return `
+      ${ret ? `<div class="esp-foto"><img src="${esc(ret)}" alt="${esc(plain(raw('especialista.nome')))}"></div>` : ''}
       ${T('especialista.kicker', 'div', 'kicker reveal')}
-      ${T('especialista.nome', 'h2', 'h2 reveal')}
+      ${T('especialista.nome', 'h1', 'h1 esp-nome reveal')}
       ${T('especialista.local', 'div', 'sub reveal')}
-      <div class="row reveal">${foto('especialista.foto', 'especialista.nome')}${stats('especialista.numeros', '')}</div>
-      ${raw('especialista.frase') ? T('especialista.frase', 'div', 'quote reveal') : ''}`,
+      <div class="row reveal">${ret ? '' : foto('especialista.foto', 'especialista.nome')}${stats('especialista.numeros', '')}</div>
+      ${raw('especialista.frase') ? T('especialista.frase', 'div', 'quote reveal') : ''}`;
+    },
 
     quemSomos: () => `
       ${T('quemSomos.kicker', 'div', 'kicker reveal')}
@@ -320,11 +371,11 @@
       ${T(b + '.kicker', 'div', 'kicker reveal')}
       ${T(b + '.titulo', 'h2', 'h2 reveal')}
       ${s.sub != null ? T(b + '.sub', 'p', 'sub reveal') : ''}
-      ${cs.length ? `<div class="fields ${cs.length === 1 ? 'um' : ''} reveal">${cs.map((c, fi) => campo(si, fi)).join('')}</div>` : ''}
+      ${cs.length ? `<div class="fields ${cs.length === 1 ? 'um' : cs.length >= 5 ? 'tres' : ''} reveal">${cs.map((c, fi) => campo(si, fi)).join('')}</div>` : ''}
       ${s.calculos ? `<div class="derived reveal" data-calc="${si}"></div>` : ''}
       ${ps.length ? `<div class="qgrid ${ps.length <= 2 ? 'uma' : ''} reveal">${ps.map((q, qi) => {
         const multi = q.tipo === 'multipla', qp = qPath(si, qi);
-        return `<div class="q" data-q="${esc(qkey(s, q, qi))}" data-multi="${multi ? 1 : 0}">
+        return `<div class="q${q.depende ? ' q-cond' : ''}" data-q="${esc(qkey(s, q, qi))}" data-si="${si}" data-qi="${qi}" data-multi="${multi ? 1 : 0}">
           ${T(qp + '.texto', 'div', 'q-t')}
           ${q.sub != null ? T(qp + '.sub', 'div', 'q-s') : (multi ? '<div class="q-s">Pode marcar mais de um</div>' : '')}
           <div class="opts">${(q.opcoes || []).map((o, oi) => {
@@ -440,8 +491,9 @@
     valores: () => `
       ${T('valores.kicker', 'div', 'kicker reveal')}
       ${T('valores.titulo', 'h2', 'h2 reveal')}
-      <div class="vstack reveal">${list('valores.itens').map((v, i) => `<div class="vrow">${T('valores.itens.' + i + '.nome', 'span', 'vn')}${T('valores.itens.' + i + '.valor', 'span', 'vv')}</div>`).join('')}
-        <div class="vrow tot"><span class="vn">${T('valores.totalRotulo')} <span class="tag-est">Estimativa</span></span>${T('valores.total', 'span', 'vv')}</div></div>`,
+      <div class="vstack reveal">${list('valores.itens').map((v, i) => `<div class="vrow">${T('valores.itens.' + i + '.nome', 'span', 'vn')}<span class="vv">${T('valores.itens.' + i + '.valor')}${v.fonte ? `<i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(v.fonte)}">i</i>` : ''}</span></div>`).join('')}
+        <div class="vrow tot"><span class="vn">${T('valores.totalRotulo')} <span class="tag-est">Estimativa</span></span>${T('valores.total', 'span', 'vv')}</div></div>
+      ${T('valores.nota', 'div', 'note reveal')}`,
 
     planos: () => {
       const ps = list('planos.itens');
@@ -497,7 +549,7 @@
   function defs(){
     const d = [
       { id:'capa', html:B.capa, cls:'centro' },
-      { id:'especialista', html:B.especialista },
+      { id:'especialista', html:B.especialista, cls: raw('especialista.retrato') ? 'esp' : '' },
       { id:'quem-somos', html:B.quemSomos },
       { id:'antes', html:B.antes }
     ];
@@ -653,6 +705,12 @@
     const r12 = pr.total(12) / Math.max(1, pr.total(6));
     $$('.live[data-live="fator12"]').forEach(s => { s.textContent = r12 >= 3 ? 'mais que triplica' : r12 > 2.05 ? 'mais que dobra' : 'dobra'; });
 
+    // ---- perguntas que dependem de outras ----
+    $$('.q[data-si]', slidesEl).forEach(el => {
+      const s = secoes()[+el.dataset.si], q = s && s.perguntas[+el.dataset.qi];
+      if(q) el.classList.toggle('q-oculta', !editing && estadoQ(s, q, +el.dataset.qi).oculta);
+    });
+
     // ---- origem dos números e taxas calculadas ----
     $$('.origem', slidesEl).forEach(el => {
       const o = origemDe(el.id.slice(3));
@@ -664,6 +722,8 @@
       const L = num('leads'), V = num('vendas'), I = num('midia'), og = origemDe('leads'), out = [];
       if(L > 0 && V > 0) out.push(`Conversão de vocês: <b>${pct(V / L * 100)}</b> (${nf1.format(V)} de ${nf0.format(L)} contatos)`);
       else out.push('Conversão: ' + (og && og.vazio ? 'sem a contagem de contatos não dá pra calcular' : 'preencha contatos e ' + esc(termo('vendas'))));
+      const mgc = margemPct();
+      if(mgc != null && num('ticket') > 0) out.push(esc(termo('Ticket')) + ': <b>' + brl(num('ticket') * mgc / 100) + '</b>');
       if(cfg.conversao) out.push(`Média do mercado: <b>${pct(cfg.conversao.v)}</b><i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(cfg.conversao.fonte)}">i</i>`);
       if(L > 0 && I > 0) out.push(`Custo por lead: <b>${brl(I / L)}</b>`);
       if(V > 0 && I > 0) out.push(`Custo por ${esc(termo('venda'))}: <b>${brl(I / V)}</b>`);
@@ -687,7 +747,7 @@
         const mine = ce ? ce.ganhoFinal : 0, nosso = pr.total(M);
         setVal('dMine', mine, 'brlS'); setVal('dNosso', nosso);
         set('dMineS', esc((!ce || ce.inc === 0) ? 'sem crescimento de ' + termo('receita') + ' no período' : brl(Math.abs(ce.inc)) + (ce.inc > 0 ? ' a mais' : ' a menos') + ' a cada mês, empilhado em ' + M + (M === 1 ? ' mês' : ' meses')));
-        set('dNossoS', esc('Com ' + pr.rot + ' e ' + termo('ticket') + ' de ' + brl(pr.Tk) + (pr.tkMedia ? ' (média de mercado)' : '') + ', empilhado em ' + M + (M === 1 ? ' mês' : ' meses') + (pr.expl ? ' (' + pr.expl + ')' : '')));
+        set('dNossoS', esc('Com ' + pr.rot + ' e ' + termo('ticket') + ' de ' + brl(pr.Tk) + pr.tkDet + (pr.tkMedia ? ' (média de mercado)' : '') + ', empilhado em ' + M + (M === 1 ? ' mês' : ' meses') + (pr.expl ? ' (' + pr.expl + ')' : '')));
         const ratio = nosso / Math.max(mine, 1);
         flag.hidden = false;
         flag.className = 'flag ' + (ratio > 3 ? 'red' : ratio > 1.5 ? 'yellow' : 'green');
@@ -730,7 +790,7 @@
         $('.bar-v', b).textContent = nf0.format(Math.round(s[i]));
       });
       setVal('tot' + n, pr.total(n));
-      set('base' + n, esc('Base: ' + pr.rot + ' × ' + termo('ticket') + ' de ' + brl(pr.Tk) + (pr.tkMedia ? ' (média de mercado)' : '')) + (pr.ref ? ' <span class="ph">[referência: preencha os números do raio-x]</span>' : '') +
+      set('base' + n, esc('Base: ' + pr.rot + ' × ' + termo('ticket') + ' de ' + brl(pr.Tk) + pr.tkDet + (pr.tkMedia ? ' (média de mercado)' : '')) + (pr.ref ? ' <span class="ph">[referência: preencha os números do raio-x]</span>' : '') +
         '<br>' + esc(pr.P.recorrente ? 'Cada mês soma os ' + termo('clientes') + ' novos dos meses anteriores.' : 'Cada barra mostra o acumulado até aquele mês.'));
       set('seg' + n, s.map((v, i) => `<div class="seg" title="Mês ${i + 1}: ${brl(v)}" style="width:${(v / soma * 100).toFixed(3)}%;background:rgba(59,142,243,${(0.22 + (i + 1) / n * 0.78).toFixed(2)})"></div>`).join(''));
       set('segL' + n, s.map((v, i) => `<span>${n <= 6 ? 'Mês ' + (i + 1) : i + 1}</span>`).join(''));
@@ -741,7 +801,10 @@
       set('you' + n, ce ? 'Você, sozinho, ' + (ce.ganhoFinal >= 0 ? 'empilhou' : 'perdeu') + ' <b>' + brl(Math.abs(ce.ganhoFinal)) + '</b> em ' + ce.M + ' ' + (ce.M === 1 ? 'mês' : 'meses') + '. É daqui que a ' + esc(termo('marca')) + ' parte.'
         : 'Assim que você preencher seus números (página "' + esc(paginaDoCampo('meses')) + '"), mostramos aqui o seu ponto de partida.');
       const v = num('vendas'), tk = num('ticket');
-      set('rec' + n, v > 0 && tk > 0 ? 'Hoje suas ' + esc(termo('vendas')) + ' geram <b>' + brl(v * tk) + '</b> por mês. São ' + nf1.format(v) + ' ' + esc(termo('vendas')) + ' a ' + brl(tk) + ' de ' + esc(termo('ticket')) + '.' : '');
+      const mgx = margemPct();
+      set('rec' + n, !(v > 0 && tk > 0) ? '' : mgx != null
+        ? 'Hoje suas ' + esc(termo('vendas')) + ' geram <b>' + brl(v * tk) + '</b> de faturamento por mês, cerca de <b>' + brl(v * tk * mgx / 100) + '</b> de lucro.'
+        : 'Hoje suas ' + esc(termo('vendas')) + ' geram <b>' + brl(v * tk) + '</b> por mês. São ' + nf1.format(v) + ' ' + esc(termo('vendas')) + ' a ' + brl(tk) + ' de ' + esc(termo('ticket')) + '.');
     });
     setVal('gar6', pr.total(6)); setVal('gar12', pr.total(12));
 
@@ -755,7 +818,7 @@
       let h = areas().map(a => {
         const s = areaStats(a.id), itens = [];
         cadaPergunta((sc, si, q, qi) => {
-          if((sc.area || 'comercial') !== a.id) return;
+          if(areaDe(sc, q) !== a.id) return;
           const r = respostaTexto(si, qi); if(!r) return;
           const d = dorQ(sc, q, qi);
           itens.push(`<div class="ans ${d === 1 ? 'd1' : d === 0.5 ? 'd05' : d === 0 ? 'd0' : ''}"><i></i><div><div class="aq">${esc(plain(raw(qPath(si, qi) + '.texto')))}</div><div class="ar2">${esc(r)}</div></div></div>`);
@@ -971,14 +1034,14 @@
     await Promise.race([dlPronto, new Promise(r => setTimeout(r, 1500))]);
     if(dlCap){
       try{ await dlCap.save({ filename:nome, data }); toast('Arquivo pronto.'); return; }
-      catch(err){ if(err && err.code === 'declined') return; toast('Não foi possível salvar o arquivo aqui.'); return; }
+      catch(err){ if(err && err.code === 'declined') return; toast('Não foi possível salvar o arquivo aqui (' + ((err && err.code) || 'erro') + '). Use o arquivo ribeker-apresentacao.html no Chrome.'); return; }
     }
     const blob = data instanceof Blob ? data : new Blob([data], { type:mime });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = nome;
     document.body.appendChild(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-    toast('Arquivo baixado.');
+    toast(window.self !== window.top ? 'Arquivo gerado. Se o download não começar, use o arquivo ribeker-apresentacao.html no Chrome.' : 'Arquivo baixado.');
   }
   function slug(s){ return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase(); }
 
@@ -996,6 +1059,8 @@
     }));
     const L = num('leads'), V = num('vendas'), I = num('midia');
     if(L > 0 && V > 0) out.push(['Conversão (calculada)', pct(V / L * 100)]);
+    const mgi = margemPct();
+    if(mgi != null && num('ticket') > 0) out.push([termo('Ticket') + ' (calculado)', brl(num('ticket') * mgi / 100)]);
     if(L > 0 && I > 0) out.push(['Custo por lead (calculado)', brl(I / L)]);
     if(V > 0 && I > 0) out.push(['Custo por ' + termo('venda') + ' (calculado)', brl(I / V)]);
     return out;
@@ -1013,7 +1078,7 @@
     return areasQuePontuam().map(a => {
       const s = areaStats(a.id), itens = [];
       cadaPergunta((sc, si, q, qi) => {
-        if((sc.area || 'comercial') !== a.id) return;
+        if(areaDe(sc, q) !== a.id) return;
         const d = dorQ(sc, q, qi), acao = plain(raw(qPath(si, qi) + '.acao'));
         if(d == null || d === 0 || !acao) return;
         itens.push({ acao, pergunta:plain(raw(qPath(si, qi) + '.texto')), dor:d });
@@ -1150,7 +1215,7 @@
     areas().forEach(a => {
       const s = areaStats(a.id), itens = [];
       cadaPergunta((sc, si, q, qi) => {
-        if((sc.area || 'comercial') !== a.id) return;
+        if(areaDe(sc, q) !== a.id) return;
         const r = respostaTexto(si, qi); if(!r) return;
         const d = dorQ(sc, q, qi), dot = d === 1 ? 'r' : d === 0.5 ? 'a' : d === 0 ? 'v' : '';
         itens.push(`<div class="rp-item"><div class="rp-q">${dot ? `<span class="rp-dot ${dot}"></span>` : ''}${esc(plain(raw(qPath(si, qi) + '.texto')))}</div><div class="rp-r">${esc(r)}</div></div>`);
@@ -1194,25 +1259,220 @@
     try{ await carregar('vendor/' + arquivo); }catch(e){}
     if(!window[global]) await carregar(cdn);
   }
+  // ---- relatório em PDF desenhado direto: texto de verdade, sem print da tela ----
+  // (funciona no link do claude.ai, no arquivo local e sem internet)
+  const txtPdf = s => String(s == null ? '' : s).replace(/→/g, '->').replace(/≥/g, '>=').replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"')
+    .replace(/[^\x00-\xFF\u2013\u2014\u2022\u2026\u203A]/g, '');
+  async function imagemDataURL(src){
+    if(!src) return null;
+    if(/^data:/.test(src)) return src;
+    try{
+      const b = await (await fetch(src)).blob();
+      return await new Promise(ok => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.onerror = () => ok(null); fr.readAsDataURL(b); });
+    }catch(e){ return null; }
+  }
+  async function montarPdf(comPlano){
+    const pdf = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
+    const W = 210, H = 297, M = 16, CW = W - 2 * M, LIM = H - 18;
+    const C = { ink:[12,26,51], mut:[90,107,136], line:[221,228,240], soft:[243,246,251], acc:[31,95,191], ok:[19,168,116], warn:[201,133,16], bad:[214,69,69], white:[255,255,255], accsoft:[238,244,253], oksoft:[223,245,236] };
+    const cor = (k, t) => { const c = C[k]; if(t === 'f') pdf.setFillColor(c[0], c[1], c[2]); else if(t === 'd') pdf.setDrawColor(c[0], c[1], c[2]); else pdf.setTextColor(c[0], c[1], c[2]); };
+    const tierC = v => v == null ? 'mut' : v < 34 ? 'bad' : v < 66 ? 'warn' : 'ok';
+    const fonte = (tam, estilo) => { pdf.setFont('helvetica', estilo || 'normal'); pdf.setFontSize(tam); };
+    const linhas = (t, w, tam, estilo) => { fonte(tam, estilo); return pdf.splitTextToSize(txtPdf(t), w); };
+    const alt = (n, tam) => n * tam * 0.3528 * 1.35;
+    const g = geral(), ce = custoEsperar();
+    const emp = dx.ident.empresa || (termo('Empresa') + ' sem nome');
+    const dataTxt = dataBR(dx.ident.data || hojeISO());
+    const logo = await imagemDataURL(MARCA.logoRelatorio || '');
+    let y = M;
+    const cab = titulo => {
+      y = M;
+      fonte(8, 'bold'); cor('acc'); pdf.text(txtPdf(titulo.toUpperCase()), M, y + 3, { charSpace:0.3 });
+      fonte(18, 'bold'); cor('ink'); pdf.text(txtPdf(emp), M, y + 11);
+      fonte(9); cor('mut'); pdf.text(txtPdf('Diagnóstico realizado em ' + dataTxt + (dx.ident.whatsapp ? ' · ' + dx.ident.whatsapp : '')), M, y + 17);
+      if(logo){ try{ const pr = pdf.getImageProperties(logo), h = 11, w = h * pr.width / pr.height; pdf.addImage(logo, 'PNG', W - M - w, y + 1, w, h); }catch(e){} }
+      cor('ink', 'd'); pdf.setLineWidth(0.6); pdf.line(M, y + 21, W - M, y + 21);
+      y += 28;
+    };
+    const nova = titulo => { pdf.addPage(); cab(titulo); };
+    const cabe = (h, tt) => { if(y + h > LIM) nova(tt); };
+    const titulo = (t, tt) => { cabe(12, tt); fonte(12, 'bold'); cor('ink'); pdf.text(txtPdf(t), M, y + 4); y += 8; };
+    const caixa = (texto, tt, o) => {
+      o = o || {};
+      const tam = o.tam || 9.5, ls = linhas(texto, CW - 10, tam), h = alt(ls.length, tam) + 7;
+      cabe(h, tt);
+      cor(o.fundo || 'soft', 'f'); cor(o.borda || 'line', 'd'); pdf.setLineWidth(0.3); pdf.roundedRect(M, y, CW, h, 2, 2, 'FD');
+      fonte(tam); cor(o.cor || 'ink'); pdf.text(ls, M + 5, y + 5.5, { lineHeightFactor:1.35 });
+      y += h + 4;
+    };
+    const blocoTitulo = (nome, p, tt, cont) => {
+      cabe(14, tt);
+      fonte(9.5, 'bold'); cor('acc'); pdf.text(txtPdf((nome + (cont ? ' (continuação)' : '')).toUpperCase()), M, y + 4, { charSpace:0.3 });
+      if(p != null){ fonte(11, 'bold'); cor(tierC(p)); pdf.text(p + '%', W - M, y + 4, { align:'right' }); }
+      cor('line', 'd'); pdf.setLineWidth(0.3); pdf.line(M, y + 6.5, W - M, y + 6.5);
+      y += 9.5;
+    };
+
+    // página 1: panorama
+    const t1 = 'Raio-X Comercial · ' + N.nome;
+    cab(t1);
+    const leit = leitura(g.aprov, g.st.filter(x => x.s.aprov < 50).sort((a, b) => a.s.aprov - b.s.aprov).slice(0, 2).map(x => nomeArea(x.a)));
+    const lg = linhas(leit, CW - 52, 10), hG = Math.max(28, alt(lg.length, 10) + 14);
+    cor('soft', 'f'); pdf.roundedRect(M, y, CW, hG, 3, 3, 'F');
+    fonte(30, 'bold'); cor(tierC(g.aprov)); pdf.text(g.aprov == null ? '--' : g.aprov + '%', M + 6, y + hG / 2 + 4);
+    fonte(7.5, 'bold'); cor('mut'); pdf.text('APROVEITAMENTO GERAL', M + 46, y + 8, { charSpace:0.3 });
+    fonte(10); cor('ink'); pdf.text(lg, M + 46, y + 14, { lineHeightFactor:1.35 });
+    y += hG + 7;
+    titulo('Resultado por área', t1);
+    areasQuePontuam().forEach(a => {
+      const st = areaStats(a.id);
+      cabe(18, t1);
+      fonte(10.5, 'bold'); cor('ink'); pdf.text(txtPdf(nomeArea(a)), M, y + 4); pdf.text(st.aprov == null ? '--' : st.aprov + '%', W - M, y + 4, { align:'right' });
+      cor('line', 'f'); pdf.roundedRect(M, y + 6.5, CW, 2.6, 1.3, 1.3, 'F');
+      if(st.aprov){ cor(tierC(st.aprov), 'f'); pdf.roundedRect(M, y + 6.5, CW * st.aprov / 100, 2.6, 1.3, 1.3, 'F'); }
+      fonte(8); cor('mut'); pdf.text(txtPdf(st.alertas + ' de ' + st.total + ' pontos de atenção · ' + st.respondidas + ' respondidas'), M, y + 13.5);
+      y += 18;
+    });
+    const cs = camposInformados();
+    if(cs.length){
+      titulo('Números informados pela ' + termo('empresa'), t1);
+      const cols = 3, gap = 4, cw = (CW - gap * (cols - 1)) / cols;
+      for(let i = 0; i < cs.length; i += cols){
+        const lin = cs.slice(i, i + cols);
+        const h = Math.max.apply(null, lin.map(c => alt(linhas(c[0], cw - 6, 8).length, 8) + alt(linhas(c[1], cw - 6, 11, 'bold').length, 11) + 7));
+        cabe(h, t1);
+        lin.forEach((c, j) => {
+          const x = M + j * (cw + gap), l1 = linhas(c[0], cw - 6, 8);
+          cor('line', 'd'); pdf.setLineWidth(0.3); pdf.roundedRect(x, y, cw, h, 2, 2, 'D');
+          fonte(8); cor('mut'); pdf.text(l1, x + 3, y + 5, { lineHeightFactor:1.3 });
+          const l2 = linhas(c[1], cw - 6, 11, 'bold'); cor('ink'); pdf.text(l2, x + 3, y + 5 + alt(l1.length, 8) + 2.5, { lineHeightFactor:1.25 });
+        });
+        y += h + gap;
+      }
+      y += 2;
+    }
+    caixa(plain(String(raw('relatorio.legenda') || '').replace(/\(ponto (vermelho|amarelo|verde)\)\s*/g, '$1 = ')), t1, { tam:9 });
+    const fu = fontesUsadas();
+    if(fu.length) caixa('Referências de mercado usadas: ' + fu.join(' · '), t1, { tam:8, cor:'mut' });
+
+    // o custo de esperar
+    if(ce){
+      const tc = 'O custo de esperar';
+      nova(tc);
+      const lf = linhas(ce.texto, CW, 11);
+      fonte(11); cor('ink'); pdf.text(lf, M, y + 4, { lineHeightFactor:1.4 });
+      y += alt(lf.length, 11) + 6;
+      if(ce.linhas.length){
+        const X = [M + 70, M + 125, W - M - 2];
+        const head = () => {
+          fonte(8.5, 'bold'); cor('mut');
+          pdf.text('Mês', M + 2, y + 4.5); pdf.text('Ganho acumulado', X[0], y + 4.5, { align:'right' }); pdf.text('Investido acumulado', X[1], y + 4.5, { align:'right' }); pdf.text('Saldo', X[2], y + 4.5, { align:'right' });
+          cor('ink', 'd'); pdf.setLineWidth(0.5); pdf.line(M, y + 6.5, W - M, y + 6.5);
+          y += 8;
+        };
+        head();
+        ce.linhas.forEach(l => {
+          if(y + 6.5 > LIM){ nova(tc); head(); }
+          const pb = l.mes === ce.payback;
+          if(pb){ cor('oksoft', 'f'); pdf.rect(M, y - 0.5, CW, 6.5, 'F'); }
+          fonte(9, pb ? 'bold' : 'normal'); cor(pb ? 'ok' : 'ink');
+          pdf.text(String(l.mes), M + 2, y + 4); pdf.text(txtPdf(brlS(l.ganho)), X[0], y + 4, { align:'right' }); pdf.text(txtPdf(brlS(l.investido)), X[1], y + 4, { align:'right' });
+          if(l.saldo < 0 && !pb) cor('bad');
+          pdf.text(txtPdf(brlS(l.saldo)), X[2], y + 4, { align:'right' });
+          cor('line', 'd'); pdf.setLineWidth(0.2); pdf.line(M, y + 6, W - M, y + 6);
+          y += 6.5;
+        });
+      }
+    }
+
+    // plano de ação
+    if(comPlano){
+      const porArea = acoesPorArea(), tp = 'Plano de ação';
+      if(porArea.length){
+        nova(tp);
+        const li = linhas(plain(raw('relatorio.planoIntro')), CW, 10);
+        fonte(10); cor('ink'); pdf.text(li, M, y + 4, { lineHeightFactor:1.4 });
+        y += alt(li.length, 10) + 5;
+        const top = porArea.flatMap(a => a.itens.map(i => ({ area:a.nome, acao:i.acao }))).slice(0, 3);
+        const hs = top.map(t => alt(linhas(t.acao, CW - 22, 10).length, 10) + 7);
+        const hP = 13 + hs.reduce((a, b) => a + b, 0);
+        cabe(hP, tp);
+        cor('accsoft', 'f'); cor('acc', 'd'); pdf.setLineWidth(0.4); pdf.roundedRect(M, y, CW, hP, 2.5, 2.5, 'FD');
+        fonte(11, 'bold'); cor('acc'); pdf.text('Por onde começar', M + 5, y + 7.5);
+        let yy = y + 13;
+        top.forEach((t, i) => {
+          cor('acc', 'f'); pdf.circle(M + 8, yy + 1.2, 2.6, 'F');
+          fonte(8, 'bold'); cor('white'); pdf.text(String(i + 1), M + 8, yy + 2.3, { align:'center' });
+          const la = linhas(t.acao, CW - 22, 10);
+          fonte(10); cor('ink'); pdf.text(la, M + 14, yy + 2.3, { lineHeightFactor:1.35 });
+          fonte(8); cor('mut'); pdf.text(txtPdf(t.area), M + 14, yy + 2.3 + alt(la.length, 10));
+          yy += hs[i];
+        });
+        y += hP + 7;
+        porArea.forEach(a => {
+          blocoTitulo(a.nome, a.pct, tp);
+          a.itens.forEach(it => {
+            const la = linhas(it.acao, CW - 8, 10), lp = linhas('a partir de: ' + it.pergunta, CW - 8, 8);
+            const h = alt(la.length, 10) + alt(lp.length, 8) + 4;
+            if(y + h > LIM){ nova(tp); blocoTitulo(a.nome, a.pct, tp, true); }
+            fonte(10, 'bold'); cor('acc'); pdf.text('\u203A', M + 1, y + 4);
+            fonte(10); cor('ink'); pdf.text(la, M + 6, y + 4, { lineHeightFactor:1.35 });
+            fonte(8); cor('mut'); pdf.text(lp, M + 6, y + 4 + alt(la.length, 10), { lineHeightFactor:1.3 });
+            y += h;
+            cor('line', 'd'); pdf.setLineWidth(0.15); pdf.line(M + 6, y - 1, W - M, y - 1);
+          });
+          y += 5;
+        });
+        caixa(plain(raw('relatorio.planoFecho')), tp, { tam:9 });
+      }
+    }
+
+    // respostas
+    const tr = 'Respostas do diagnóstico';
+    nova(tr);
+    areas().forEach(a => {
+      const st = areaStats(a.id), itens = [];
+      cadaPergunta((sc, si, q, qi) => {
+        if(areaDe(sc, q) !== a.id) return;
+        const r = respostaTexto(si, qi); if(!r) return;
+        itens.push({ q:plain(raw(qPath(si, qi) + '.texto')), r, d:dorQ(sc, q, qi) });
+      });
+      if(!itens.length) return;
+      blocoTitulo(nomeArea(a), st.aprov, tr);
+      itens.forEach(it => {
+        const lq = linhas(it.q, CW - 8, 9), lr = linhas(it.r, CW - 8, 9.5, 'bold');
+        const h = alt(lq.length, 9) + alt(lr.length, 9.5) + 3;
+        if(y + h > LIM){ nova(tr); blocoTitulo(nomeArea(a), st.aprov, tr, true); }
+        const dc = it.d === 1 ? 'bad' : it.d === 0.5 ? 'warn' : it.d === 0 ? 'ok' : null;
+        if(dc){ cor(dc, 'f'); pdf.circle(M + 1.6, y + 2.4, 1.2, 'F'); }
+        fonte(9); cor('mut'); pdf.text(lq, M + 5, y + 3.5, { lineHeightFactor:1.3 });
+        fonte(9.5, 'bold'); cor('ink'); pdf.text(lr, M + 5, y + 3.5 + alt(lq.length, 9), { lineHeightFactor:1.3 });
+        y += h;
+      });
+      y += 5;
+    });
+    caixa(plain(raw('relatorio.rodape'), { data:dataTxt }), tr, { tam:8.5, cor:'mut' });
+
+    const n = pdf.getNumberOfPages();
+    for(let i = 1; i <= n; i++){
+      pdf.setPage(i);
+      cor('line', 'd'); pdf.setLineWidth(0.2); pdf.line(M, H - 12, W - M, H - 12);
+      fonte(8); cor('mut'); pdf.text(txtPdf(MARCA.nome || ''), M, H - 8); pdf.text('Página ' + i + ' de ' + n, W - M, H - 8, { align:'right' });
+    }
+    return pdf;
+  }
   async function gerarPdf(comPlano, btn){
     const rotulo = btn.textContent;
     btn.disabled = true; btn.textContent = 'Gerando PDF…';
-    const rel = montarRelatorio(comPlano);
     const nome = 'raio-x-comercial-' + slug(dx.ident.empresa || N.id) + (comPlano ? '-com-plano-de-acao' : '') + '-' + (dx.ident.data || hojeISO()).split('-').reverse().join('-') + '.pdf';
     try{
-      await biblioteca('html2canvas', 'html2canvas.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
       await biblioteca('jspdf', 'jspdf.umd.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-      if(document.fonts && document.fonts.ready) await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 3000))]);
-      const pdf = new window.jspdf.jsPDF({ unit:'mm', format:'a4' });
-      const folhas = $$('.rp', rel);
-      for(let i = 0; i < folhas.length; i++){
-        const c = await window.html2canvas(folhas[i], { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false });
-        if(i) pdf.addPage('a4');
-        pdf.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, Math.min(297, 210 * c.height / c.width));
-      }
+      const pdf = await montarPdf(comPlano);
       await salvarArquivo(nome, pdf.output('blob'), 'application/pdf');
     }catch(err){
-      // sem as bibliotecas ou com imagem bloqueada: usa a impressão do navegador
+      // sem a biblioteca de PDF: usa a impressão do navegador ("Salvar como PDF")
+      montarRelatorio(comPlano);
+      toast('Abrindo a impressão: escolha "Salvar como PDF".');
       const tit = document.title; document.title = nome.replace(/\.pdf$/, '');
       setTimeout(() => { window.print(); setTimeout(() => { document.title = tit; }, 1000); }, 60);
     }finally{
@@ -1222,7 +1482,7 @@
 
   // ============ início ============
   $('#miniLogo').src = MARCA.icone || MARCA.logo || '';
-  window.RB = { proj, custoEsperar, geral, areaStats, resumoTexto, escolherNicho, ir, montarRelatorio, get dx(){ return dx; }, get nicho(){ return N; } };
+  window.RB = { proj, custoEsperar, geral, areaStats, resumoTexto, escolherNicho, ir, montarRelatorio, montarPdf, estadoQ, respEfetiva, get dx(){ return dx; }, get nicho(){ return N; } };
   const hash = (location.hash || '').replace('#', '');
   const inicial = NICHOS.find(n => n.id === hash) || NICHOS.find(n => n.id === store.get('rb:nicho')) || (NICHOS.length === 1 ? NICHOS[0] : null);
   if(inicial) escolherNicho(inicial.id);

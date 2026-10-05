@@ -17,7 +17,16 @@
                          Opção sem "dor" não pontua. "campo" abre uma caixinha de texto (ex.: "qual?").
        tipo 'multipla' → várias respostas. Com "bom: 3" pontua (3 ou mais = estruturado, 2 = parcial, 1 = atenção).
                          Sem "bom" só registra.
-       acao            → entra no plano de ação do PDF quando a resposta indica dor */
+       acao            → entra no plano de ação do PDF quando a resposta indica dor
+       id              → nome da pergunta, usado por "depende"
+       area            → troca a área do placar só desta pergunta (ex.: uma pergunta de tela informativa que pontua)
+       depende         → pergunta condicional. Some da tela quando outra pergunta tem certa resposta:
+                         { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' }
+                           oculta    → índices das opções da pergunta de origem que escondem esta (0 = primeira)
+                           resposta  → opção que passa a valer sozinha (entra no placar e no relatório, com o motivo).
+                                       Sem "resposta", a pergunta só sai da conta.
+                         { q: 'funis', semOpcao: 0 } → some quando a múltipla de origem foi respondida sem a opção 0.
+                         Com q: ['a', 'b'], só some se todas as de origem indicarem. Aceita uma lista de condições. */
 NICHO({
   id: 'escolas',
   nome: 'Escolas e cursos',
@@ -60,18 +69,18 @@ NICHO({
         { id: 'equipe', rotulo: 'Tamanho da equipe comercial?', suf: 'pessoas', unidade: 'pessoas' }
       ],
       perguntas: [
-        { texto: 'Quem vende hoje na escola?', tipo: 'multipla',
+        { id: 'quemvende', texto: 'Quem vende hoje na escola?', tipo: 'multipla',
           opcoes: ['Dono', 'Diretor', 'Professor', 'Secretária', 'Comercial'] },
-        { texto: 'Como a instituição vende?', tipo: 'unica',
+        { id: 'processo', texto: 'Como a instituição vende?', tipo: 'unica',
           opcoes: [{ t: 'Existe processo de venda definido', dor: 0 }, { t: 'Cada um vende do seu jeito que sabe', dor: 1 }],
           acao: 'Definir um processo de venda único, com as mesmas etapas para todo mundo que atende.' },
-        { texto: 'Comercial faz ativo?', sub: 'Prospecção via parcerias, reuniões, network, eventos', tipo: 'unica',
+        { id: 'ativo', texto: 'Comercial faz ativo?', sub: 'Prospecção via parcerias, reuniões, network, eventos', tipo: 'unica',
           opcoes: [{ t: 'Sim', dor: 0 }, { t: '+ ou -', dor: 0.5 }, { t: 'Não', dor: 1 }],
           acao: 'Colocar prospecção ativa na rotina da semana: parcerias, visitas, eventos e network.' },
-        { texto: 'Tem meta de matrícula definida?', tipo: 'unica',
+        { id: 'meta', texto: 'Tem meta de matrícula definida?', tipo: 'unica',
           opcoes: [{ t: 'Sim, diária/semanal/mensal', dor: 0 }, { t: 'Só mensal', dor: 0.5 }, { t: 'Não tem metas', dor: 1 }],
           acao: 'Quebrar a meta do mês em meta de semana e de dia, com acompanhamento à vista.' },
-        { texto: 'Tem líder ou gerente comercial?', tipo: 'unica',
+        { id: 'lider', texto: 'Tem líder ou gerente comercial?', tipo: 'unica',
           opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
           acao: 'Ter uma pessoa responsável pelo comercial, que acompanha a meta e o time toda semana.' }
       ]
@@ -82,17 +91,30 @@ NICHO({
       titulo: 'Marketing e *Tráfego Pago*',
       sub: 'Diagnóstico de tráfego pago, redes sociais e capacidade de atendimento',
       perguntas: [
-        { texto: 'A empresa já realizou anúncios no Meta Ads (Instagram/Facebook)?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
-        { texto: 'A empresa já investiu/investe em outros canais de publicidade?', tipo: 'unica', opcoes: [{ t: 'Sim, qual?', campo: 'canal' }, 'Não'] },
-        { texto: 'A empresa já teve resultados positivos com anúncios pagos?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
-        { texto: 'A empresa possui verba mensal definida para investir em tráfego pago?', tipo: 'unica', opcoes: [{ t: 'Sim, quanto?', campo: 'R$/mês' }, 'Não'] },
-        { texto: 'A empresa possui capacidade para atender uma demanda maior de clientes?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
-        { texto: 'Já possui um WhatsApp Business para receber os contatos gerados pelos anúncios?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
-        { texto: 'Tem constância/frequência de postagens nas redes sociais?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
-        { texto: 'Tem estratégia por trás das postagens?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
-        { texto: 'Produz conteúdos como vídeos, fotos e imagens dos produtos/serviços?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
-        { texto: 'Já realiza vendas e fechamento de negócios através das redes sociais?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
-        { texto: 'As redes sociais estão preparadas para receber clientes?', tipo: 'unica', opcoes: ['Sim', '+ ou -', 'Não'] }
+        // pontua no Comercial, como no original ("tem tráfego pago rodando hoje?")
+        { id: 'trafego', area: 'comercial', texto: 'Tem anúncio pago rodando hoje?', sub: 'Meta Ads (Instagram/Facebook), Google ou outro canal', tipo: 'unica',
+          opcoes: [{ t: 'Sim, onde?', dor: 0, campo: 'canal' }, { t: 'Já anunciou, mas parou', dor: 1 }, { t: 'Nunca anunciou', dor: 1 }],
+          acao: 'Começar campanha paga com verba controlada e custo por lead medido desde o primeiro dia.' },
+        { id: 'resultado', texto: 'Já teve resultado positivo com anúncio pago?', tipo: 'unica', opcoes: ['Sim', 'Não'],
+          depende: { q: 'trafego', oculta: [2], motivo: 'nunca anunciou' } },
+        { id: 'capacidade', texto: 'A escola tem capacidade para atender uma demanda maior de alunos?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
+        { id: 'posta', texto: 'Posta nas redes sociais com frequência?', tipo: 'unica',
+          opcoes: ['Sim, com frequência', 'Posta, mas sem frequência', 'Não posta'] },
+        // as próximas só aparecem para quem posta; para quem não posta valem "Não" automaticamente
+        { id: 'socialmidia', area: 'comercial', texto: 'Tem um social mídia?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' },
+          acao: 'Ter alguém responsável pelas redes, com rotina de publicação definida.' },
+        { id: 'estrategia', area: 'comercial', texto: 'Tem estratégia por trás das postagens?', sub: 'Pauta pensada para atrair, gerar confiança e chamar para a matrícula', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' },
+          acao: 'Montar linha editorial com pauta da semana, dividindo o conteúdo entre atrair, gerar confiança e chamar para a matrícula.' },
+        { id: 'conteudo', texto: 'Produz vídeos e fotos próprios (escola, aulas, alunos)?', tipo: 'unica', opcoes: ['Sim', 'Não'],
+          depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' } },
+        { id: 'venderedes', texto: 'Já fecha matrícula pelas redes sociais?', tipo: 'unica', opcoes: ['Sim', 'Não'],
+          depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' } },
+        { id: 'redesprontas', texto: 'As redes sociais estão preparadas para receber clientes?', tipo: 'unica', opcoes: ['Sim', '+ ou -', 'Não'],
+          depende: { q: 'posta', oculta: [2], resposta: 2, motivo: 'não posta nas redes' } }
       ]
     },
     {
@@ -101,24 +123,13 @@ NICHO({
       titulo: 'Geração de Leads e *Marketing*',
       sub: 'Como a escola atrai e se posiciona hoje',
       perguntas: [
-        { texto: 'Quais os funis de geração de lead da escola?', tipo: 'multipla', bom: 3,
-          opcoes: ['Tráfego pago', 'Orgânico / Social selling empresa', 'Orgânico / Colaborador', 'Captação ativa (externa)', 'Real interessado', 'Lead base', 'Indicação', 'Remarketing', 'Contrapropostas'],
+        // a captação ativa já foi perguntada em Vendas e Prospecção ("Comercial faz ativo?")
+        { id: 'funis', texto: 'De onde chegam os leads da escola hoje?', tipo: 'multipla', bom: 3,
+          opcoes: ['Tráfego pago', 'Orgânico / Instagram da escola', 'Orgânico / Colaborador', 'Real interessado', 'Lead base', 'Indicação', 'Remarketing', 'Contrapropostas'],
           acao: 'Abrir mais de uma origem de lead, para o resultado não depender de um canal só.' },
-        { texto: 'Hoje tem posicionamento na cidade?', sub: 'Marca, não só oferta', tipo: 'unica',
+        { id: 'posicionamento', texto: 'Hoje tem posicionamento na cidade?', sub: 'Marca, não só oferta', tipo: 'unica',
           opcoes: [{ t: 'Sim', dor: 0 }, { t: '+ ou -', dor: 0.5 }, { t: 'Não', dor: 1 }],
-          acao: 'Definir pelo que a escola quer ser reconhecida na cidade e repetir isso em toda comunicação.' },
-        { texto: 'Tem um social mídia?', tipo: 'unica',
-          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
-          acao: 'Ter alguém responsável pelas redes, com rotina de publicação definida.' },
-        { texto: 'Tem estratégias de postagem?', tipo: 'unica',
-          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
-          acao: 'Montar linha editorial com pauta da semana, no lugar de postar por impulso.' },
-        { texto: 'Instagram: sabe o que é topo, meio e fundo de funil?', tipo: 'unica',
-          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
-          acao: 'Dividir o conteúdo entre atrair, relacionar e converter, com peso definido para cada etapa.' },
-        { texto: 'Tem tráfego pago rodando hoje?', tipo: 'unica',
-          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
-          acao: 'Começar campanha paga com verba controlada e custo por lead medido desde o primeiro dia.' }
+          acao: 'Definir pelo que a escola quer ser reconhecida na cidade e repetir isso em toda comunicação.' }
       ]
     },
     {
@@ -127,18 +138,19 @@ NICHO({
       titulo: '*Ferramentas*',
       sub: 'O que já está implementado tecnicamente',
       perguntas: [
-        { texto: 'Tem CRM pra captação e organização dos leads?', tipo: 'unica',
+        { id: 'crm', texto: 'Tem CRM pra captação e organização dos leads?', tipo: 'unica',
           opcoes: [{ t: 'Sim, qual?', dor: 0, campo: 'ferramenta' }, { t: 'Não', dor: 1 }],
           acao: 'Implantar CRM para registrar todo lead que chega, com dono e etapa.' },
-        { texto: 'Tem automação de mensagens (WhatsApp, Instagram e e-mail)?', tipo: 'unica',
+        { id: 'funilcrm', texto: 'O funil de vendas está desenhado dentro do CRM?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'crm', oculta: [1], resposta: 1, motivo: 'não tem CRM' },
+          acao: 'Desenhar as etapas do funil dentro do CRM, do primeiro contato até a matrícula.' },
+        { id: 'automacao', texto: 'Tem automação de mensagens (WhatsApp, Instagram e e-mail)?', tipo: 'unica',
           opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
           acao: 'Automatizar as mensagens de entrada, confirmação e lembrete, para nenhum lead esperar resposta.' },
-        { texto: 'O funil de vendas está desenhado dentro do CRM?', tipo: 'unica',
+        { id: 'dashboard', texto: 'Tem relatório ou painel para acompanhar as métricas?', tipo: 'unica',
           opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
-          acao: 'Desenhar as etapas do funil dentro do CRM, do primeiro contato até a matrícula.' },
-        { texto: 'Tem relatórios/dashboard pro líder acompanhar as métricas?', tipo: 'unica',
-          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
-          acao: 'Montar um painel com leads, conversão e matrículas para o líder acompanhar toda semana.' }
+          acao: 'Montar um painel com leads, conversão e matrículas para acompanhar toda semana.' }
       ]
     },
     {
@@ -147,18 +159,18 @@ NICHO({
       titulo: 'Atendimento e *Follow-up*',
       sub: 'Como o lead é tratado depois que chega',
       perguntas: [
-        { texto: 'Quem faz a qualificação do lead?', tipo: 'multipla',
+        { id: 'qualifica', texto: 'Quem faz a qualificação do lead?', tipo: 'multipla',
           opcoes: ['Dono', 'Secretária', 'Líder/gerente', 'SDR', 'Closer'] },
-        { texto: 'Tem tempo médio de resposta definido?', tipo: 'unica',
+        { id: 'tempoResp', texto: 'Tem tempo médio de resposta definido?', tipo: 'unica',
           opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
           acao: 'Definir um tempo máximo de resposta ao lead e medir se ele está sendo cumprido.' },
-        { texto: 'Existe script/roteiro de atendimento?', tipo: 'unica',
+        { id: 'script', texto: 'Existe script/roteiro de atendimento?', tipo: 'unica',
           opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
           acao: 'Escrever o roteiro de atendimento, do primeiro contato até o agendamento da visita.' },
-        { texto: 'Tem follow-up estruturado depois do primeiro contato?', tipo: 'unica',
+        { id: 'followup', texto: 'Tem follow-up estruturado depois do primeiro contato?', tipo: 'unica',
           opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
           acao: 'Criar régua de follow-up com prazo e responsável, do primeiro contato até a matrícula.' },
-        { texto: 'Tem cadência de reativação de leads frios?', tipo: 'unica',
+        { id: 'reativacao', texto: 'Tem cadência de reativação de leads frios?', tipo: 'unica',
           opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
           acao: 'Criar cadência para reativar os leads frios da base antes de cada período de matrícula.' }
       ]
@@ -173,7 +185,7 @@ NICHO({
         { id: 'vendas', rotulo: 'Média de matrículas por mês', suf: 'alunos / mês', unidade: 'alunos/mês' },
         { id: 'leads', rotulo: 'Quantos contatos novos chegam por mês?', sub: 'WhatsApp, Instagram, site e telefone', suf: 'contatos / mês', unidade: 'contatos/mês',
           atalhos: [{ t: 'Não sei', v: null }] },
-        { id: 'ticket', rotulo: 'Ticket médio (mensalidade)', pre: 'R$', suf: 'R$ / mês',
+        { id: 'ticket', rotulo: 'Ticket médio (mensalidade)', sub: 'Quanto um aluno paga por mês, em média', pre: 'R$', suf: 'R$ / mês',
           medias: [
             { t: 'Idiomas', v: 500, fonte: 'Escolas de idiomas cobram de R$ 300 a R$ 700 por mês em turmas regulares; usamos o meio da faixa. WorldStudy, junho de 2026.' },
             { t: 'Faculdade presencial', v: 835, fonte: 'Mediana nacional da mensalidade presencial em 2026. Cenário de Precificação da Graduação 2026, Hoper Educação e ABMES.' },
@@ -186,7 +198,7 @@ NICHO({
         conversao: { v: 1.8, fonte: 'Panorama RD Station 2025, Educação e Ensino: 14% dos leads viram oportunidade e 13% das oportunidades viram venda, cerca de 1,8% do lead à matrícula. Base: empresas com RD Station Marketing e CRM integrados.' }
       },
       perguntas: [
-        { texto: 'De onde vêm esses números?', tipo: 'unica',
+        { id: 'origem', texto: 'De onde vêm esses números?', tipo: 'unica',
           opcoes: [{ t: 'Do CRM ou de relatório', dor: 0 }, { t: 'De cabeça, aproximado', dor: 0.5 }, { t: 'Não sabemos', dor: 1 }],
           acao: 'Medir toda semana contatos, matrículas e investimento, para saber a conversão e o custo por matrícula de verdade.' }
       ]

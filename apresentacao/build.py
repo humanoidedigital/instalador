@@ -56,7 +56,7 @@ def main():
     html = re.sub(r'<script src="([^"]+)"></script>', troca_script, html)
 
     # bibliotecas do PDF antes do motor, para o relatório funcionar sem internet
-    libs = ''.join(script_inline(ler('vendor/' + f), 'vendor/' + f) for f in ('html2canvas.min.js', 'jspdf.umd.min.js'))
+    libs = ''.join(script_inline(ler('vendor/' + f), 'vendor/' + f) for f in ('jspdf.umd.min.js',))
     html = html.replace('<script>/* motor.js */', libs + '\n<script>/* motor.js */', 1)
 
     DIST.mkdir(exist_ok=True)

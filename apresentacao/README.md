@@ -39,8 +39,14 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
 - **Respostas:** clique para marcar e de novo para desmarcar. A resposta marcada fica sempre azul, inclusive a
   negativa: o julgamento aparece só no painel, não na frente do cliente durante as perguntas.
 - **Salvamento:** fica gravado no navegador, separado por nicho. Fechou sem querer? Abre de novo e continua.
-- **Último slide:** "Relatório" e "Relatório + plano de ação" geram o PDF. "Copiar resumo" copia um texto para colar
-  no WhatsApp ou no CRM. "Novo diagnóstico" zera para o próximo cliente.
+- **Perguntas condicionais:** algumas perguntas só aparecem quando fazem sentido. Quem "Não posta" nas redes não vê
+  social mídia, estratégia, conteúdo, venda pelas redes e redes preparadas: elas valem "Não" sozinhas e aparecem assim
+  no relatório, com o motivo. Sem CRM, "funil dentro do CRM" vira "Não". "Resultado com anúncio" some para quem nunca
+  anunciou. Em veículos, "leads dos portais no CRM" só aparece para quem marcou Portais nas origens de lead.
+  No modo edição todas aparecem, com contorno amarelo nas condicionais.
+- **Último slide:** "Relatório" e "Relatório + plano de ação" baixam o PDF (desenhado direto, com texto de verdade,
+  funciona sem internet). "Copiar resumo" copia um texto para colar no WhatsApp ou no CRM. "Novo diagnóstico" zera
+  para o próximo cliente.
 
 ## Quando o lead não sabe o número
 
@@ -48,7 +54,7 @@ Na tela **Resultados** ninguém precisa saber taxa em %. As perguntas são simpl
 ticket, investimento) e a apresentação calcula na hora a **conversão**, o **custo por lead** e o **custo por venda**,
 mostrando ao lado a conversão média do mercado do nicho.
 
-- **"Média do mercado"** (no ticket): preenche com a referência do nicho. O "i" mostra a fonte. O campo fica marcado
+- **"Média do mercado"** (no ticket e, em veículos, na margem): preenche com a referência do nicho. O "i" mostra a fonte. O campo fica marcado
   como média de mercado no painel, nas projeções e no PDF, que lista todas as fontes usadas.
 - **"Não sei"** (contatos): o campo fica fora das contas, sem inventar número.
 - **"Não investe"** (anúncio): preenche 0.
@@ -61,10 +67,29 @@ Referências atuais (todas com fonte no arquivo do nicho):
 | Escolas | Idiomas R$ 500/mês (meio da faixa R$ 300–700) | WorldStudy, jun/2026 |
 | Escolas | Faculdade presencial R$ 835 · EAD R$ 214 (medianas) | Hoper Educação e ABMES, 2026 |
 | Escolas | Conversão lead → matrícula ~1,8% | Panorama RD Station 2025 |
-| Veículos | Lucro bruto ~R$ 9.700 por veículo (11% de R$ 88.030) | Megadealer/AutoAvaliar, mai/2025 |
+| Veículos | Ticket médio dos seminovos R$ 88.030 | Megadealer/AutoAvaliar, mai/2025 |
+| Veículos | Margem bruta 11% (10,8% a 11,2% em 2025, 2.492 revendas) | Megadealer/AutoAvaliar, 2025 |
 | Veículos | Conversão lead → venda 3% | Followize/AutoForce, 2018 |
 
 Para um nicho novo, peça ao Claude Code para pesquisar as médias com fonte e colocar em `medias` e `calculos`.
+
+### Veículos: faturamento, ticket e margem (em vez de lucro)
+
+O dono raramente sabe o lucro mensal de cabeça, mas sabe quanto fatura e o preço médio do carro. Por isso a tela
+Resultados pergunta **ticket médio do veículo** e **margem** (com o botão da média de mercado, 11%), e a tela Tempo
+pergunta **faturamento**. A apresentação converte em lucro com a margem: lucro por veículo = ticket × margem, e o custo
+de esperar usa faturamento × margem (o texto mostra a margem usada e se ela é a média de mercado).
+Para usar isso em outro nicho: `projecao.margem: { campo: 'margem', referencia: 11 }`.
+
+### Valores de mercado (slide "Contratando cada peça separada")
+
+| Peça | Valor | Fonte |
+|---|---|---|
+| Social mídia | R$ 3.000/mês | Glassdoor, salário médio no Brasil, 2026 |
+| Gestor de tráfego pago | R$ 3.000/mês | Glassdoor, abr/2026 |
+| Especialista em RevOps (orienta o time de vendas) | R$ 9.150/mês | Glassdoor, RevOps Specialist, jun/2026 |
+| CRM com WhatsApp e IA, 3 usuários | R$ 387/mês | Kommo Avançado, R$ 129 por usuário (anual), 2026 |
+| **Total** | **R$ 15.537/mês** | salários sem encargos e sem verba de anúncio |
 
 ## Editar sem programar (modo edição)
 
@@ -93,6 +118,8 @@ Peça assim:
 | `capa.tagline`, `publico`, `perfis.itens`, `case` | Conteúdo dos slides deste nicho |
 | `areas` | Áreas do placar. Só as que têm pergunta com peso entram na nota (Marketing e Tráfego Pago é informativo, como no original) |
 | `raiox` | As telas do raio-x, com `campos` (números) e `perguntas` (com `dor` 0 / 0,5 / 1 e `acao` para o plano) |
+| `perguntas[].id` e `depende` | Pergunta condicional: `depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' }` (explicado no topo de `escolas.js`) |
+| `perguntas[].area` | Faz uma pergunta pontuar em outra área (ex.: "anúncio rodando hoje" fica na tela de Marketing, mas pontua no Comercial) |
 | `campos[].medias` | Botões de média do mercado: `{ t, v, fonte }` |
 | `campos[].atalhos` | Botões rápidos: `{ t: 'Não sei', v: null }`, `{ t: 'Não investe', v: 0 }` |
 | `raiox[].calculos.conversao` | Conversão média do mercado mostrada ao lado da calculada: `{ v, fonte }` |
@@ -100,7 +127,8 @@ Peça assim:
 | `projecao.multiplicador` e `conta` | Escolas: o dobro das matrículas, contando todas (`total`). Veículos: 50% a mais, contando só as vendas a mais (`extra`) |
 | Qualquer chave de `marca.js` | Pode ser sobrescrita no nicho |
 
-Ids de campo que entram nas contas: `vendas`, `ticket`, `leads`, `midia`, `meses`, `custo`, `receitaIni`, `receitaHoje`.
+Ids de campo que entram nas contas: `vendas`, `ticket`, `leads`, `midia`, `meses`, `custo`, `receitaIni`, `receitaHoje`
+(e o campo de margem, se o nicho tiver `projecao.margem`).
 
 ## Como as contas funcionam (iguais ao original)
 
@@ -114,9 +142,9 @@ Ids de campo que entram nas contas: `vendas`, `ticket`, `leads`, `midia`, `meses
 ## Antes da primeira reunião
 
 Já preenchido a partir do PDF Revenue Operations: foto, números e frase do fundador, posicionamento, case Isentei e IA no WhatsApp.
-O que ainda está entre colchetes:
+Valores de mercado preenchidos com fonte (tabela acima).
+Ainda opcional:
 
-- `marca.js`: valores de mercado (slide "Contratando cada peça separada").
 - O slide do acordo com bônus ("Vamos pro tudo") fica oculto (`ocultar: ['garantia']`), porque não faz parte da operação.
 - Logos das marcas: já estão em `assets/marcas/`. Para trocar ou incluir, informe em `marcas.lista[].logo` (sem logo aparece o nome).
 - Prints: `mkt.imagem` (Instagram de cliente) e `ferramenta.imagem` (pipeline no CRM), opcionais.
@@ -130,6 +158,6 @@ apresentacao/
   marca.js          pitch e dados da Ribeker, iguais em todo nicho
   nichos/*.js       um arquivo por nicho
   assets/           logo e imagens
-  vendor/           bibliotecas do PDF (html2canvas, jsPDF), para funcionar offline
+  vendor/           biblioteca do PDF (jsPDF), para funcionar offline
   build.py          gera dist/ribeker-apresentacao.html
 ```
