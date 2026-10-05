@@ -15,7 +15,7 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
   python3 build.py
   ```
 
-## Roteiro (29 slides)
+## Roteiro (30 slides)
 
 1. Capa · Especialista · Quem somos
 2. Antes de tudo: nome, WhatsApp do lead e data
@@ -23,7 +23,7 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
    Atendimento e Follow-up · Resultados · Tempo, investimento e resultado
 4. O que o diagnóstico mostrou: custo de esperar, "o que você empilhou sozinho" x estimativa da Ribeker, placar
 5. Vendas Ribeker · No seu segmento · Um método, vários segmentos (marcas em destaque) ·
-   4 cases (Dua, Pata Negra, Isentei, IsenteJá + Isentoo) · Ponte para a {empresa} · Mkt · Ferramenta · Time
+   5 cases (Dua, Pata Negra, Multi Mármore, Isentei, IsenteJá + Isentoo) · Ponte para a {empresa} · Mkt · Ferramenta · Time
 6. Resultado empilhado em 6 e 12 meses
 7. Valores de mercado · Planos (sem fidelidade) · Fechamento
 8. Salvar o raio-X: placar, respostas por área, custo de esperar, PDF e resumo
@@ -53,11 +53,13 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
 ## Cases e marcas
 
 O slide de marcas mostra que o método não é de um nicho só: são destaques entre os mais de 20 clientes, de
-segmentos diferentes, no Brasil e no exterior. As marcas com selo "case" (`marcas.lista[].case: true`) têm slide próprio.
+segmentos diferentes, no Brasil e no exterior. Todas levam o selo "case" (`marcas.lista[].case: true`); as principais
+têm slide próprio.
 
 Os cases ficam em `cases.lista` no `marca.js`, na ordem recomendada (do mais simples ao mais completo, um degrau
 da mesma escada em cada um): Dua (ticket alto, decisão pensada), Pata Negra (estratégia vale mais que verba),
-Isentei (operação completa) e IsenteJá + Isentoo (do zero, o clímax). Cada case segue o mesmo esqueleto:
+Multi Mármore (showroom: passou a saber de onde vem cada venda), Isentei (operação completa) e IsenteJá + Isentoo
+(do zero, o clímax). Campos opcionais: `tabela` (no lugar dos números) e `funil` (barras do lead à venda). Cada case segue o mesmo esqueleto:
 gancho, antes, virada, resultado, moral, e uma linha `obs` dizendo de onde vem o número (ex.: "R$ 245 mil = 7 × R$ 35 mil").
 
 - **Notas do apresentador (tecla N):** a versão falada de 30 segundos de cada case e da ponte. Não compartilhe a tela
@@ -68,7 +70,7 @@ gancho, antes, virada, resultado, moral, e uma linha `obs` dizendo de onde vem o
 - **Gancho por nicho:** `{compraPensada}` ("Igual a quem compra carro") e `{temHoje}` ("loja que já tem nome e estoque")
   ficam em `termos` de cada nicho.
 - Para trocar a ordem, mude a ordem em `cases.lista`. Para esconder um case num nicho: modo edição → Ocultar slide.
-- Pata Negra está sem logo (aparece o nome). Para colocar: salve em `assets/marcas/` e informe em `marcas.lista` e `cases.lista[].logos`.
+- Logo novo: salve em `assets/marcas/` e informe em `marcas.lista[].logo` e `cases.lista[].logos`.
 
 ## Quando o lead não sabe o número
 
@@ -163,7 +165,7 @@ Ids de campo que entram nas contas: `vendas`, `ticket`, `leads`, `midia`, `meses
 
 ## Antes da primeira reunião
 
-Já preenchido a partir do PDF Revenue Operations: foto, números e frase do fundador, posicionamento, cases (Dua, Pata Negra, Isentei, IsenteJá e Isentoo) e IA no WhatsApp.
+Já preenchido a partir do PDF Revenue Operations: foto, números e frase do fundador, posicionamento, cases (Dua, Pata Negra, Multi Mármore, Isentei, IsenteJá e Isentoo) e IA no WhatsApp.
 Valores de mercado preenchidos com fonte (tabela acima).
 Ainda opcional:
 

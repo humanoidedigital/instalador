@@ -27,7 +27,8 @@ window.MARCA = {
   },
 
   // slides que começam escondidos. Ids: capa, especialista, quem-somos, antes, rx-<id da tela>, painel,
-  // resolvemos, perfis, marcas, case-<id do case> (case-dua, case-patanegra, case-isentei, case-zero), ponte,
+  // resolvemos, perfis, marcas, case-<id do case> (case-dua, case-patanegra, case-multimarmore, case-isentei,
+  // case-zero), ponte,
   // mkt, ferramenta, time, empilhamento-6, empilhamento-12, valores, planos, garantia, fechamento, salvar
   ocultar: ['garantia'],               // o acordo com bônus não faz parte da operação
 
@@ -44,7 +45,7 @@ window.MARCA = {
   especialista: {
     kicker: 'Fundador',
     nome: 'Lucas Ribeker',
-    local: 'Fundador da Ribeker · Revenue Operations',
+    local: 'Fundador da Ribeker Assessoria Digital',
     foto: 'assets/lucas.jpg',
     retrato: 'assets/lucas-retrato.jpg',   // foto em pé, ocupa a lateral do slide (sem ela, usa a foto redonda)
     numeros: [
@@ -99,19 +100,19 @@ window.MARCA = {
   marcas: {
     kicker: 'Um método, vários segmentos',
     titulo: 'Marcas de segmentos diferentes, *o mesmo método*',
-    sub: 'Alguns destaques entre os mais de 20 clientes que já atendemos, de segmentos diferentes, no Brasil e no exterior. Os marcados com "case" vêm a seguir.',
+    sub: 'Alguns cases entre os mais de 20 clientes que já atendemos, de segmentos diferentes, no Brasil e no exterior. Os principais vêm detalhados a seguir.',
     // logo: coloque o arquivo em assets/marcas/ e informe o caminho (ex.: assets/marcas/isentei.png); sem logo aparece o nome
-    // case: true mostra o selo "case" (a marca tem slide de case logo depois)
+    // case: true mostra o selo "case" 
     lista: [
       { nome: 'DUA', segmento: 'Arquitetura', logo: 'assets/marcas/dua.png', case: true },
-      { nome: 'Empório Pata Negra', segmento: 'E-commerce gourmet', logo: '', case: true },
+      { nome: 'Empório Pata Negra', segmento: 'E-commerce gourmet', logo: 'assets/marcas/pata-negra.png', case: true },
       { nome: 'isentei', segmento: 'Isenção de IR', logo: 'assets/marcas/isentei.png', case: true },
       { nome: 'isente Já', segmento: 'Isenção de IR', logo: 'assets/marcas/isente-ja.png', case: true },
       { nome: 'isentoo', segmento: 'Isenção de IR', logo: 'assets/marcas/isentoo.png', case: true },
-      { nome: 'Duran Esquadrias', segmento: 'Esquadrias', logo: 'assets/marcas/duran.png' },
-      { nome: 'Multi Mármore', segmento: 'Mármores', logo: 'assets/marcas/multi-marmore.png' },
-      { nome: 'Univerplast', segmento: 'Indústria de plásticos', logo: 'assets/marcas/univerplast.png' },
-      { nome: 'Tango', segmento: 'Fantasias', logo: 'assets/marcas/tango.png' }
+      { nome: 'Multi Mármore', segmento: 'Marmoraria', logo: 'assets/marcas/multi-marmore.png', case: true },
+      { nome: 'Duran Esquadrias', segmento: 'Esquadrias', logo: 'assets/marcas/duran.png', case: true },
+      { nome: 'Univerplast', segmento: 'Indústria de plásticos', logo: 'assets/marcas/univerplast.png', case: true },
+      { nome: 'Tango', segmento: 'Fantasias', logo: 'assets/marcas/tango.png', case: true }
     ],
     frentesTitulo: 'O que roda nessas operações',
     frentes: ['Tráfego pago', 'CRM', 'Vendas', 'Analytics', 'Rede social'],
@@ -146,7 +147,7 @@ window.MARCA = {
       },
       {
         id: 'patanegra', marca: 'Empório Pata Negra', segmento: 'E-commerce gourmet',
-        logos: [],
+        logos: ['assets/marcas/pata-negra.png'],
         titulo: 'November Black: *R$\u00a0220\u00a0mil* com R$\u00a06\u00a0mil de anúncio',
         gancho: 'Todo mundo faz Black Friday. A gente fez o mês inteiro.',
         antes: 'E-commerce de alto padrão (jamón, paella, gourmet) diante da Black Friday de todo ano: um fim de semana disputado por todas as lojas, anúncio caro e cliente cansado de desconto.',
@@ -160,6 +161,29 @@ window.MARCA = {
         moral: 'Verba pequena não é desculpa. Uma ideia comercial certa, no calendário certo, rende mais do que dobrar o orçamento de anúncio.',
         obs: 'Valores aproximados de um mês sazonal (novembro de 2025), não uma média mensal.',
         fala: '"O Empório Pata Negra vende jamón e produtos gourmet online. Na Black Friday, todo mundo briga pelo mesmo fim de semana. Eu propus fazer o mês inteiro, a November Black. Com seis mil reais de anúncio, os anúncios trouxeram perto de duzentos e vinte mil em vendas no mês. Trinta e seis vezes o investimento. O ponto não é a verba, é a estratégia comercial por trás dela."'
+      },
+      {
+        id: 'multimarmore', marca: 'Multi Mármore', segmento: 'Marmoraria de alto padrão · showroom',
+        logos: ['assets/marcas/multi-marmore.png'],
+        titulo: 'A marmoraria que passou a saber *de onde vem cada venda*',
+        gancho: 'Marmoraria vive de cliente de porta e indicação. O problema é que ninguém sabe qual anúncio trouxe aquele cliente.',
+        antes: 'Showroom, bom produto e atendimento pelo WhatsApp, mas sem saber quanto do faturamento vinha da internet: o cliente via o anúncio, aparecia na loja e entrava como "cliente de porta". Cada real em mídia era um palpite.',
+        virada: 'Campanhas no Google e na Meta segmentadas por cidade, a Gabriela (agente de IA) recepcionando e direcionando cada contato no WhatsApp, e um funil que acompanha cada lead do anúncio ao orçamento e à venda fechada.',
+        frentes: ['Tráfego pago (Google e Meta)', 'IA no WhatsApp', 'Funil comercial', 'Analytics'],
+        // funil: barras proporcionais, do topo ao fechamento
+        funil: [
+          { valor: '146', rotulo: 'leads' },
+          { valor: '126', rotulo: 'orçamentos' },
+          { valor: '31', rotulo: 'vendas' }
+        ],
+        numeros: [
+          { valor: 'R$ 548 mil', rotulo: 'Em vendas no mês, ticket médio de R$ 17,7 mil' },
+          { valor: '47,7%', rotulo: 'Da receita fechada veio do Google' },
+          { valor: '55%', rotulo: 'Dos orçamentos de Google e Meta parados na revisão interna' }
+        ],
+        moral: 'Quando você enxerga o funil inteiro, descobre que o gargalo nem sempre é o anúncio. Às vezes o lead está bom e a venda está travada dentro de casa.',
+        obs: 'Dados de agosto de 2026. Os 47,7% do Google incluem um contrato B2B de R$ 165 mil.',
+        fala: '"A Multi Mármore é uma marmoraria de alto padrão aqui em Bragança. Antes, o cliente via o anúncio, ia na loja e entrava como cliente de porta, então ninguém sabia o que a internet vendia. A gente montou Google, Meta, uma IA atendendo no WhatsApp e um funil do anúncio até a venda. Em agosto foram 31 vendas e mais de meio milhão no mês, quase metade vindo do Google. E o mais legal: o funil mostrou que tinha orçamento parado na revisão interna. É esse tipo de visão que eu quero te dar."'
       },
       {
         id: 'isentei', marca: 'Isentei', segmento: 'Isenção de IR · serviços',
@@ -212,7 +236,7 @@ window.MARCA = {
     pagaRotulo: 'a operação inteira',   // "1 venda a mais por mês já paga ...": o número e o detalhe saem do ticket do raio-x
     convite: 'Quero começar pequeno, provar isso com você e fazer da sua {empresa} o próximo case.',
     obs: 'Nenhum número dos cases entra na sua conta: os cenários saem do seu ticket, da sua margem e da sua capacidade de atendimento.',
-    fala: '"Três negócios diferentes, um ponto em comum: a gente não parou no anúncio. Acompanhou até o contrato, até o pedido, até a reunião. No seu caso, a pergunta é uma só: quantas {vendas} a mais por mês saem pela internet. Eu quero começar pequeno, provar isso com você e fazer da sua {empresa} o meu próximo case."\nTroca a métrica (sai "leads", entra {vendas}), reduz o risco ("uma {venda} paga tudo") e assume a parceria. Não transferir ROAS, ticket ou faturamento dos cases para a {empresa}.'
+    fala: '"Negócios diferentes, um ponto em comum: a gente não parou no anúncio. Acompanhou até o contrato, até o pedido, até a reunião. No seu caso, a pergunta é uma só: quantas {vendas} a mais por mês saem pela internet. Eu quero começar pequeno, provar isso com você e fazer da sua {empresa} o meu próximo case."\nTroca a métrica (sai "leads", entra {vendas}), reduz o risco ("uma {venda} paga tudo") e assume a parceria. Não transferir ROAS, ticket ou faturamento dos cases para a {empresa}.'
   },
 
   mkt: {

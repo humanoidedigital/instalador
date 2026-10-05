@@ -442,9 +442,12 @@
       const marca = logos.length ? logos.map(l => `<img src="${esc(l)}" alt="">`).join('') : T(b + '.marca', 'span', 'cs-nome');
       const degraus = Array.from({ length:tot }, (_, j) => `<i class="${j <= ci ? 'on' : ''}" style="height:${(35 + 65 * (j + 1) / tot).toFixed(0)}%"></i>`).join('');
       const tb = c.tabela;
+      // funil opcional: barras proporcionais ao número de cada etapa
+      const fv = (c.funil || []).map(f => parseFloat(String(f.valor).replace(/\./g, '').replace(',', '.')) || 0), fmax = Math.max.apply(null, fv.concat(1));
+      const funil = (c.funil || []).length ? `<div class="cs-funil">${c.funil.map((f, k) => `<div class="fb" style="width:${Math.max(28, fv[k] / fmax * 100).toFixed(1)}%">${T(b + '.funil.' + k + '.valor', 'b')} ${T(b + '.funil.' + k + '.rotulo')}</div>`).join('')}</div>` : '';
       const res = tb ? `<div class="cs-res">${T('cases.resultadoRotulo', 'div', 'label')}<table class="tbl cs-tbl"><thead><tr>${(tb.colunas || []).map((x, k) => T(b + '.tabela.colunas.' + k, 'th')).join('')}</tr></thead>
           <tbody>${(tb.linhas || []).map((l, li) => `<tr>${l.map((x, k) => T(b + '.tabela.linhas.' + li + '.' + k, 'td')).join('')}</tr>`).join('')}</tbody></table>${tb.rodape ? T(b + '.tabela.rodape', 'div', 'small') : ''}</div>`
-        : `<div class="cs-res">${T('cases.resultadoRotulo', 'div', 'label')}<div class="cs-stats">${(c.numeros || []).map((x, k) => `<div class="stat">${T(b + '.numeros.' + k + '.valor', 'div', 'n count')}${T(b + '.numeros.' + k + '.rotulo', 'div', 'l')}</div>`).join('')}</div></div>`;
+        : `<div class="cs-res${c.funil ? ' com-funil' : ''}">${T('cases.resultadoRotulo', 'div', 'label')}${funil}<div class="cs-stats">${(c.numeros || []).map((x, k) => `<div class="stat">${T(b + '.numeros.' + k + '.valor', 'div', 'n count')}${T(b + '.numeros.' + k + '.rotulo', 'div', 'l')}</div>`).join('')}</div></div>`;
       return `
       <div class="cs-head reveal"><div class="cs-marca">${marca}</div><div class="cs-degraus" title="Do mais simples ao mais completo" aria-hidden="true">${degraus}</div></div>
       <div class="kicker reveal"><span>${T('cases.kicker')} ${ci + 1} de ${tot} · ${T(b + '.segmento')}</span></div>
