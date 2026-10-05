@@ -4,7 +4,7 @@
    Estrutura:
      id, nome, descricao  → aparecem no seletor de nicho
      termos               → palavras usadas nos textos da marca ({venda}, {cliente}, {receita}...)
-     capa, publico, perfis, case → conteúdo dos slides deste nicho (qualquer chave de marca.js pode ser sobrescrita aqui)
+     capa, publico, perfis       → conteúdo dos slides deste nicho (qualquer chave de marca.js pode ser sobrescrita aqui)
      areas                → áreas do placar; só as que têm pergunta com peso entram na nota
      raiox                → as telas do raio-x, na ordem em que aparecem
      projecao             → parâmetros da conta do empilhamento
@@ -38,7 +38,9 @@ NICHO({
     venda: 'matrícula', vendas: 'matrículas',
     ticket: 'ticket médio',
     receita: 'receita', suaReceita: 'sua receita',
-    fimJornada: 'a cadeira ocupada em sala'
+    fimJornada: 'a cadeira ocupada em sala',
+    compraPensada: 'quem escolhe uma escola',   // gancho do case Dua
+    temHoje: 'nome e alunos'
   },
 
   capa: { tagline: 'Sistema comercial para negócios de educação' },

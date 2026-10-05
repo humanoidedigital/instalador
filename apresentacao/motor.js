@@ -427,25 +427,52 @@
       ${T('marcas.kicker', 'div', 'kicker reveal')}
       ${T('marcas.titulo', 'h2', 'h2 reveal')}
       ${T('marcas.sub', 'p', 'sub reveal')}
-      <div class="brands reveal">${ls.map((m, i) => {
+      <div class="brands reveal" style="--n:${ls.length}">${ls.map((m, i) => {
         const b = 'marcas.lista.' + i, lg = raw(b + '.logo');
-        return `<div class="brand">${lg ? `<img src="${esc(lg)}" alt="${esc(plain(raw(b + '.nome')))}">` : T(b + '.nome', 'div', 'bn')}${T(b + '.segmento', 'div', 'bs')}</div>`;
+        return `<div class="brand">${m.case ? '<span class="bcase">case</span>' : ''}${lg ? `<img src="${esc(lg)}" alt="${esc(plain(raw(b + '.nome')))}">` : T(b + '.nome', 'div', 'bn')}${T(b + '.segmento', 'div', 'bs')}</div>`;
       }).join('')}</div>
       <div class="frentes reveal">${T('marcas.frentesTitulo', 'span', 'label')}${list('marcas.frentes').map((f, i) => T('marcas.frentes.' + i, 'span', 'chip')).join('')}</div>
       ${T('marcas.destaque', 'div', 'insight reveal')}`;
     },
 
-    case: () => {
-      const antes = list('case.antes');
-      const esq = raw('case.imagem') || !antes.length ? shot('case.imagem', 'case.legenda', 'Espaço para o print do resultado.')
-        : `<div class="card antes">${T('case.antesTitulo', 'div', 'label')}<ul class="blist">${antes.map((x, i) => T('case.antes.' + i, 'li')).join('')}</ul>${T('case.antesRodape', 'div', 'small')}</div>`;
+    // um slide por case: gancho, antes, virada, resultado (números ou tabela), moral e de onde vem o número
+    caso: ci => {
+      const b = 'cases.lista.' + ci, c = list('cases.lista')[ci] || {}, tot = list('cases.lista').length;
+      const logos = (c.logos || []).filter(Boolean);
+      const marca = logos.length ? logos.map(l => `<img src="${esc(l)}" alt="">`).join('') : T(b + '.marca', 'span', 'cs-nome');
+      const degraus = Array.from({ length:tot }, (_, j) => `<i class="${j <= ci ? 'on' : ''}" style="height:${(35 + 65 * (j + 1) / tot).toFixed(0)}%"></i>`).join('');
+      const tb = c.tabela;
+      const res = tb ? `<div class="cs-res">${T('cases.resultadoRotulo', 'div', 'label')}<table class="tbl cs-tbl"><thead><tr>${(tb.colunas || []).map((x, k) => T(b + '.tabela.colunas.' + k, 'th')).join('')}</tr></thead>
+          <tbody>${(tb.linhas || []).map((l, li) => `<tr>${l.map((x, k) => T(b + '.tabela.linhas.' + li + '.' + k, 'td')).join('')}</tr>`).join('')}</tbody></table>${tb.rodape ? T(b + '.tabela.rodape', 'div', 'small') : ''}</div>`
+        : `<div class="cs-res">${T('cases.resultadoRotulo', 'div', 'label')}<div class="cs-stats">${(c.numeros || []).map((x, k) => `<div class="stat">${T(b + '.numeros.' + k + '.valor', 'div', 'n count')}${T(b + '.numeros.' + k + '.rotulo', 'div', 'l')}</div>`).join('')}</div></div>`;
       return `
-      ${T('case.kicker', 'div', 'kicker reveal')}
-      ${T('case.nome', 'h2', 'h2 reveal')}
-      ${T('case.insight', 'p', 'sub reveal')}
-      <div class="proof reveal">${esq}${stats('case.numeros', '')}</div>
-      ${T('case.rodape', 'div', 'label reveal')}`;
+      <div class="cs-head reveal"><div class="cs-marca">${marca}</div><div class="cs-degraus" title="Do mais simples ao mais completo" aria-hidden="true">${degraus}</div></div>
+      <div class="kicker reveal"><span>${T('cases.kicker')} ${ci + 1} de ${tot} · ${T(b + '.segmento')}</span></div>
+      ${T(b + '.titulo', 'h2', 'h2 reveal')}
+      ${T(b + '.gancho', 'div', 'quote reveal')}
+      <div class="cs-grid${tb ? ' com-tabela' : ''} reveal">
+        <div class="card">${T('cases.antesRotulo', 'div', 'label')}${T(b + '.antes', 'p', 'small')}</div>
+        <div class="card">${T('cases.viradaRotulo', 'div', 'label')}${T(b + '.virada', 'p', 'small')}
+          <div class="cs-frentes">${(c.frentes || []).map((x, k) => T(b + '.frentes.' + k, 'span', 'chip')).join('')}</div></div>
+        ${res}
+      </div>
+      ${T(b + '.moral', 'div', 'insight reveal')}
+      ${T(b + '.obs', 'div', 'cs-obs reveal')}`;
     },
+
+    ponte: () => `
+      ${T('ponte.kicker', 'div', 'kicker reveal')}
+      ${T('ponte.titulo', 'h2', 'h2 reveal')}
+      ${T('ponte.texto', 'p', 'sub reveal')}
+      <div class="pt-grid reveal">
+        <div class="card hero pt-conta">
+          ${T('ponte.pergunta', 'div', 'h3')}
+          <div class="pt-n" id="ptN">--</div>
+          <div class="pt-l" id="ptL"></div>
+          <div class="small" id="ptDet"></div>
+        </div>
+        <div class="pt-lado">${T('ponte.convite', 'div', 'insight')}${T('ponte.obs', 'div', 'cs-obs')}</div>
+      </div>`,
 
     mkt: () => `
       ${T('mkt.kicker', 'div', 'kicker reveal')}
@@ -559,7 +586,8 @@
       { id:'resolvemos', html:B.resolvemos },
       { id:'perfis', html:B.perfis },
       { id:'marcas', html:B.marcas },
-      { id:'case', html:B.case },
+      ...list('cases.lista').map((c, ci) => ({ id:'case-' + (c.id || ci + 1), html:() => B.caso(ci), cls:'cs', nota:'cases.lista.' + ci + '.fala' })),
+      { id:'ponte', html:B.ponte, nota:'ponte.fala' },
       { id:'mkt', html:B.mkt },
       { id:'ferramenta', html:B.ferramenta },
       { id:'time', html:B.time },
@@ -585,7 +613,8 @@
     refreshED();
     const hid = ocultos();
     const ds = defs().filter(d => editing || !hid.includes(d.id));
-    slidesEl.innerHTML = ds.map(d => `<section class="slide ${d.cls || ''}${hid.includes(d.id) ? ' oculto' : ''}" data-id="${d.id}" aria-label="${esc(d.id)}">${d.html()}</section>`).join('');
+    const notas = d => d.nota && raw(d.nota) ? `<aside class="notas"><div class="label">Notas do apresentador · N esconde</div>${T(d.nota, 'div', 'nt')}</aside>` : '';
+    slidesEl.innerHTML = ds.map(d => `<section class="slide ${d.cls || ''}${hid.includes(d.id) ? ' oculto' : ''}" data-id="${d.id}" aria-label="${esc(d.id)}">${d.html()}${notas(d)}</section>`).join('');
     slides = $$('.slide', slidesEl).map(el => ({ id:el.dataset.id, el }));
     slides.forEach(s => $$('.reveal', s.el).forEach((r, i) => r.style.setProperty('--i', i)));
     preencherCampos();
@@ -808,6 +837,20 @@
     });
     setVal('gar6', pr.total(6)); setVal('gar12', pr.total(12));
 
+    // ---- ponte: quantas {vendas} a mais pagam a operação (preço do plano mais completo) ----
+    if($('#ptN')){
+      const precos = list('planos.itens').map(p => parseFloat(String(plain(p.preco || '')).replace(/[^\d,]/g, '').replace(',', '.'))).filter(v => v > 0);
+      const preco = precos.length ? Math.max.apply(null, precos) : 0;
+      if(preco > 0 && pr.Tk > 0){
+        const n = Math.max(1, Math.ceil(preco / pr.Tk)), um = n === 1;
+        set('ptN', nf0.format(n) + ' ' + esc(termo(um ? 'venda' : 'vendas')) + ' a mais' + (pr.P.recorrente ? '' : ' por mês'));
+        set('ptL', (um ? 'já paga ' : 'já pagam ') + fmt(raw('ponte.pagaRotulo') || 'a operação inteira') + (pr.P.recorrente ? ', todo mês' : ''));
+        set('ptDet', esc(termo('Ticket') + ' de ' + brl(pr.Tk) + pr.tkDet + (pr.tkMedia ? ' (média de mercado)' : '') + '.') +
+          (pr.P.recorrente ? ' ' + esc('Cada ' + termo('cliente') + ' novo paga todo mês.') : '') +
+          (pr.ref ? ' <span class="ph">[referência: preencha os números do raio-x]</span>' : ''));
+      } else { set('ptN', '--'); set('ptL', ''); set('ptDet', ''); }
+    }
+
     // ---- salvar ----
     if($('#sNome')){
       $('#sNome').textContent = dx.ident.empresa || (termo('Empresa') + ' sem nome');
@@ -903,6 +946,10 @@
     else if(e.key === 'End') ir(slides.length - 1);
     else if(e.key === 'f' || e.key === 'F') telaCheia();
     else if(e.key === 'e' || e.key === 'E') alternarEdicao();
+    else if(e.key === 'n' || e.key === 'N'){
+      const on = document.body.classList.toggle('com-notas');
+      if(on && !slides[idx].el.querySelector('.notas')) toast('Notas ligadas. Este slide não tem notas.');
+    }
     else if(e.key === 'Escape' && editing) alternarEdicao();
   });
   let tx0 = null, ty0 = null;

@@ -177,13 +177,60 @@ s{opacity:.6}
 .dchip{display:inline-flex;align-items:center;gap:.45em;padding:.5cqw .9cqw;border-radius:999px;background:rgba(59,142,243,.1);border:1px solid rgba(59,142,243,.32);font-size:clamp(9.5px,.82cqw,13px);color:var(--mut)}
 .dchip b{color:var(--tx);font-variant-numeric:tabular-nums}
 .quote{max-width:64cqw;padding:.9cqw 1.3cqw;border-left:3px solid var(--acc);background:var(--panel);border-radius:0 .8cqw .8cqw 0;font:500 clamp(11px,.98cqw,16px)/1.55 var(--f-body);color:var(--mut);font-style:italic}
-.brands{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9cqw;width:100%}
-.brand{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35cqw;min-height:6cqw;padding:.9cqw;border-radius:1cqw;background:#f4f7fd;color:#0c1a33;text-align:center;min-width:0}
+/* 5 por linha; a última linha fica centralizada */
+.brands{display:flex;flex-wrap:wrap;justify-content:center;gap:.9cqw;width:100%}
+.brand{position:relative;flex:0 0 calc((100% - 3.6cqw) / 5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35cqw;min-height:6cqw;padding:.9cqw;border-radius:1cqw;background:#f4f7fd;color:#0c1a33;text-align:center;min-width:0}
+.bcase{position:absolute;top:.5cqw;right:.5cqw;padding:.2em .6em;border-radius:999px;background:var(--acc-strong);color:#fff;font:700 clamp(7px,.58cqw,9.5px)/1.2 var(--f-body);letter-spacing:.12em;text-transform:uppercase}
 .brand img{max-height:4.4cqw;max-width:80%;object-fit:contain}
 .brand .bn{font:800 clamp(13px,1.35cqw,22px)/1.1 var(--f-disp);letter-spacing:-.01em}
 .brand .bs{font:600 clamp(8px,.68cqw,11px)/1.3 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:#5a6b88}
 .brand .ph{color:#8a5a00;outline-color:#c98510}
 .frentes{display:flex;flex-wrap:wrap;align-items:center;gap:.6cqw}
+
+/* ---------- cases ---------- */
+.slide.cs{gap:.95cqw}
+.cs-head{display:flex;align-items:center;justify-content:space-between;gap:2cqw;width:100%}
+.cs-marca{display:flex;align-items:center;gap:1.2cqw;padding:.6cqw 1.2cqw;border-radius:.9cqw;background:#f4f7fd;min-height:3.6cqw}
+.cs-marca img{height:2.6cqw;min-height:22px;width:auto;max-width:14cqw;object-fit:contain}
+.cs-nome{font:800 clamp(13px,1.45cqw,23px)/1 var(--f-disp);letter-spacing:-.01em;color:#0c1a33}
+.cs-degraus{display:flex;align-items:flex-end;gap:.35cqw;height:2.6cqw;min-height:20px}
+.cs-degraus i{width:.75cqw;min-width:6px;border-radius:2px;background:rgba(150,190,255,.16)}
+.cs-degraus i.on{background:var(--acc);box-shadow:0 0 10px var(--acc-glow)}
+.slide.cs .quote{max-width:70cqw}
+.cs-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.05fr);gap:1.1cqw;width:100%;align-items:stretch}
+.cs-grid.com-tabela{grid-template-columns:minmax(0,.85fr) minmax(0,.95fr) minmax(0,1.6fr)}
+.cs-grid .card{display:flex;flex-direction:column;gap:.5cqw}
+.cs-grid .card .small{color:var(--tx);opacity:.82}
+.cs-frentes{display:flex;flex-wrap:wrap;gap:.4cqw;margin-top:auto;padding-top:.3cqw}
+.cs-frentes .chip{padding:.3cqw .7cqw;font-size:clamp(8.5px,.72cqw,11.5px)}
+.cs-res{display:flex;flex-direction:column;gap:.5cqw;min-width:0}
+.cs-res{align-self:stretch}
+.cs-stats{display:flex;flex-direction:column;gap:.6cqw;flex:1}
+.cs-stats .stat{flex:1}
+.cs-stats .stat{display:flex;align-items:center;gap:1cqw;padding:.75cqw 1.1cqw;min-width:0;border-color:rgba(59,142,243,.4);background:linear-gradient(160deg,rgba(59,142,243,.14),rgba(59,142,243,.03))}
+.cs-stats .stat .n{font-size:clamp(17px,2cqw,32px);flex:none;min-width:5.2em}
+.cs-stats .stat .l{margin:0;max-width:none}
+.cs-tbl{font-size:clamp(9.5px,.92cqw,15px);margin:0}
+.cs-tbl th{font-size:.85em}
+.cs-tbl td{padding:.45cqw .4cqw}
+.cs-tbl tbody tr:last-child td{color:var(--acc);font-weight:700}
+.cs-res .small b,.cs-res .small .hl{color:var(--tx)}
+.slide.cs .insight{max-width:70cqw}
+.cs-obs{font-size:clamp(8.5px,.72cqw,11.5px);line-height:1.45;color:var(--mut2)}
+.cs-obs::before{content:"* ";}
+.pt-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:1.4cqw;width:100%;align-items:center}
+.pt-conta{gap:.6cqw}
+.pt-n{font:800 clamp(22px,2.9cqw,46px)/1.05 var(--f-disp);letter-spacing:-.03em;color:var(--acc);text-shadow:0 0 30px rgba(59,142,243,.35)}
+.pt-l{font:700 clamp(12px,1.25cqw,20px)/1.3 var(--f-disp)}
+.pt-lado{display:flex;flex-direction:column;gap:1cqw}
+.pt-lado .insight{max-width:none;font-size:clamp(11px,1.05cqw,17px);color:var(--tx)}
+
+/* ---------- notas do apresentador (tecla N; sempre visíveis no modo edição) ---------- */
+.notas{display:none;position:absolute;left:7.5cqw;right:7.5cqw;bottom:5.6cqw;z-index:8;max-height:34%;overflow:auto;padding:.9cqw 1.2cqw;border-radius:.8cqw;
+  background:rgba(3,12,32,.95);border:1px dashed var(--warn);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.notas .label{color:var(--warn);margin-bottom:.4cqw}
+.notas .nt{font-size:clamp(10.5px,.95cqw,15px);line-height:1.5;color:var(--tx)}
+.com-notas .notas,.editing .notas{display:block}
 .frentes .label{margin-right:.4cqw}
 .card.antes{display:flex;flex-direction:column;gap:.7cqw}
 .card.antes .blist li{font-size:clamp(10px,.92cqw,14.5px);color:var(--mut)}
@@ -428,7 +475,14 @@ s{opacity:.6}
   .slide.centro{justify-content:center}
   .editing .slide{padding-top:150px}
   .ident,.qgrid,.dash,.cmp,.proof,.split,.save,.fields,.fields.tres,.plans,.stack-foot,.team{grid-template-columns:minmax(0,1fr)}
-  .brands{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .brand{flex-basis:calc(50% - 5px)}
+  .brand img{max-height:34px}
+  .cs-grid,.cs-grid.com-tabela,.pt-grid{grid-template-columns:minmax(0,1fr)}
+  .cs-head{flex-wrap:wrap}
+  .cs-marca img{height:28px;max-width:40vw}
+  .slide.cs .quote,.slide.cs .insight{max-width:none}
+  .cs-tbl{font-size:11px}
+  .notas{left:12px;right:12px;bottom:70px;max-height:45%}
   .slide.esp .esp-foto{position:relative;flex:none;align-self:stretch;width:calc(100% + 36px);max-width:none;height:320px;margin:-52px -18px 0}
   .slide.esp > :not(.esp-foto){max-width:100%}
   .brand{min-height:64px}
@@ -538,7 +592,7 @@ s{opacity:.6}
       <button class="btn ghost" id="ebReset" type="button">Desfazer tudo</button>
       <button class="btn" id="ebDone" type="button">Concluir</button>
     </div>
-    <div class="hint" id="hint">← → navega · clique nas respostas pra marcar · F tela cheia · E edita</div>
+    <div class="hint" id="hint">← → navega · clique nas respostas pra marcar · F tela cheia · E edita · N notas</div>
     <main class="slides" id="slides"></main>
     <nav class="chrome" aria-label="Navegação">
       <button class="nicho-chip" id="nichoBtn" type="button" title="Trocar o nicho da reunião"><span>Nicho</span><b id="nichoNome">Escolher</b></button>

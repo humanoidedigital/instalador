@@ -17,7 +17,9 @@ NICHO({
     venda: 'venda', vendas: 'vendas',
     ticket: 'lucro por veículo',          // ticket médio × margem: é o que entra nas contas
     receita: 'lucro', suaReceita: 'seu lucro',
-    fimJornada: 'a chave na mão do cliente'
+    fimJornada: 'a chave na mão do cliente',
+    compraPensada: 'quem compra carro',   // gancho do case Dua
+    temHoje: 'nome e estoque'            // "imagina numa loja que já tem nome e estoque"
   },
 
   capa: { tagline: 'Sistema comercial para revendas de veículos' },
