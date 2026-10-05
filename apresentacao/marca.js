@@ -104,17 +104,30 @@ window.MARCA = {
     titulo: 'Marcas de segmentos diferentes, *o mesmo método*',
     sub: 'Alguns cases entre os mais de 20 clientes que já atendemos, de segmentos diferentes, no Brasil e no exterior. Os principais vêm detalhados a seguir.',
     // logo: coloque o arquivo em assets/marcas/ e informe o caminho (ex.: assets/marcas/isentei.png); sem logo aparece o nome
-    // case: true mostra o selo "case" 
+    // case: true mostra o selo "case"
+    // proteção de concorrente: "concorrentes" são os segmentos em que a marca é concorrente do cliente da reunião.
+    // Se o nicho tiver esse id (ou a tag em "concorrencia"), nome, logo e detalhes que identificam a empresa somem
+    // e o case continua. Dá para ligar e desligar à mão no seletor de nicho. "aliases": outras grafias do nome.
+    sigiloRotulo: 'Cliente sob sigilo',
     lista: [
-      { nome: 'DUA', segmento: 'Arquitetura', logo: 'assets/marcas/dua.png', case: true },
-      { nome: 'Empório Pata Negra', segmento: 'E-commerce gourmet', logo: 'assets/marcas/pata-negra.png', case: true },
-      { nome: 'isentei', segmento: 'Isenção de IR', logo: 'assets/marcas/isentei.png', case: true },
-      { nome: 'isente Já', segmento: 'Isenção de IR', logo: 'assets/marcas/isente-ja.png', case: true },
-      { nome: 'isentoo', segmento: 'Isenção de IR', logo: 'assets/marcas/isentoo.png', case: true },
-      { nome: 'Multi Mármore', segmento: 'Marmoraria', logo: 'assets/marcas/multi-marmore.png', case: true },
-      { nome: 'Duran Esquadrias', segmento: 'Esquadrias', logo: 'assets/marcas/duran.png', case: true },
-      { nome: 'Univerplast', segmento: 'Indústria de plásticos', logo: 'assets/marcas/univerplast.png', case: true },
-      { nome: 'Tango', segmento: 'Fantasias', logo: 'assets/marcas/tango.png', case: true }
+      { id: 'dua', nome: 'DUA', aliases: ['Dua Arquitetura', 'Dua'], segmento: 'Arquitetura', logo: 'assets/marcas/dua.png', case: true,
+        concorrentes: ['arquitetura', 'interiores'] },
+      { id: 'patanegra', nome: 'Empório Pata Negra', aliases: ['Pata Negra'], segmento: 'E-commerce gourmet', logo: 'assets/marcas/pata-negra.png', case: true,
+        concorrentes: ['ecommerce', 'alimentos', 'gourmet', 'emporio'] },
+      { id: 'isentei', nome: 'isentei', segmento: 'Isenção de IR', logo: 'assets/marcas/isentei.png', case: true,
+        concorrentes: ['isencao-ir', 'tributario', 'contabilidade'] },
+      { id: 'isenteja', nome: 'isente Já', aliases: ['IsenteJá', 'Isente Já', 'IsenteJa'], segmento: 'Isenção de IR', logo: 'assets/marcas/isente-ja.png', case: true,
+        concorrentes: ['isencao-ir', 'tributario', 'contabilidade'] },
+      { id: 'isentoo', nome: 'isentoo', segmento: 'Isenção de IR', logo: 'assets/marcas/isentoo.png', case: true,
+        concorrentes: ['isencao-ir', 'tributario', 'contabilidade'] },
+      { id: 'multimarmore', nome: 'Multi Mármore', aliases: ['Multimármore', 'MultiMármore'], segmento: 'Marmoraria', logo: 'assets/marcas/multi-marmore.png', case: true,
+        concorrentes: ['marmoraria', 'pedras', 'revestimentos'] },
+      { id: 'duran', nome: 'Duran Esquadrias', aliases: ['Duran'], segmento: 'Esquadrias', logo: 'assets/marcas/duran.png', case: true,
+        concorrentes: ['esquadrias', 'vidracaria', 'serralheria'] },
+      { id: 'univerplast', nome: 'Univerplast', segmento: 'Indústria de plásticos', logo: 'assets/marcas/univerplast.png', case: true,
+        concorrentes: ['plasticos', 'sinalizacao', 'pallets'] },
+      { id: 'tango', nome: 'Tango', aliases: ['Tango Fantasias'], segmento: 'Fantasias', logo: 'assets/marcas/tango.png', case: true,
+        concorrentes: ['fantasias', 'moda', 'confeccao'] }
     ],
     frentesTitulo: 'O que roda nessas operações',
     frentes: ['Tráfego pago', 'CRM', 'Vendas', 'Analytics', 'Rede social'],
@@ -125,6 +138,8 @@ window.MARCA = {
   // o contato até o caixa. Cada case é um degrau dessa escada, do mais simples ao mais completo.
   // Esqueleto: gancho, antes, virada, resultado, moral. "obs" aparece no slide (de onde vem o número);
   // "fala" é a versão de 30 segundos, nas notas do apresentador (tecla N).
+  // "marcas": ids de marcas.lista ligadas ao case. Se alguma estiver protegida, o case usa "sigilo":
+  // "sigilo.nome" no lugar do logo, e qualquer campo dentro de "sigilo" (fala, antes, titulo, tabela...) troca o original.
   cases: {
     kicker: 'Case',                     // vira "Case 1 de 4 · Arquitetura"
     antesRotulo: 'Antes',
@@ -134,6 +149,11 @@ window.MARCA = {
       {
         id: 'dua', marca: 'Dua Arquitetura', segmento: 'Arquitetura · ticket alto',
         logos: ['assets/marcas/dua.png'],
+        marcas: ['dua'],
+        sigilo: {
+          nome: 'Escritório de arquitetura',
+          fala: '"Esse é um escritório de arquitetura que, antes da gente, só impulsionava post no Instagram. Projeto caro, cliente que pensa muito antes de fechar. A gente montou o tráfego no Google e na Meta e um CRM, e, num único mês, eles fecharam sete projetos. Não sete leads: sete clientes diferentes, com contrato assinado. Perto de duzentos e quarenta e cinco mil reais em projetos."\nSe perguntarem o nome: "É do seu segmento. Eu protejo os dados dos meus clientes do mesmo jeito que vou proteger os seus."'
+        },
         titulo: '*7 projetos* fechados em um único mês',
         gancho: 'Projeto de arquitetura não é compra por impulso. O cliente pesquisa, compara, some e volta. Igual a {compraPensada}.',
         antes: 'Sem processo comercial, sem CRM e sem tráfego pago: só post impulsionado no Instagram, sem saber o que virava cliente. Orçamento enviado virava silêncio.',
@@ -150,6 +170,13 @@ window.MARCA = {
       {
         id: 'patanegra', marca: 'Empório Pata Negra', segmento: 'E-commerce gourmet',
         logos: ['assets/marcas/pata-negra.png'],
+        marcas: ['patanegra'],
+        sigilo: {
+          nome: 'E-commerce gourmet',
+          titulo: 'Black Friday de um mês inteiro: *R$\u00a0220\u00a0mil* com R$\u00a06\u00a0mil de anúncio',
+          antes: 'E-commerce de produtos gourmet de alto padrão diante da Black Friday de todo ano: um fim de semana disputado por todas as lojas, anúncio caro e cliente cansado de desconto.',
+          fala: '"Esse é um e-commerce de produtos gourmet. Na Black Friday, todo mundo briga pelo mesmo fim de semana. Eu propus fazer o mês inteiro. Com seis mil reais de anúncio, os anúncios trouxeram perto de duzentos e vinte mil em vendas no mês. Trinta e seis vezes o investimento. O ponto não é a verba, é a estratégia comercial por trás dela."\nSe perguntarem o nome: "É do seu segmento. Eu protejo os dados dos meus clientes do mesmo jeito que vou proteger os seus."'
+        },
         titulo: 'November Black: *R$\u00a0220\u00a0mil* com R$\u00a06\u00a0mil de anúncio',
         gancho: 'Todo mundo faz Black Friday. A gente fez o mês inteiro.',
         antes: 'E-commerce de alto padrão (jamón, paella, gourmet) diante da Black Friday de todo ano: um fim de semana disputado por todas as lojas, anúncio caro e cliente cansado de desconto.',
@@ -167,6 +194,12 @@ window.MARCA = {
       {
         id: 'multimarmore', marca: 'Multi Mármore', segmento: 'Marmoraria de alto padrão · showroom',
         logos: ['assets/marcas/multi-marmore.png'],
+        marcas: ['multimarmore'],
+        sigilo: {
+          nome: 'Marmoraria com showroom',
+          virada: 'Campanhas no Google e na Meta segmentadas por cidade, uma agente de IA recepcionando e direcionando cada contato no WhatsApp, e um funil que acompanha cada lead do anúncio ao orçamento e à venda fechada.',
+          fala: '"Essa é uma marmoraria de alto padrão, com showroom. Antes, o cliente via o anúncio, ia na loja e entrava como cliente de porta, então ninguém sabia o que a internet vendia. A gente montou Google, Meta, uma IA atendendo no WhatsApp e um funil do anúncio até a venda. Em um mês foram 31 vendas e mais de meio milhão, quase metade vindo do Google. E o funil mostrou orçamento parado na revisão interna. É esse tipo de visão que eu quero te dar."\nSe perguntarem o nome: "É do seu segmento. Eu protejo os dados dos meus clientes do mesmo jeito que vou proteger os seus."'
+        },
         titulo: 'A marmoraria que passou a saber *de onde vem cada venda*',
         gancho: 'Marmoraria vive de cliente de porta e indicação. O problema é que ninguém sabe qual anúncio trouxe aquele cliente.',
         antes: 'Showroom, bom produto e atendimento pelo WhatsApp, mas sem saber quanto do faturamento vinha da internet: o cliente via o anúncio, aparecia na loja e entrava como "cliente de porta". Cada real em mídia era um palpite.',
@@ -190,6 +223,11 @@ window.MARCA = {
       {
         id: 'isentei', marca: 'Isentei', segmento: 'Isenção de IR · serviços',
         logos: ['assets/marcas/isentei.png'],
+        marcas: ['isentei'],
+        sigilo: {
+          nome: 'Empresa de isenção de IR',
+          fala: '"Esse é o case que mostra onde a gente pode chegar juntos. Essa empresa fazia uma reunião por dia antes de a gente assumir. A gente organizou tudo: campanha, CRM, acompanhamento e IA atendendo no WhatsApp e no telefone. Foram para dez, quinze reuniões por dia, e teve mês de um milhão. Não começa assim, mas é pra lá que a gente vai."\nNunca apresentar como previsão para a {empresa}. Se perguntarem o nome: "É do seu segmento. Eu protejo os dados dos meus clientes do mesmo jeito que vou proteger os seus."'
+        },
         titulo: 'De 1 para *10 a 15 reuniões* por dia',
         gancho: 'O problema dessa empresa não era falta de lead. Era o que acontecia com o lead depois que ele chegava.',
         antes: 'Cerca de 1 reunião por dia. Sem CRM, sem processo comercial, campanha sem segmentação, sem rastreamento, sem IA e sem follow-up: quem não respondia na primeira mensagem se perdia.',
@@ -207,6 +245,11 @@ window.MARCA = {
       {
         id: 'zero', marca: 'IsenteJá e Isentoo', segmento: 'Isenção de IR · criadas do zero',
         logos: ['assets/marcas/isente-ja.png', 'assets/marcas/isentoo.png'],
+        marcas: ['isenteja', 'isentoo'],
+        sigilo: {
+          nome: 'Duas empresas de isenção de IR',
+          tabela: { linhas: [['Empresa A, 1º mês'], ['Empresa B, 1º mês']] }
+        },
         titulo: 'Duas empresas *do zero* a R$\u00a0400–500\u00a0mil por mês',
         gancho: 'Não tinha site, não tinha Instagram, não tinha cliente. Tinha só a ideia.',
         antes: 'Duas empresas de isenção de IR começando literalmente do zero: sem marca, sem canal de venda, sem base de clientes.',

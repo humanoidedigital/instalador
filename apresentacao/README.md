@@ -72,6 +72,20 @@ gancho, antes, virada, resultado, moral, e uma linha `obs` dizendo de onde vem o
 - Para trocar a ordem, mude a ordem em `cases.lista`. Para esconder um case num nicho: modo edição → Ocultar slide.
 - Logo novo: salve em `assets/marcas/` e informe em `marcas.lista[].logo` e `cases.lista[].logos`.
 
+## Proteção de concorrente
+
+Apresentando para alguém do mesmo segmento de uma marca dos cases (ex.: um escritório de arquitetura e o case Dua)?
+O nome, o logo e o que identifica a empresa somem, e o case continua: aparece "Escritório de arquitetura · cliente
+sob sigilo", com os números, a história e a fala de 30 segundos sem o nome.
+
+- **Manual, por reunião:** botão "Nicho" (canto inferior esquerdo) → "Proteção de concorrente" → clique na marca.
+  Fica guardado no diagnóstico atual; "Novo diagnóstico" limpa.
+- **Automático por nicho:** cada marca tem `concorrentes` em `marcas.lista` (ex.: Dua: `arquitetura`, `interiores`).
+  Se o id do nicho ou uma tag em `concorrencia` do nicho bater, a marca já começa protegida. Ex.: um nicho
+  `id: 'arquitetura'` protege a Dua sozinho; um nicho de reformas pode ter `concorrencia: ['arquitetura', 'interiores']`.
+- **O que troca no case:** `cases.lista[].sigilo` (nome no lugar do logo e a versão sem identificação de qualquer campo:
+  `fala`, `antes`, `titulo`, `tabela`...). Se sobrar o nome da marca em algum texto, ele é trocado por "cliente sob sigilo".
+
 ## Quando o lead não sabe o número
 
 Na tela **Resultados** ninguém precisa saber taxa em %. As perguntas são simples (vendas por mês, contatos por mês,

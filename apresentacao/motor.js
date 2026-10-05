@@ -293,6 +293,35 @@
   }
   function rotuloDoCampo(id){ const si = secaoDoCampo(id); if(si < 0) return id; const fi = secoes()[si].campos.findIndex(c => c.id === id); return plain(raw('raiox.' + si + '.campos.' + fi + '.rotulo')).replace(/\?$/, ''); }
 
+  // ============ proteção de concorrente ============
+  // Cliente da reunião do mesmo segmento de uma marca dos cases: nome, logo e o que identifica a empresa somem,
+  // o case continua. Automático quando as tags do nicho (id + "concorrencia") batem com marcas.lista[].concorrentes;
+  // manual no seletor de nicho, guardado no diagnóstico (dx.sigilo: { idDaMarca: true/false }).
+  const CADEADO = '<svg class="cad" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  const marcasComId = () => list('marcas.lista').filter(m => m && m.id);
+  function sigiloAuto(m){
+    const tags = [N && N.id].concat((N && N.concorrencia) || []).filter(Boolean);
+    return (m.concorrentes || []).some(t => tags.includes(t));
+  }
+  function protegida(id){
+    const m = marcasComId().find(x => x.id === id);
+    if(!m) return false;
+    const man = dx && dx.sigilo ? dx.sigilo[id] : undefined;
+    return man != null ? !!man : sigiloAuto(m);
+  }
+  const caseProtegido = c => (c.marcas || []).some(protegida);
+  // rede de segurança: troca qualquer nome protegido que tenha sobrado em texto (ex.: texto editado depois)
+  function anonimizar(root){
+    if(editing) return;
+    const nomes = marcasComId().filter(m => protegida(m.id)).flatMap(m => [plain(m.nome)].concat(m.aliases || [])).filter(n => n && n.length > 2);
+    if(!nomes.length) return;
+    const re = new RegExp('(^|[^\\p{L}\\p{N}])(' + nomes.sort((a, b) => b.length - a.length).map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?=$|[^\\p{L}\\p{N}])', 'giu');
+    const rot = plain(raw('marcas.sigiloRotulo')) || 'Cliente sob sigilo';
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), ns = [];
+    while(w.nextNode()) ns.push(w.currentNode);
+    ns.forEach(t => { const v = t.nodeValue.replace(re, '$1' + rot.toLowerCase()); if(v !== t.nodeValue) t.nodeValue = v; });
+  }
+
   // ============ slides ============
   function stats(path, cls){
     return `<div class="stats ${cls == null ? 'reveal' : cls}">${list(path).map((s, i) => `<div class="stat">${T(path + '.' + i + '.valor', 'div', 'n count')}${T(path + '.' + i + '.rotulo', 'div', 'l')}</div>`).join('')}</div>`;
@@ -429,7 +458,8 @@
       ${T('marcas.titulo', 'h2', 'h2 reveal')}
       ${T('marcas.sub', 'p', 'sub reveal')}
       <div class="brands reveal" style="--n:${ls.length}">${ls.map((m, i) => {
-        const b = 'marcas.lista.' + i, lg = raw(b + '.logo');
+        const b = 'marcas.lista.' + i, lg = raw(b + '.logo'), prot = m.id && protegida(m.id);
+        if(prot) return `<div class="brand sig">${m.case ? '<span class="bcase">case</span>' : ''}<div class="bn">${CADEADO}${T('marcas.sigiloRotulo')}</div>${T(b + '.segmento', 'div', 'bs')}</div>`;
         return `<div class="brand">${m.case ? '<span class="bcase">case</span>' : ''}${lg ? `<img src="${esc(lg)}" alt="${esc(plain(raw(b + '.nome')))}">` : T(b + '.nome', 'div', 'bn')}${T(b + '.segmento', 'div', 'bs')}</div>`;
       }).join('')}</div>
       <div class="frentes reveal">${T('marcas.frentesTitulo', 'span', 'label')}${list('marcas.frentes').map((f, i) => T('marcas.frentes.' + i, 'span', 'chip')).join('')}</div>
@@ -439,29 +469,33 @@
     // um slide por case: gancho, antes, virada, resultado (números ou tabela), moral e de onde vem o número
     caso: ci => {
       const b = 'cases.lista.' + ci, c = list('cases.lista')[ci] || {}, tot = list('cases.lista').length;
+      // proteção de concorrente: com a marca protegida, cada campo usa a versão de "sigilo" quando ela existe
+      const prot = caseProtegido(c);
+      const cp = rest => { const sp = b + '.sigilo.' + rest, v = prot ? raw(sp) : null; return v != null && v !== '' ? sp : b + '.' + rest; };
       const logos = (c.logos || []).filter(Boolean);
-      const marca = logos.length ? logos.map(l => `<img src="${esc(l)}" alt="">`).join('') : T(b + '.marca', 'span', 'cs-nome');
+      const marca = prot ? `<span class="cs-sig">${CADEADO}${T(raw(b + '.sigilo.nome') ? b + '.sigilo.nome' : b + '.segmento', 'span', 'cs-nome')}</span>${T('marcas.sigiloRotulo', 'span', 'cs-sigtag')}`
+        : logos.length ? logos.map(l => `<img src="${esc(l)}" alt="">`).join('') : T(b + '.marca', 'span', 'cs-nome');
       const degraus = Array.from({ length:tot }, (_, j) => `<i class="${j <= ci ? 'on' : ''}" style="height:${(35 + 65 * (j + 1) / tot).toFixed(0)}%"></i>`).join('');
       const tb = c.tabela;
       // funil opcional: barras proporcionais ao número de cada etapa
       const fv = (c.funil || []).map(f => parseFloat(String(f.valor).replace(/\./g, '').replace(',', '.')) || 0), fmax = Math.max.apply(null, fv.concat(1));
-      const funil = (c.funil || []).length ? `<div class="cs-funil">${c.funil.map((f, k) => `<div class="fb" style="width:${Math.max(28, fv[k] / fmax * 100).toFixed(1)}%">${T(b + '.funil.' + k + '.valor', 'b')} ${T(b + '.funil.' + k + '.rotulo')}</div>`).join('')}</div>` : '';
-      const res = tb ? `<div class="cs-res">${T('cases.resultadoRotulo', 'div', 'label')}<table class="tbl cs-tbl"><thead><tr>${(tb.colunas || []).map((x, k) => T(b + '.tabela.colunas.' + k, 'th')).join('')}</tr></thead>
-          <tbody>${(tb.linhas || []).map((l, li) => `<tr>${l.map((x, k) => T(b + '.tabela.linhas.' + li + '.' + k, 'td')).join('')}</tr>`).join('')}</tbody></table>${tb.rodape ? T(b + '.tabela.rodape', 'div', 'small') : ''}</div>`
-        : `<div class="cs-res${c.funil ? ' com-funil' : ''}">${T('cases.resultadoRotulo', 'div', 'label')}${funil}<div class="cs-stats">${(c.numeros || []).map((x, k) => `<div class="stat">${T(b + '.numeros.' + k + '.valor', 'div', 'n count')}${T(b + '.numeros.' + k + '.rotulo', 'div', 'l')}</div>`).join('')}</div></div>`;
+      const funil = (c.funil || []).length ? `<div class="cs-funil">${c.funil.map((f, k) => `<div class="fb" style="width:${Math.max(28, fv[k] / fmax * 100).toFixed(1)}%">${T(cp('funil.' + k + '.valor'), 'b')} ${T(cp('funil.' + k + '.rotulo'))}</div>`).join('')}</div>` : '';
+      const res = tb ? `<div class="cs-res">${T('cases.resultadoRotulo', 'div', 'label')}<table class="tbl cs-tbl"><thead><tr>${(tb.colunas || []).map((x, k) => T(cp('tabela.colunas.' + k), 'th')).join('')}</tr></thead>
+          <tbody>${(tb.linhas || []).map((l, li) => `<tr>${l.map((x, k) => T(cp('tabela.linhas.' + li + '.' + k), 'td')).join('')}</tr>`).join('')}</tbody></table>${tb.rodape ? T(cp('tabela.rodape'), 'div', 'small') : ''}</div>`
+        : `<div class="cs-res${c.funil ? ' com-funil' : ''}">${T('cases.resultadoRotulo', 'div', 'label')}${funil}<div class="cs-stats">${(c.numeros || []).map((x, k) => `<div class="stat">${T(cp('numeros.' + k + '.valor'), 'div', 'n count')}${T(cp('numeros.' + k + '.rotulo'), 'div', 'l')}</div>`).join('')}</div></div>`;
       return `
-      <div class="cs-head reveal"><div class="cs-marca">${marca}</div><div class="cs-degraus" title="Do mais simples ao mais completo" aria-hidden="true">${degraus}</div></div>
-      <div class="kicker reveal"><span>${T('cases.kicker')} ${ci + 1} de ${tot} · ${T(b + '.segmento')}</span></div>
-      ${T(b + '.titulo', 'h2', 'h2 reveal')}
-      ${T(b + '.gancho', 'div', 'quote reveal')}
+      <div class="cs-head reveal"><div class="cs-marca${prot ? ' sig' : ''}">${marca}</div><div class="cs-degraus" title="Do mais simples ao mais completo" aria-hidden="true">${degraus}</div></div>
+      <div class="kicker reveal"><span>${T('cases.kicker')} ${ci + 1} de ${tot} · ${T(cp('segmento'))}</span></div>
+      ${T(cp('titulo'), 'h2', 'h2 reveal')}
+      ${T(cp('gancho'), 'div', 'quote reveal')}
       <div class="cs-grid${tb ? ' com-tabela' : ''} reveal">
-        <div class="card">${T('cases.antesRotulo', 'div', 'label')}${T(b + '.antes', 'p', 'small')}</div>
-        <div class="card">${T('cases.viradaRotulo', 'div', 'label')}${T(b + '.virada', 'p', 'small')}
-          <div class="cs-frentes">${(c.frentes || []).map((x, k) => T(b + '.frentes.' + k, 'span', 'chip')).join('')}</div></div>
+        <div class="card">${T('cases.antesRotulo', 'div', 'label')}${T(cp('antes'), 'p', 'small')}</div>
+        <div class="card">${T('cases.viradaRotulo', 'div', 'label')}${T(cp('virada'), 'p', 'small')}
+          <div class="cs-frentes">${(c.frentes || []).map((x, k) => T(cp('frentes.' + k), 'span', 'chip')).join('')}</div></div>
         ${res}
       </div>
-      ${T(b + '.moral', 'div', 'insight reveal')}
-      ${T(b + '.obs', 'div', 'cs-obs reveal')}`;
+      ${T(cp('moral'), 'div', 'insight reveal')}
+      ${T(cp('obs'), 'div', 'cs-obs reveal')}`;
     },
 
     ponte: () => `
@@ -591,7 +625,8 @@
       { id:'resolvemos', html:B.resolvemos },
       { id:'perfis', html:B.perfis },
       { id:'marcas', html:B.marcas },
-      ...list('cases.lista').map((c, ci) => ({ id:'case-' + (c.id || ci + 1), html:() => B.caso(ci), cls:'cs', nota:'cases.lista.' + ci + '.fala' })),
+      ...list('cases.lista').map((c, ci) => ({ id:'case-' + (c.id || ci + 1), html:() => B.caso(ci), cls:'cs',
+        nota:'cases.lista.' + ci + (caseProtegido(c) && raw('cases.lista.' + ci + '.sigilo.fala') ? '.sigilo.fala' : '.fala') })),
       { id:'ponte', html:B.ponte, nota:'ponte.fala' },
       { id:'mkt', html:B.mkt },
       { id:'ferramenta', html:B.ferramenta },
@@ -623,6 +658,7 @@
     slides = $$('.slide', slidesEl).map(el => ({ id:el.dataset.id, el }));
     slides.forEach(s => $$('.reveal', s.el).forEach((r, i) => r.style.setProperty('--i', i)));
     preencherCampos();
+    anonimizar(slidesEl);
     if(editing) entrarEdicao();
     $('#dots').innerHTML = slides.map((s, i) => `<button class="dot" type="button" aria-label="Ir para o slide ${i + 1}" data-go="${i}"></button>`).join('');
     const novo = manterId ? slides.findIndex(s => s.id === manterId) : 0;
@@ -1013,10 +1049,31 @@
         <div class="h3">${esc(n.nome)}</div><div class="small">${esc(n.descricao || '')}</div></button>`;
     }).join('') || '<p class="sub">Nenhum nicho carregado. Confira as linhas &lt;script src="nichos/..."&gt; no index.html.</p>';
     $('#pkClose').hidden = !N;
+    montarSigilo();
     $('#picker').hidden = false;
     const first = $('.pk-card', $('#picker')); if(first) first.focus();
   }
   function fecharPicker(){ $('#picker').hidden = true; }
+  function montarSigilo(){
+    const box = $('#pkSig'), ms = marcasComId();
+    box.hidden = !N || !ms.length;
+    if(box.hidden) return;
+    $('#pkSigNicho').textContent = N.nome;
+    $('#pkSigList').innerHTML = ms.map(m => {
+      const on = protegida(m.id), auto = sigiloAuto(m);
+      return `<button class="sig-chip${on ? ' on' : ''}" type="button" data-sig="${esc(m.id)}" aria-pressed="${on}">${on ? CADEADO : ''}<span>${esc(plain(m.nome))}</span><small>${esc(plain(m.segmento || ''))}${auto ? ' · concorrente deste nicho' : ''}</small></button>`;
+    }).join('');
+  }
+  $('#pkSigList').addEventListener('click', e => {
+    const c = e.target.closest('[data-sig]'); if(!c || !N) return;
+    const id = c.dataset.sig, m = marcasComId().find(x => x.id === id), novo = !protegida(id);
+    dx.sigilo = Object.assign({}, dx.sigilo);
+    if(m && novo === sigiloAuto(m)) delete dx.sigilo[id]; else dx.sigilo[id] = novo;
+    gravarDx();
+    montar(slides[idx] && slides[idx].id);
+    montarSigilo();
+    toast(novo ? plain(m.nome) + ': nome e logo ocultos nesta reunião.' : plain(m.nome) + ': nome e logo visíveis.');
+  });
   $('#nichoBtn').addEventListener('click', abrirPicker);
   $('#pkClose').addEventListener('click', fecharPicker);
   $('#pkGrid').addEventListener('click', e => { const c = e.target.closest('[data-nicho]'); if(c){ escolherNicho(c.dataset.nicho); fecharPicker(); } });

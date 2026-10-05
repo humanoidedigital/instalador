@@ -467,6 +467,22 @@ s{opacity:.6}
 .pk-card .small{flex:1}
 .pk-meta{font-size:clamp(9.5px,.8cqw,12.5px);color:var(--acc);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 .pk-close{position:absolute;top:2cqw;right:2cqw}
+.picker{overflow-y:auto}
+.pk-sig{display:flex;flex-direction:column;gap:.6cqw;padding-top:1.2cqw;border-top:1px solid var(--line)}
+.pk-sig .small{max-width:80ch}
+.pk-sig-list{display:flex;flex-wrap:wrap;gap:.6cqw}
+.sig-chip{display:inline-flex;align-items:center;gap:.5em;padding:.5cqw 1cqw;min-height:32px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:clamp(10.5px,.88cqw,14px);font-weight:600}
+.sig-chip small{font-weight:500;color:var(--mut2);font-size:.85em}
+.sig-chip:hover{border-color:var(--acc);color:var(--tx)}
+.sig-chip.on{border-color:var(--warn);background:rgba(246,181,68,.12);color:#ffe2a8}
+.sig-chip.on small{color:#e9c27a}
+.cad{width:1em;height:1em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.brand.sig{background:#e9eef7}
+.brand.sig .bn{display:inline-flex;align-items:center;gap:.4em;color:#33445f;font-size:clamp(12px,1.15cqw,19px)}
+.cs-marca.sig{gap:.8cqw}
+.cs-sig{display:inline-flex;align-items:center;gap:.5em;color:#0c1a33}
+.cs-sig .cad{width:1.1em;height:1.1em}
+.cs-sigtag{font:700 clamp(7.5px,.6cqw,10px)/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:#5a6b88}
 
 .toast{position:absolute;left:50%;bottom:6cqw;z-index:45;transform:translate(-50%,1cqw);opacity:0;pointer-events:none;padding:.8em 1.2em;border-radius:999px;
   background:#0d2b5e;border:1px solid var(--acc);font-size:clamp(11px,.9cqw,14px);font-weight:600;transition:opacity .3s,transform .3s;max-width:90%;text-align:center}
@@ -619,6 +635,11 @@ s{opacity:.6}
       <h2 class="h2">Para quem é a reunião <span class="hl">de hoje?</span></h2>
       <p class="sub">Cada nicho tem as próprias perguntas, termos e projeção. O pitch e a lógica são os mesmos.</p>
       <div class="pk-grid" id="pkGrid"></div>
+      <div class="pk-sig" id="pkSig" hidden>
+        <div class="label">Proteção de concorrente · <span id="pkSigNicho"></span></div>
+        <p class="small">O cliente de hoje é do mesmo segmento de alguma dessas marcas? Clique para ocultar nome, logo e o que identifica a empresa. O case continua na apresentação. Fica guardado neste diagnóstico; "Novo diagnóstico" limpa.</p>
+        <div class="pk-sig-list" id="pkSigList"></div>
+      </div>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </div>
