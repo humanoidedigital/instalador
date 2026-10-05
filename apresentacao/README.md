@@ -162,6 +162,10 @@ Ids de campo que entram nas contas: `vendas`, `ticket`, `leads`, `midia`, `meses
   (incremento × m(m+1)/2). Saldo = ganho acumulado − investido. A tabela mês a mês destaca o mês do payback.
 - **Empilhamento:** clientes novos por mês × ticket. Recorrente: o mês m soma m levas (6 meses = 21 × a base; 12 meses = 78 ×).
   Venda única: acumula (6 meses = 6 × a base).
+- **Painel, "O que você somou a mais, sozinho":** o quanto o {receita} mensal subiu entre o início e hoje, somado mês a mês
+  em rampa (no 1º mês um pouco a mais, no último a diferença inteira). **"A estimativa com a Ribeker"**: a base da projeção
+  × ticket, somada no mesmo prazo. As duas contas aparecem escritas embaixo dos números, e as notas (tecla N) do painel e
+  do empilhamento trazem como explicar.
 
 ## Antes da primeira reunião
 

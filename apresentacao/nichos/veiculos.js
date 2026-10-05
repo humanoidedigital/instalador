@@ -24,6 +24,12 @@ NICHO({
 
   capa: { tagline: 'Sistema comercial para revendas de veículos' },
 
+  // venda de veículo não se repete: o resultado acumula (não empilha mensalidade)
+  empilhamento: {
+    titulo6: 'Resultado acumulado em *6 meses*',
+    titulo12: 'O resultado acumulado *{fator12}*'
+  },
+
   publico: ['Revendas multimarcas', 'Concessionárias', 'Lojas de motos', 'Seminovos premium', 'Caminhões e utilitários'],
 
   perfis: {
@@ -220,7 +226,7 @@ NICHO({
     conta: 'extra',                     // conta só as vendas a mais, não as que a loja já faz
     margem: { campo: 'margem', referencia: 11 },  // o dono informa preço e faturamento; o lucro sai da margem (ou da média, 11%)
     referencia: { base: 5, ticket: 88030 },  // enquanto não preenchem: 5 vendas de exemplo e o ticket médio dos seminovos
-    baseRotulo: '+{n} vendas/mês',
+    baseRotulo: '+{n} vendas a mais por mês',
     explicacao: '50% a mais que as {hoje} vendas de hoje'
   }
 });

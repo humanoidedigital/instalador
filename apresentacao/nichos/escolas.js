@@ -224,7 +224,7 @@ NICHO({
     multiplicador: 2,                   // o dobro das matrículas de hoje
     conta: 'total',
     referencia: { base: 10, ticket: 500 },  // enquanto não preenchem: 10 alunos de exemplo e a média de idiomas
-    baseRotulo: '{n} alunos novos/mês',
-    explicacao: 'o dobro das {hoje} que você faz hoje'
+    baseRotulo: '{n} alunos novos por mês',
+    explicacao: 'o dobro das {hoje} de hoje, contando todas, não só as a mais'
   }
 });

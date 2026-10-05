@@ -76,8 +76,10 @@ window.MARCA = {
   painel: {
     kicker: 'Raio-X · Resultado',
     titulo: 'O que o *diagnóstico* mostrou',
-    mine: 'O que você conseguiu empilhar sozinho',
-    nosso: 'A estimativa que a Ribeker entrega no mesmo prazo'
+    mine: 'O que você somou a mais, sozinho',
+    nosso: 'A estimativa com a Ribeker, no mesmo prazo',
+    // notas do apresentador (tecla N)
+    nota: 'Como explicar os dois números ("empilhar" = somar o que entra a mais, mês a mês):\n• Esquerda, você sozinho: compara o {receita} de hoje com o de {meses} atrás. Como ele subiu aos poucos, a conta soma a diferença de cada mês: no 1º mês um pouco a mais, no último a diferença inteira. A conta está escrita embaixo do número.\n• Direita, com a Ribeker: a base de {vendas} por mês da estimativa × {ticket}, somada no mesmo prazo. É estimativa e conta o resultado desde o 1º mês; na prática tem a rampa da implantação.\n• Frase de cima (saldo): o que entrou a mais menos tudo o que o comercial custou no período. É a lógica do pitch original: mostra o custo de esperar.\nFala: "Em {meses}, tudo o que você investiu no comercial trouxe esse valor a mais. No mesmo prazo, com o método, a estimativa é essa outra."'
   },
 
   resolvemos: {
@@ -279,7 +281,10 @@ window.MARCA = {
     kicker12: 'Mantendo o trabalho por 12 meses',
     titulo12: 'O resultado empilhado *{fator12}*',
     evolucao: 'Estimativa · evolução mês a mês',
-    partida: 'Seu ponto de partida, sozinho'
+    partida: 'Seu ponto de partida, sozinho',
+    // notas do apresentador (tecla N): uma para venda com mensalidade, outra para venda única
+    notaRecorrente: 'Empilhar, quando a venda tem mensalidade: cada turma de {clientes} novos continua pagando nos meses seguintes. Mês 1: 1 turma pagando. Mês 2: 2 turmas. Mês 6: 6 turmas. Somando os 6 meses: 1+2+3+4+5+6 = 21 vezes o valor de uma turma. Em 12 meses: 78 vezes, por isso o resultado {fator12}. A conta não desconta cancelamentos: é estimativa.\nFala: "Cada {cliente} que entra continua pagando. O mês 6 já carrega seis turmas juntas. É isso que é empilhar."',
+    notaUnica: 'Aqui não tem mensalidade: cada {venda} entra uma vez só. Cada barra é o acumulado até aquele mês: o mês 1 tem as {vendas} a mais de um mês; o mês 6, as de seis meses somadas. Em 12 meses o acumulado {fator12}. É estimativa e conta o resultado desde o 1º mês.\nFala: "Parece pouco por mês. Somando o ano, é isso aqui."'
   },
 
   // parâmetros da conta do empilhamento (cada nicho define os seus em "projecao")

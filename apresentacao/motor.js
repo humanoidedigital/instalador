@@ -275,7 +275,8 @@
       margem: mg, preco,
       tkDet: mg != null ? ' (' + brl(preco) + ' × ' + pct(mg) + ' de margem)' : '',
       tkMedia: !!(ticket > 0 && origemDe('ticket') && origemDe('ticket').tipo === 'media'),
-      rot: plain(P.baseRotulo, { n:nf1.format(base) }),
+      rot: base === 1 ? plain(P.baseRotulo, { n:'1' }).replace(termo('vendas'), termo('venda')).replace(termo('clientes'), termo('cliente')).replace(/\bnovos\b/, 'novo')
+        : plain(P.baseRotulo, { n:nf1.format(base) }),
       expl: vendas > 0 ? plain(P.explicacao, { hoje:nf1.format(vendas) }) : ''
     };
   }
@@ -577,6 +578,7 @@
   };
 
   function defs(){
+    const notaEmp = merged('projecao').recorrente === false ? 'empilhamento.notaUnica' : 'empilhamento.notaRecorrente';
     const d = [
       { id:'capa', html:B.capa, cls:'centro' },
       { id:'especialista', html:B.especialista, cls: raw('especialista.retrato') ? 'esp' : '' },
@@ -585,7 +587,7 @@
     ];
     secoes().forEach((s, si) => d.push({ id:'rx-' + s.id, html:() => B.secao(s, si) }));
     d.push(
-      { id:'painel', html:B.painel },
+      { id:'painel', html:B.painel, nota:'painel.nota' },
       { id:'resolvemos', html:B.resolvemos },
       { id:'perfis', html:B.perfis },
       { id:'marcas', html:B.marcas },
@@ -594,8 +596,8 @@
       { id:'mkt', html:B.mkt },
       { id:'ferramenta', html:B.ferramenta },
       { id:'time', html:B.time },
-      { id:'empilhamento-6', html:() => B.empilhamento(6) },
-      { id:'empilhamento-12', html:() => B.empilhamento(12) },
+      { id:'empilhamento-6', html:() => B.empilhamento(6), nota:notaEmp },
+      { id:'empilhamento-12', html:() => B.empilhamento(12), nota:notaEmp },
       { id:'valores', html:B.valores },
       { id:'planos', html:B.planos },
       { id:'garantia', html:B.garantia },
@@ -778,8 +780,17 @@
         set('dFrase', ce ? ce.html : `Você já faz <b>${M} ${M === 1 ? 'mês' : 'meses'}</b> tentando ajustar isso. Gastou <b>${brl(C)}</b> por mês, <b>${brl(C * M)}</b> no total.`);
         const mine = ce ? ce.ganhoFinal : 0, nosso = pr.total(M);
         setVal('dMine', mine, 'brlS'); setVal('dNosso', nosso);
-        set('dMineS', esc((!ce || ce.inc === 0) ? 'sem crescimento de ' + termo('receita') + ' no período' : brl(Math.abs(ce.inc)) + (ce.inc > 0 ? ' a mais' : ' a menos') + ' a cada mês, empilhado em ' + M + (M === 1 ? ' mês' : ' meses')));
-        set('dNossoS', esc('Com ' + pr.rot + ' e ' + termo('ticket') + ' de ' + brl(pr.Tk) + pr.tkDet + (pr.tkMedia ? ' (média de mercado)' : '') + ', empilhado em ' + M + (M === 1 ? ' mês' : ' meses') + (pr.expl ? ' (' + pr.expl + ')' : '')));
+        // as duas contas escritas por extenso, para o cliente (e quem apresenta) entender de onde vem cada número
+        const per = M === 1 ? '1 mês' : M + ' meses', sua = termo('SuaReceita');
+        const rampa = ce && M > 1 ? ', de ' + brl(Math.abs(ce.inc)) + ' no 1º mês até ' + brl(Math.abs(ce.R1 - ce.R0)) + ' no último' : '';
+        set('dMineS', esc(!ce ? 'Preencha a tela "' + paginaDoCampo('receitaHoje') + '" para calcular.'
+          : ce.R1 === ce.R0 ? sua + ' mensal não mudou em ' + per + ': não há ganho a somar.'
+          : ce.cresceu ? sua + ' mensal subiu ' + brl(ce.R1 - ce.R0) + ' em ' + per + '. Somando o que entrou a mais em cada mês' + rampa + ': ' + brl(ce.ganhoFinal) + '.'
+          : sua + ' mensal caiu ' + brl(ce.R0 - ce.R1) + ' em ' + per + '. Somando o que deixou de entrar em cada mês' + rampa + ': ' + brl(Math.abs(ce.ganhoFinal)) + '.'));
+        const tri = M * (M + 1) / 2;
+        set('dNossoS', esc(pr.rot + (pr.expl ? ' (' + pr.expl + ')' : '') + ' × ' + termo('ticket') + ' de ' + brl(pr.Tk) + pr.tkDet + (pr.tkMedia ? ' (média de mercado)' : '') + ' = ' + brl(pr.mensal) + ' por mês. ' +
+          (pr.P.recorrente ? 'Cada turma continua pagando: no mês ' + M + ' já são ' + M + ' turmas. Somando ' + per + ': ' + brl(pr.mensal) + ' × ' + nf0.format(tri) + '.'
+            : 'Somando ' + per + ': ' + brl(pr.mensal) + ' × ' + M + '.')));
         const ratio = nosso / Math.max(mine, 1);
         flag.hidden = false;
         flag.className = 'flag ' + (ratio > 3 ? 'red' : ratio > 1.5 ? 'yellow' : 'green');
@@ -830,7 +841,7 @@
       const bw = tem ? Math.min(100, Math.max(R0, 0) / ref * 100) : 0, cw = tem ? Math.max(0, Math.min(100 - bw, Math.max(R1 - R0, 0) / ref * 100)) : 0;
       document.getElementById('lb' + n).style.width = bw.toFixed(2) + '%';
       document.getElementById('lc' + n).style.width = cw.toFixed(2) + '%';
-      set('you' + n, ce ? 'Você, sozinho, ' + (ce.ganhoFinal >= 0 ? 'empilhou' : 'perdeu') + ' <b>' + brl(Math.abs(ce.ganhoFinal)) + '</b> em ' + ce.M + ' ' + (ce.M === 1 ? 'mês' : 'meses') + '. É daqui que a ' + esc(termo('marca')) + ' parte.'
+      set('you' + n, ce ? 'Você, sozinho, ' + (ce.ganhoFinal >= 0 ? 'somou' : 'perdeu') + ' <b>' + brl(Math.abs(ce.ganhoFinal)) + '</b> a ' + (ce.ganhoFinal >= 0 ? 'mais' : 'menos') + ' em ' + ce.M + ' ' + (ce.M === 1 ? 'mês' : 'meses') + '. É daqui que a ' + esc(termo('marca')) + ' parte.'
         : 'Assim que você preencher seus números (página "' + esc(paginaDoCampo('meses')) + '"), mostramos aqui o seu ponto de partida.');
       const v = num('vendas'), tk = num('ticket');
       const mgx = margemPct();
