@@ -40,15 +40,20 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
 - **Nicho:** o botão no canto inferior esquerdo troca o nicho. Também dá para abrir direto: `...html#escolas`, `...html#veiculos`.
 - **Respostas:** clique para marcar e de novo para desmarcar. A resposta marcada fica sempre azul, inclusive a
   negativa: o julgamento aparece só no painel, não na frente do cliente durante as perguntas.
-- **Salvamento:** fica gravado no navegador, separado por nicho. Fechou sem querer? Abre de novo e continua.
+- **Salvamento:** fica gravado no navegador. Fechou sem querer? Abre de novo e continua.
+- **Diagnósticos salvos:** "Novo diagnóstico" não apaga nada; o anterior vai para a lista "Diagnósticos salvos"
+  (botão Nicho), com busca por nome ou WhatsApp, aproveitamento e data. "Abrir" retoma de onde parou, inclusive
+  trocando de nicho. Pelo link do claude.ai, a lista também fica na área privada da sua conta e aparece em qualquer
+  aparelho. No arquivo local ela fica só naquele navegador: use "Baixar cópia de segurança" e "Importar cópia" para
+  levar a outro computador (e como backup, porque limpar os dados do navegador apaga a lista).
 - **Perguntas condicionais:** algumas perguntas só aparecem quando fazem sentido. Quem "Não posta" nas redes não vê
   social mídia, estratégia, conteúdo, venda pelas redes e redes preparadas: elas valem "Não" sozinhas e aparecem assim
   no relatório, com o motivo. Sem CRM, "funil dentro do CRM" vira "Não". "Resultado com anúncio" some para quem nunca
   anunciou. Em veículos, "leads dos portais no CRM" só aparece para quem marcou Portais nas origens de lead.
   No modo edição todas aparecem, com contorno amarelo nas condicionais.
 - **Último slide:** "Relatório" e "Relatório + plano de ação" baixam o PDF (desenhado direto, com texto de verdade,
-  funciona sem internet). "Copiar resumo" copia um texto para colar no WhatsApp ou no CRM. "Novo diagnóstico" zera
-  para o próximo cliente.
+  funciona sem internet). "Copiar resumo" copia um texto para colar no WhatsApp ou no CRM. "Novo diagnóstico" começa
+  o próximo cliente e guarda o atual em "Diagnósticos salvos".
 
 ## Cases e marcas
 

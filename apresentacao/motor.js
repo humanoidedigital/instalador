@@ -15,7 +15,7 @@
 
   const store = {
     get(k){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } },
-    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } },
     del(k){ try{ localStorage.removeItem(k); }catch(e){} }
   };
 
@@ -40,10 +40,11 @@
   const abertos = new Set();          // acordeões abertos no slide final
 
   function hojeISO(){ const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
-  function novoDx(){ return { ident:{ empresa:'', whatsapp:'', data:hojeISO() }, resp:{}, nums:{}, origem:{} }; }
+  function novoId(){ return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function novoDx(){ return { id:novoId(), ident:{ empresa:'', whatsapp:'', data:hojeISO() }, resp:{}, nums:{}, origem:{} }; }
   const dxKey = () => 'rb:dx:' + (N ? N.id : 'x');
   let saveT = null;
-  function gravarDx(){ clearTimeout(saveT); saveT = null; dx.ts = Date.now(); store.set(dxKey(), dx); }
+  function gravarDx(){ clearTimeout(saveT); saveT = null; dx.ts = Date.now(); store.set(dxKey(), dx); arquivar(); }
   function salvarDx(){ clearTimeout(saveT); saveT = setTimeout(gravarDx, 250); }
   window.addEventListener('pagehide', () => { if(saveT) gravarDx(); });
   document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden' && saveT) gravarDx(); });
@@ -1034,10 +1035,174 @@
     setTimeout(() => { if(btn.dataset.conf){ delete btn.dataset.conf; btn.textContent = btn.dataset.orig; } }, 3500);
   }
   function acao(a, btn){
-    if(a === 'novo') return confirmar(btn, 'Clique de novo para apagar', () => { dx = novoDx(); store.del(dxKey()); abertos.clear(); montar(slides[idx] && slides[idx].id); toast('Diagnóstico zerado.'); });
+    if(a === 'novo') return confirmar(btn, 'Clique de novo para começar outro', () => {
+      gravarDx();
+      const tinha = temConteudo(dx);
+      dx = novoDx(); gravarDx(); abertos.clear(); montar(slides[idx] && slides[idx].id);
+      toast(tinha ? 'Novo diagnóstico. O anterior ficou em "Diagnósticos salvos" (botão Nicho).' : 'Novo diagnóstico.');
+    });
     if(a === 'pdf') return gerarPdf(false, btn);
     if(a === 'pdf-plano') return gerarPdf(true, btn);
     if(a === 'copiar') return copiarResumo();
+  }
+
+  // ============ diagnósticos salvos ============
+  // Cada diagnóstico tem um id, e toda gravação atualiza o arquivo (rb:arq). "Novo diagnóstico" não apaga nada:
+  // o anterior fica em "Diagnósticos salvos" (botão Nicho) para reabrir quando o lead voltar. Fica neste navegador;
+  // aberto pelo link do claude.ai, também vai para a área privada da sua conta (db, data/users/<id>) e aparece
+  // em qualquer aparelho. Cópia de segurança em .json leva tudo para outro computador.
+  const ARQ = 'rb:arq';
+  const temConteudo = d => !!(d && ((d.ident && (d.ident.empresa || d.ident.whatsapp)) || Object.keys(d.resp || {}).length || Object.keys(d.nums || {}).length));
+  const arquivo = () => store.get(ARQ) || {};
+  let avisouCheio = false;
+  function guardarArquivo(a){
+    if(store.set(ARQ, a) || avisouCheio) return;
+    avisouCheio = true;
+    toast('O navegador está sem espaço para guardar diagnósticos. Baixe a cópia de segurança e exclua os antigos.');
+  }
+  function itemDe(d, nicho, aprov){
+    return { id:d.id, nicho, empresa:(d.ident && d.ident.empresa) || '', whatsapp:(d.ident && d.ident.whatsapp) || '', data:(d.ident && d.ident.data) || '', ts:d.ts || Date.now(), aprov, dx:JSON.parse(JSON.stringify(d)) };
+  }
+  function arquivar(){
+    if(!N || !temConteudo(dx)) return;
+    if(!dx.id) dx.id = novoId();
+    const a = arquivo(), it = itemDe(dx, N.id, geral().aprov);
+    a[dx.id] = it;
+    guardarArquivo(a);
+    nuvemAgendar(it);
+  }
+  // diagnósticos de antes desta versão (um por nicho, sem id) entram no arquivo uma vez
+  function migrarAntigos(){
+    const a = arquivo(), N0 = N, d0 = dx;
+    let mudou = false;
+    NICHOS.forEach(n => {
+      const d = store.get('rb:dx:' + n.id);
+      if(!temConteudo(d) || (d.id && a[d.id])) return;
+      if(!d.id){ d.id = novoId(); store.set('rb:dx:' + n.id, d); }
+      N = n; dx = Object.assign(novoDx(), d);
+      a[d.id] = itemDe(dx, n.id, geral().aprov); mudou = true;
+    });
+    N = N0; dx = d0;
+    if(mudou) guardarArquivo(a);
+  }
+  function abrirDiagnostico(id){
+    const it = arquivo()[id];
+    if(!it) return;
+    const n = NICHOS.find(x => x.id === it.nicho);
+    if(!n){ toast('O nicho deste diagnóstico não está nesta versão da apresentação.'); return; }
+    if(saveT) gravarDx();
+    N = n; store.set('rb:nicho', n.id);
+    try{ history.replaceState(null, '', '#' + n.id); }catch(e){}
+    dx = Object.assign(novoDx(), JSON.parse(JSON.stringify(it.dx)));
+    store.set(dxKey(), dx);
+    abertos.clear(); montar(); fecharPicker();
+    toast('Diagnóstico de ' + (it.empresa || 'cliente sem nome') + ' aberto. Continua de onde parou.');
+  }
+  function excluirDiagnostico(id){
+    const a = arquivo(); delete a[id]; guardarArquivo(a);
+    nuvemApagar(id);
+    if(dx.id === id){ dx = novoDx(); store.set(dxKey(), dx); montar(slides[idx] && slides[idx].id); }
+    montarArquivo();
+  }
+  function montarArquivo(){
+    const box = $('#pkArq'), busca = ($('#pkBusca').value || '').trim().toLowerCase();
+    const itens = Object.values(arquivo()).sort((x, y) => (y.ts || 0) - (x.ts || 0));
+    box.hidden = !N;
+    const nome = id => { const n = NICHOS.find(x => x.id === id); return n ? n.nome : id; };
+    const achados = itens.filter(it => !busca || [it.empresa, it.whatsapp, nome(it.nicho)].join(' ').toLowerCase().includes(busca) || String(it.whatsapp).replace(/\D/g, '').includes(busca.replace(/\D/g, '') || '§'));
+    $('#pkArqList').innerHTML = achados.slice(0, 60).map(it => {
+      const cur = dx && dx.id === it.id && N && N.id === it.nicho;
+      return `<div class="arq-row${cur ? ' cur' : ''}">
+        <div class="arq-n"><b>${esc(it.empresa || 'Sem nome')}</b><span>${esc([nome(it.nicho), it.data ? dataBR(it.data) : '', it.whatsapp].filter(Boolean).join(' · '))}${cur ? ' · aberto agora' : ''}</span></div>
+        <span class="arq-p tier ${tier(it.aprov)}">${it.aprov == null ? '--' : it.aprov + '%'}</span>
+        <button class="tb" type="button" data-abrir="${esc(it.id)}">${cur ? 'Aberto' : 'Abrir'}</button>
+        <button class="tb" type="button" data-excluir="${esc(it.id)}">Excluir</button>
+      </div>`;
+    }).join('') || `<p class="small">${itens.length ? 'Nada encontrado com essa busca.' : 'Nenhum diagnóstico salvo ainda.'}</p>`;
+    $('#pkArqNota').textContent = itens.length + (itens.length === 1 ? ' diagnóstico guardado' : ' diagnósticos guardados') +
+      (nuvem ? ' neste navegador e na sua conta do Claude (abre em qualquer aparelho pelo link).' : ' neste navegador. Para levar a outro computador, baixe a cópia de segurança e importe lá.');
+  }
+  $('#pkBusca').addEventListener('input', montarArquivo);
+  $('#pkArqList').addEventListener('click', e => {
+    const ab = e.target.closest('[data-abrir]'), ex = e.target.closest('[data-excluir]');
+    if(ab) abrirDiagnostico(ab.dataset.abrir);
+    if(ex) confirmar(ex, 'Confirmar', () => excluirDiagnostico(ex.dataset.excluir));
+  });
+  $('#pkBackup').addEventListener('click', () => {
+    if(saveT) gravarDx();
+    const itens = Object.values(arquivo());
+    if(!itens.length){ toast('Nenhum diagnóstico para baixar.'); return; }
+    const corpo = JSON.stringify({ tipo:'ribeker-diagnosticos', versao:1, exportado:new Date().toISOString(), itens }, null, 1);
+    salvarArquivo('diagnosticos-ribeker-' + hojeISO() + '.json', new Blob([corpo], { type:'application/json' }), 'application/json');
+  });
+  $('#pkImport').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      try{
+        const j = JSON.parse(fr.result);
+        if(!j || j.tipo !== 'ribeker-diagnosticos' || !Array.isArray(j.itens)) throw new Error('formato');
+        const a = arquivo(); let n = 0;
+        j.itens.forEach(it => { if(!it || !it.id || !it.dx) return; if(!a[it.id] || (it.ts || 0) > (a[it.id].ts || 0)){ a[it.id] = it; n++; nuvemAgendar(it); } });
+        guardarArquivo(a); montarArquivo();
+        toast(n ? n + (n === 1 ? ' diagnóstico importado.' : ' diagnósticos importados.') : 'Esses diagnósticos já estavam aqui.');
+      }catch(err){ toast('Arquivo não reconhecido. Use a cópia de segurança baixada aqui.'); }
+      e.target.value = '';
+    };
+    fr.readAsText(f);
+  });
+
+  // ---- na sua conta, quando aberto pelo link do claude.ai (privado: data/users/<seu id>) ----
+  let nuvem = null, nuvemUid = null, nuvemIniciada = null, nuvemT = null, nuvemOcupada = false;
+  const nuvemFila = new Map(), nuvemUltimo = new Map();
+  const docNuvem = id => nuvem.collection('data/users/' + nuvemUid).doc('diag-' + id);
+  function iniciarNuvem(){
+    if(nuvemIniciada) return nuvemIniciada;
+    nuvemIniciada = (async () => {
+      if(!(window.claude && typeof window.claude.use === 'function')) return;
+      try{
+        const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+        if(!db || !user) return;
+        const uid = await user.id();
+        if(!uid) return;
+        nuvem = db; nuvemUid = uid;
+        const snap = await nuvem.collection('data/users/' + uid).get();
+        const a = arquivo(), naNuvem = new Set();
+        let mudou = false;
+        snap.docs.forEach(d => {
+          const v = d.data();
+          if(!v || !v.id) return;
+          naNuvem.add(v.id);
+          nuvemUltimo.set(v.id, JSON.stringify(v));
+          if(v.apagado){ if(a[v.id] && (a[v.id].ts || 0) <= (v.ts || 0)){ delete a[v.id]; mudou = true; } return; }
+          if(v.dx && (!a[v.id] || (v.ts || 0) > (a[v.id].ts || 0))){ a[v.id] = v; mudou = true; }
+        });
+        if(mudou) guardarArquivo(a);
+        Object.values(a).forEach(it => { if(!naNuvem.has(it.id)) nuvemAgendar(it); });
+        if(!$('#picker').hidden) montarArquivo();
+      }catch(e){ nuvem = null; }
+    })();
+    return nuvemIniciada;
+  }
+  function nuvemAgendar(it){
+    iniciarNuvem();
+    nuvemFila.set(it.id, it);
+    clearTimeout(nuvemT); nuvemT = setTimeout(nuvemDrenar, 4000);
+  }
+  function nuvemApagar(id){ nuvemFila.set(id, { id, apagado:true, ts:Date.now() }); clearTimeout(nuvemT); nuvemT = setTimeout(nuvemDrenar, 500); }
+  async function nuvemDrenar(){
+    if(!nuvem || nuvemOcupada) return;
+    nuvemOcupada = true;
+    try{
+      for(const [id, it] of [...nuvemFila]){
+        nuvemFila.delete(id);
+        const corpo = JSON.stringify(it);
+        if(nuvemUltimo.get(id) === corpo) continue;          // só escreve o que mudou
+        try{ await docNuvem(id).set(JSON.parse(corpo)); nuvemUltimo.set(id, corpo); }
+        catch(e){ if(e && e.code === 'quota_exceeded') toast('A área da sua conta para diagnósticos está cheia. Exclua os antigos.'); }
+      }
+    }finally{ nuvemOcupada = false; }
   }
 
   // ============ seletor de nicho ============
@@ -1049,6 +1214,9 @@
         <div class="h3">${esc(n.nome)}</div><div class="small">${esc(n.descricao || '')}</div></button>`;
     }).join('') || '<p class="sub">Nenhum nicho carregado. Confira as linhas &lt;script src="nichos/..."&gt; no index.html.</p>';
     $('#pkClose').hidden = !N;
+    if(saveT) gravarDx();
+    montarArquivo();
+    iniciarNuvem().then(() => { if(!$('#picker').hidden) montarArquivo(); });
     montarSigilo();
     $('#picker').hidden = false;
     const first = $('.pk-card', $('#picker')); if(first) first.focus();
@@ -1599,6 +1767,7 @@
   }
 
   // ============ início ============
+  migrarAntigos();
   $('#miniLogo').src = MARCA.icone || MARCA.logo || '';
   window.RB = { proj, custoEsperar, geral, areaStats, resumoTexto, escolherNicho, ir, montarRelatorio, montarPdf, estadoQ, respEfetiva, get dx(){ return dx; }, get nicho(){ return N; } };
   const hash = (location.hash || '').replace('#', '');

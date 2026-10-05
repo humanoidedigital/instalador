@@ -467,7 +467,24 @@ s{opacity:.6}
 .pk-card .small{flex:1}
 .pk-meta{font-size:clamp(9.5px,.8cqw,12.5px);color:var(--acc);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 .pk-close{position:absolute;top:2cqw;right:2cqw}
-.picker{overflow-y:auto}
+/* centraliza quando cabe e rola quando não cabe (sem cortar o topo) */
+.picker{overflow-y:auto;justify-content:flex-start}
+.picker > .kicker{margin-top:auto}
+.picker > :last-child{margin-bottom:auto}
+.pk-arq{display:flex;flex-direction:column;gap:.6cqw;padding-top:1.2cqw;border-top:1px solid var(--line)}
+.pk-arq-head{display:flex;flex-wrap:wrap;align-items:center;gap:.7cqw}
+.pk-arq-head .label{margin-right:auto}
+.pk-busca{min-width:min(100%,24cqw);padding:.5cqw 1cqw;min-height:32px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--tx);font:500 clamp(11px,.9cqw,14px)/1.2 var(--f-body);outline:none}
+.pk-busca:focus{border-color:var(--acc)}
+.pk-arq-head label.tb{cursor:pointer}
+.arq-list{display:flex;flex-direction:column;gap:.4cqw;max-height:min(34vh,22cqw);overflow-y:auto;padding-right:.3cqw}
+.arq-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:.8cqw;padding:.6cqw 1cqw;border-radius:.8cqw;border:1px solid var(--line);background:var(--panel)}
+.arq-row.cur{border-color:var(--acc)}
+.arq-n{display:flex;flex-direction:column;gap:.15cqw;min-width:0}
+.arq-n b{font-size:clamp(11.5px,1cqw,16px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arq-n span{font-size:clamp(9.5px,.78cqw,12.5px);color:var(--mut2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arq-p{font:800 clamp(12px,1cqw,16px)/1 var(--f-disp);min-width:3.2em;text-align:right}
+.arq-p.red{color:var(--bad)} .arq-p.yellow{color:var(--warn)} .arq-p.green{color:var(--ok)} .arq-p.nodata{color:var(--mut2)}
 .pk-sig{display:flex;flex-direction:column;gap:.6cqw;padding-top:1.2cqw;border-top:1px solid var(--line)}
 .pk-sig .small{max-width:80ch}
 .pk-sig-list{display:flex;flex-wrap:wrap;gap:.6cqw}
@@ -504,6 +521,8 @@ s{opacity:.6}
   .slide.cs .quote,.slide.cs .insight{max-width:none}
   .cs-tbl{font-size:11px}
   .notas{left:12px;right:12px;bottom:70px;max-height:45%}
+  .arq-row{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}
+  .arq-list{max-height:40vh}
   .slide.esp .esp-foto{position:relative;flex:none;align-self:stretch;width:calc(100% + 36px);max-width:none;height:320px;margin:-52px -18px 0}
   .slide.esp > :not(.esp-foto){max-width:100%}
   .brand{min-height:64px}
@@ -635,6 +654,16 @@ s{opacity:.6}
       <h2 class="h2">Para quem é a reunião <span class="hl">de hoje?</span></h2>
       <p class="sub">Cada nicho tem as próprias perguntas, termos e projeção. O pitch e a lógica são os mesmos.</p>
       <div class="pk-grid" id="pkGrid"></div>
+      <div class="pk-arq" id="pkArq" hidden>
+        <div class="pk-arq-head">
+          <div class="label">Diagnósticos salvos</div>
+          <input class="pk-busca" id="pkBusca" type="search" placeholder="Buscar por nome ou WhatsApp" autocomplete="off">
+          <button class="tb" id="pkBackup" type="button">Baixar cópia de segurança</button>
+          <label class="tb" for="pkImport">Importar cópia</label><input id="pkImport" type="file" accept=".json,application/json" hidden>
+        </div>
+        <div class="arq-list" id="pkArqList"></div>
+        <p class="small" id="pkArqNota"></p>
+      </div>
       <div class="pk-sig" id="pkSig" hidden>
         <div class="label">Proteção de concorrente · <span id="pkSigNicho"></span></div>
         <p class="small">O cliente de hoje é do mesmo segmento de alguma dessas marcas? Clique para ocultar nome, logo e o que identifica a empresa. O case continua na apresentação. Fica guardado neste diagnóstico; "Novo diagnóstico" limpa.</p>
