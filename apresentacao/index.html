@@ -511,6 +511,8 @@ s{opacity:.6}
 .picker{overflow-y:auto;justify-content:flex-start}
 .picker > .kicker{margin-top:auto}
 .picker > :last-child{margin-bottom:auto}
+.pk-go-bar{position:sticky;bottom:-5cqw;z-index:2;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:1cqw;padding:.9cqw 0 1.1cqw;margin:0 0 -5cqw;background:#030c20;border-top:1px solid var(--line);order:99}
+.pk-go-bar .small{color:var(--mut)}
 .pk-parc{display:flex;flex-direction:column;gap:.6cqw;padding-top:1.2cqw;border-top:1px solid var(--line)}
 .pk-parc .small{max-width:90ch}
 .pk-parc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,22cqw),1fr));gap:1cqw}
@@ -561,10 +563,6 @@ s{opacity:.6}
 .cad{width:1em;height:1em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .brand.sig{background:#e9eef7}
 .brand.sig .bn{display:inline-flex;align-items:center;gap:.4em;color:#33445f;font-size:clamp(12px,1.15cqw,19px)}
-.cs-marca.sig{gap:.8cqw}
-.cs-sig{display:inline-flex;align-items:center;gap:.5em;color:#0c1a33}
-.cs-sig .cad{width:1.1em;height:1.1em}
-.cs-sigtag{font:700 clamp(7.5px,.6cqw,10px)/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:#5a6b88}
 
 .toast{position:absolute;left:50%;bottom:6cqw;z-index:45;transform:translate(-50%,1cqw);opacity:0;pointer-events:none;padding:.8em 1.2em;border-radius:999px;
   background:#0d2b5e;border:1px solid var(--acc);font-size:clamp(11px,.9cqw,14px);font-weight:600;transition:opacity .3s,transform .3s;max-width:90%;text-align:center}
@@ -740,9 +738,10 @@ s{opacity:.6}
         <div class="arq-list" id="pkArqList"></div>
         <p class="small" id="pkArqNota"></p>
       </div>
+      <div class="pk-go-bar"><span class="small" id="pkGoInfo"></span><button class="btn" id="pkGo" type="button">Começar a apresentação →</button></div>
       <div class="pk-sig" id="pkSig" hidden>
         <div class="label">Proteção de concorrente · <span id="pkSigNicho"></span></div>
-        <p class="small">O cliente de hoje é do mesmo segmento de alguma dessas marcas? Clique para ocultar nome, logo e o que identifica a empresa. O case continua na apresentação. Fica guardado neste diagnóstico; "Novo diagnóstico" limpa.</p>
+        <p class="small">O cliente de hoje é do mesmo segmento de alguma dessas marcas? Clique para proteger: o logo vira "Cliente sob sigilo" e o case dela sai da apresentação, porque sem o nome os números ainda identificariam a empresa. Fica guardado neste diagnóstico.</p>
         <div class="pk-sig-list" id="pkSigList"></div>
       </div>
     </div>

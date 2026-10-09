@@ -67,7 +67,7 @@ NICHO({
       id: 'marketing', area: 'marketing',
       kicker: 'Raio-X · Marketing',
       titulo: 'Marketing e *Tráfego Pago*',
-      sub: 'Anúncio, rastreamento, redes sociais e capacidade de atendimento',
+      sub: 'Anúncio, rastreamento e capacidade de atendimento',
       perguntas: [
         { id: 'trafego', texto: 'Tem anúncio pago rodando hoje?', sub: 'Meta Ads (Instagram/Facebook), Google ou outro canal', tipo: 'unica',
           opcoes: [{ t: 'Sim, onde?', dor: 0, campo: 'canal' }, { t: 'Já anunciou, mas parou', dor: 1 }, { t: 'Nunca anunciou', dor: 1 }],

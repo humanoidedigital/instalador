@@ -93,7 +93,7 @@ NICHO({
       id: 'marketing', area: 'marketing',
       kicker: 'Raio-X · Especialista',
       titulo: 'Marketing e *Tráfego Pago*',
-      sub: 'Diagnóstico de tráfego pago, redes sociais e capacidade de atendimento',
+      sub: 'Diagnóstico de tráfego pago, presença digital e capacidade de atendimento',
       perguntas: [
         // pontua no Comercial, como no original ("tem tráfego pago rodando hoje?")
         { id: 'trafego', area: 'comercial', texto: 'Tem anúncio pago rodando hoje?', sub: 'Meta Ads (Instagram/Facebook), Google ou outro canal', tipo: 'unica',

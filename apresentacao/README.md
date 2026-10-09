@@ -102,7 +102,8 @@ gancho, antes, virada, resultado, moral, e uma linha `obs` dizendo de onde vem o
 
 ## Parceiros (indicação)
 
-No seletor (botão Nicho), a categoria **Parceiros** pergunta se o cliente veio por indicação. O estilo de parceiro vale
+No seletor (botão Nicho), escolha o nicho e, em **Parceiros**, se o cliente veio por indicação; depois clique em
+**Começar a apresentação**. A ordem não importa: o parceiro escolhido acompanha a troca de nicho. O estilo de parceiro vale
 por cima do nicho e fica guardado no diagnóstico; o selo aparece ao lado do nicho, no rodapé.
 
 **Parceiro de social mídia** (`parceiros/social-midia.js`): agência de social mídia que indica a Ribeker. Para não haver
@@ -128,16 +129,15 @@ social-midia.js, e registre no index.html"*. Qualquer chave de `marca.js` pode s
 ## Proteção de concorrente
 
 Apresentando para alguém do mesmo segmento de uma marca dos cases (ex.: um escritório de arquitetura e o case Dua)?
-O nome, o logo e o que identifica a empresa somem, e o case continua: aparece "Escritório de arquitetura · cliente
-sob sigilo", com os números, a história e a fala de 30 segundos sem o nome.
+O logo vira "Cliente sob sigilo" no slide de marcas e **o case dela sai da apresentação inteiro**: sem o nome, os
+números e a história ainda identificariam a empresa para quem conhece o mercado.
 
-- **Manual, por reunião:** botão "Nicho" (canto inferior esquerdo) → "Proteção de concorrente" → clique na marca.
-  Fica guardado no diagnóstico atual; "Novo diagnóstico" limpa.
 - **Automático por nicho:** cada marca tem `concorrentes` em `marcas.lista` (ex.: Dua: `arquitetura`, `interiores`).
-  Se o id do nicho ou uma tag em `concorrencia` do nicho bater, a marca já começa protegida. Ex.: um nicho
-  `id: 'arquitetura'` protege a Dua sozinho; um nicho de reformas pode ter `concorrencia: ['arquitetura', 'interiores']`.
-- **O que troca no case:** `cases.lista[].sigilo` (nome no lugar do logo e a versão sem identificação de qualquer campo:
-  `fala`, `antes`, `titulo`, `tabela`...). Se sobrar o nome da marca em algum texto, ele é trocado por "cliente sob sigilo".
+  Se o id do nicho ou uma tag em `concorrencia` do nicho bater, a marca já começa protegida (no nicho Arquitetura,
+  a Dua sai sozinha).
+- **Manual, por reunião:** botão "Nicho" → "Proteção de concorrente" → clique na marca. Fica guardado no diagnóstico.
+- Os outros cases continuam, renumerados ("Case 1 de 4").
+- Se sobrar o nome de uma marca protegida em algum texto, ele é trocado por "cliente sob sigilo".
 
 ## Quando o lead não sabe o número
 

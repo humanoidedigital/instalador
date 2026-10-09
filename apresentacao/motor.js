@@ -399,6 +399,8 @@
     return man != null ? !!man : sigiloAuto(m);
   }
   const caseProtegido = c => (c.marcas || []).some(protegida);
+  // case de marca protegida sai da apresentação inteiro: sem o nome, os números ainda identificam a empresa
+  const casosVisiveis = () => list('cases.lista').map((c, ci) => ({ c, ci })).filter(x => !caseProtegido(x.c));
   // rede de segurança: troca qualquer nome protegido que tenha sobrado em texto (ex.: texto editado depois)
   function anonimizar(root){
     if(editing) return;
@@ -556,15 +558,12 @@
     },
 
     // um slide por case: gancho, antes, virada, resultado (números ou tabela), moral e de onde vem o número
-    caso: ci => {
-      const b = 'cases.lista.' + ci, c = list('cases.lista')[ci] || {}, tot = list('cases.lista').length;
-      // proteção de concorrente: com a marca protegida, cada campo usa a versão de "sigilo" quando ela existe
-      const prot = caseProtegido(c);
-      const cp = rest => { const sp = b + '.sigilo.' + rest, v = prot ? raw(sp) : null; return v != null && v !== '' ? sp : b + '.' + rest; };
+    caso: (ci, pos, tot) => {
+      const b = 'cases.lista.' + ci, c = list('cases.lista')[ci] || {};
+      const cp = rest => b + '.' + rest;
       const logos = (c.logos || []).filter(Boolean);
-      const marca = prot ? `<span class="cs-sig">${CADEADO}${T(raw(b + '.sigilo.nome') ? b + '.sigilo.nome' : b + '.segmento', 'span', 'cs-nome')}</span>${T('marcas.sigiloRotulo', 'span', 'cs-sigtag')}`
-        : logos.length ? logos.map(l => `<img src="${esc(l)}" alt="">`).join('') : T(b + '.marca', 'span', 'cs-nome');
-      const degraus = Array.from({ length:tot }, (_, j) => `<i class="${j <= ci ? 'on' : ''}" style="height:${(35 + 65 * (j + 1) / tot).toFixed(0)}%"></i>`).join('');
+      const marca = logos.length ? logos.map(l => `<img src="${esc(l)}" alt="">`).join('') : T(b + '.marca', 'span', 'cs-nome');
+      const degraus = Array.from({ length:tot }, (_, j) => `<i class="${j <= pos ? 'on' : ''}" style="height:${(35 + 65 * (j + 1) / tot).toFixed(0)}%"></i>`).join('');
       const tb = c.tabela;
       // funil opcional: barras proporcionais ao número de cada etapa
       const fv = (c.funil || []).map(f => parseFloat(String(f.valor).replace(/\./g, '').replace(',', '.')) || 0), fmax = Math.max.apply(null, fv.concat(1));
@@ -573,8 +572,8 @@
           <tbody>${(tb.linhas || []).map((l, li) => `<tr>${l.map((x, k) => T(cp('tabela.linhas.' + li + '.' + k), 'td')).join('')}</tr>`).join('')}</tbody></table>${tb.rodape ? T(cp('tabela.rodape'), 'div', 'small') : ''}</div>`
         : `<div class="cs-res${c.funil ? ' com-funil' : ''}">${T('cases.resultadoRotulo', 'div', 'label')}${funil}<div class="cs-stats">${(c.numeros || []).map((x, k) => `<div class="stat">${T(cp('numeros.' + k + '.valor'), 'div', 'n count')}${T(cp('numeros.' + k + '.rotulo'), 'div', 'l')}</div>`).join('')}</div></div>`;
       return `
-      <div class="cs-head reveal"><div class="cs-marca${prot ? ' sig' : ''}">${marca}</div><div class="cs-degraus" title="Do mais simples ao mais completo" aria-hidden="true">${degraus}</div></div>
-      <div class="kicker reveal"><span>${T('cases.kicker')} ${ci + 1} de ${tot} · ${T(cp('segmento'))}</span></div>
+      <div class="cs-head reveal"><div class="cs-marca">${marca}</div><div class="cs-degraus" title="Do mais simples ao mais completo" aria-hidden="true">${degraus}</div></div>
+      <div class="kicker reveal"><span>${T('cases.kicker')} ${pos + 1} de ${tot} · ${T(cp('segmento'))}</span></div>
       ${T(cp('titulo'), 'h2', 'h2 reveal')}
       ${T(cp('gancho'), 'div', 'quote reveal')}
       <div class="cs-grid${tb ? ' com-tabela' : ''} reveal">
@@ -742,8 +741,7 @@
       { id:'resolvemos', html:B.resolvemos },
       { id:'perfis', html:B.perfis },
       { id:'marcas', html:B.marcas },
-      ...list('cases.lista').map((c, ci) => ({ id:'case-' + (c.id || ci + 1), html:() => B.caso(ci), cls:'cs',
-        nota:'cases.lista.' + ci + (caseProtegido(c) && raw('cases.lista.' + ci + '.sigilo.fala') ? '.sigilo.fala' : '.fala') })),
+      ...casosVisiveis().map((x, pos, arr) => ({ id:'case-' + (x.c.id || x.ci + 1), html:() => B.caso(x.ci, pos, arr.length), cls:'cs', nota:'cases.lista.' + x.ci + '.fala' })),
       { id:'ponte', html:B.ponte, nota:'ponte.fala' },
       { id:'mkt', html:B.mkt },
       { id:'ferramenta', html:B.ferramenta },
@@ -1408,6 +1406,7 @@
         <div class="h3">${esc(n.nome)}</div><div class="small">${esc(n.descricao || '')}</div></button>`;
     }).join('') || '<p class="sub">Nenhum nicho carregado. Confira as linhas &lt;script src="nichos/..."&gt; no index.html.</p>';
     $('#pkClose').hidden = !N;
+    atualizarGo();
     if(saveT) gravarDx();
     montarParceiros();
     montarArquivo();
@@ -1417,6 +1416,10 @@
     const first = $('.pk-card', $('#picker')); if(first) first.focus();
   }
   function fecharPicker(){ $('#picker').hidden = true; }
+  function atualizarGo(){
+    $('#pkGo').disabled = !N;
+    $('#pkGoInfo').textContent = N ? N.nome + (PA ? ' · ' + (PA.chip || PA.nome) + (dx.parceiroNome ? ' (' + dx.parceiroNome + ')' : '') : ' · venda direta') : 'Escolha o nicho';
+  }
   function montarParceiros(){
     const box = $('#pkParc');
     box.hidden = !N || !PARCEIROS.length;
@@ -1497,7 +1500,7 @@
     store.set(PARC_KEY, reg); nuvemParceiros();
     dx.parceiroAg = id; dx.parceiroNome = nome; dx.margem = JSON.parse(JSON.stringify(mpEstado.margem));
     gravarDx(); fecharModalParceiro();
-    montar(slides[idx] && slides[idx].id); montarParceiros(); montarArquivo();
+    montar(slides[idx] && slides[idx].id); montarParceiros(); montarArquivo(); atualizarGo();
     toast(nome + ' salvo: ' + resumoMargem(dx.margem) + '. O cliente vê só o preço final.');
   });
   $('#mpExcluir').addEventListener('click', e => confirmar(e.currentTarget, 'Confirmar exclusão', () => {
@@ -1515,7 +1518,7 @@
     if(id) dx.parceiro = id; else delete dx.parceiro;
     delete dx.faixa; delete dx.parceiroAg; delete dx.parceiroNome; delete dx.margem;
     gravarDx(); montar(slides[idx] && slides[idx].id);
-    montarParceiros(); montarArquivo();
+    montarParceiros(); montarArquivo(); atualizarGo();
     toast(PA ? (PA.chip || PA.nome) + ': ' + (PA.aviso || 'estilo de parceiro ligado.') : 'Venda direta: oferta completa.');
   });
 
@@ -1541,15 +1544,26 @@
   });
   $('#nichoBtn').addEventListener('click', abrirPicker);
   $('#pkClose').addEventListener('click', fecharPicker);
-  $('#pkGrid').addEventListener('click', e => { const c = e.target.closest('[data-nicho]'); if(c){ escolherNicho(c.dataset.nicho); fecharPicker(); } });
+  $('#pkGrid').addEventListener('click', e => {
+    const c = e.target.closest('[data-nicho]');
+    if(!c) return;
+    if(!N || N.id !== c.dataset.nicho) escolherNicho(c.dataset.nicho);
+    abrirPicker();
+    const pc = $('#pkParc'); if(pc && !pc.hidden) pc.scrollIntoView({ block:'center', behavior:'smooth' });
+  });
+  $('#pkGo').addEventListener('click', () => { if(N){ fecharPicker(); ir(0, true); } });
+  const CAMPOS_PARCEIRO = ['parceiro', 'parceiroAg', 'parceiroNome', 'margem'];
   function escolherNicho(id){
     const n = NICHOS.find(x => x.id === id);
     if(!n) return;
     if(saveT) gravarDx();
+    // a reunião é a mesma: o parceiro escolhido vai junto para o nicho novo, se lá ainda não tem diagnóstico
+    const parc = {}; CAMPOS_PARCEIRO.forEach(k => { if(dx && dx[k] != null) parc[k] = JSON.parse(JSON.stringify(dx[k])); });
     N = n;
     store.set('rb:nicho', id);
     try{ history.replaceState(null, '', '#' + id); }catch(e){}
     dx = Object.assign(novoDx(), store.get(dxKey()) || {});
+    if(parc.parceiro && !dx.parceiro && !temConteudo(dx)){ Object.assign(dx, parc); gravarDx(); }
     abertos.clear();
     montar();
     if(dx.ident && dx.ident.empresa) toast('Diagnóstico de ' + dx.ident.empresa + ' retomado.');
