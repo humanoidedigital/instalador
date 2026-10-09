@@ -176,6 +176,30 @@ s{opacity:.6}
 .derived .dl{font:700 clamp(8px,.68cqw,11px)/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--mut2)}
 .dchip{display:inline-flex;align-items:center;gap:.45em;padding:.5cqw .9cqw;border-radius:999px;background:rgba(59,142,243,.1);border:1px solid rgba(59,142,243,.32);font-size:clamp(9.5px,.82cqw,13px);color:var(--mut)}
 .dchip b{color:var(--tx);font-variant-numeric:tabular-nums}
+.dref{color:var(--mut2);font-size:.9em}
+/* onde o funil vaza */
+.fn-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:1.6cqw;width:100%;align-items:start}
+.fn-etapas{display:flex;flex-direction:column;gap:.25cqw}
+.fn-et{display:grid;grid-template-columns:minmax(0,1fr) 7.5em 11em;align-items:center;gap:1cqw}
+.fn-bar{height:1.5cqw;min-height:12px;border-radius:.4cqw;background:rgba(150,190,255,.07);overflow:hidden}
+.fn-bar i{display:block;height:100%;border-radius:.4cqw;background:linear-gradient(90deg,var(--acc-strong),var(--acc));transition:width .8s cubic-bezier(.16,1,.3,1)}
+.fn-n{font:800 clamp(14px,1.45cqw,23px)/1 var(--f-disp);text-align:right;font-variant-numeric:tabular-nums}
+.fn-n .empty{font:500 clamp(9px,.74cqw,12px)/1 var(--f-body)}
+.fn-l{font-size:clamp(10px,.86cqw,14px);color:var(--mut)}
+.fn-passo{display:flex;align-items:center;flex-wrap:wrap;gap:.5em;padding:.2cqw 0 .2cqw 1cqw;font-size:clamp(9.5px,.8cqw,13px);color:var(--mut)}
+.fn-passo b{font-variant-numeric:tabular-nums;color:var(--tx)}
+.fn-seta{color:var(--mut2)}
+.fn-passo.ok b{color:var(--ok)} .fn-passo.warn b{color:var(--warn)} .fn-passo.bad b{color:var(--bad)}
+.fn-area{padding:.15em .6em;border-radius:999px;border:1px solid var(--line);font-size:.85em;color:var(--mut2)}
+.fn-lado{display:flex;flex-direction:column;gap:.7cqw}
+.fn-custos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6cqw}
+.fn-c{display:flex;flex-direction:column;gap:.2cqw;padding:.7cqw 1cqw;border-radius:.8cqw;border:1px solid var(--line);background:var(--panel)}
+.fn-c span{font-size:clamp(8.5px,.72cqw,11.5px);color:var(--mut2);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.fn-c b{font:800 clamp(14px,1.35cqw,22px)/1.1 var(--f-disp);font-variant-numeric:tabular-nums}
+.fn-ver{gap:.5cqw}
+.fn-placar{display:flex;flex-wrap:wrap;gap:.6cqw}
+.fn-placar span{padding:.3em .8em;border-radius:999px;background:var(--panel2);font-size:clamp(10px,.86cqw,14px);color:var(--mut)}
+.fn-placar span.red{background:rgba(255,107,107,.14);color:var(--bad)} .fn-placar span.yellow{background:rgba(246,181,68,.14);color:var(--warn)} .fn-placar span.green{background:rgba(56,211,159,.14);color:var(--ok)}
 .quote{max-width:64cqw;padding:.9cqw 1.3cqw;border-left:3px solid var(--acc);background:var(--panel);border-radius:0 .8cqw .8cqw 0;font:500 clamp(11px,.98cqw,16px)/1.55 var(--f-body);color:var(--mut);font-style:italic}
 /* 5 por linha; a última linha fica centralizada */
 .brands{display:flex;flex-wrap:wrap;justify-content:center;gap:.9cqw;width:100%}
@@ -495,7 +519,22 @@ s{opacity:.6}
 .pk-pc span{font-size:clamp(9.5px,.8cqw,12.5px);color:var(--mut2);line-height:1.4}
 .pk-pc:hover{border-color:var(--acc)}
 .pk-pc.cur{border-color:var(--warn);background:rgba(246,181,68,.08);box-shadow:0 0 0 1px var(--warn)}
-.pk-parc-nome .pk-busca{width:min(100%,40cqw)}
+.pk-parc-nome{display:flex;flex-wrap:wrap;align-items:center;gap:.8cqw}
+.pk-parc-nome b{color:var(--tx)}
+.modal{position:absolute;inset:0;z-index:60;display:grid;place-items:center;padding:3cqw;background:rgba(2,8,22,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.md-box{display:flex;flex-direction:column;gap:.9cqw;width:min(100%,62cqw);max-height:100%;overflow-y:auto;padding:2cqw 2.2cqw;border-radius:1.2cqw;border:1px solid var(--line);background:#081a3c;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.md-row{display:grid;grid-template-columns:12em minmax(0,1fr);align-items:center;gap:1cqw;font-size:clamp(10.5px,.9cqw,14px);color:var(--mut)}
+.md-row .pk-busca{width:100%}
+.md-row select.pk-busca{appearance:auto}
+.md-tipo{display:flex;flex-wrap:wrap;gap:.5cqw}
+.md-tipo button{padding:.45cqw 1cqw;min-height:30px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--mut);font:600 clamp(10px,.85cqw,13.5px)/1 var(--f-body)}
+.md-tipo button.on{border-color:var(--acc);background:var(--acc-soft);color:#fff}
+.md-tab{font-size:clamp(10px,.86cqw,13.5px)}
+.md-tab td{padding:.45cqw .4cqw;vertical-align:middle}
+.md-tab b{color:var(--acc)}
+.mp-in{display:inline-flex;align-items:center;gap:.35em}
+.mp-in input{width:6.5em;padding:.3em .5em;border-radius:.4cqw;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--tx);font:600 clamp(11px,.9cqw,14px)/1.2 var(--f-body);text-align:right}
+.mp-in em{font-style:normal;color:var(--mut2)}
 .parc-chip{font-style:normal;padding:.15em .6em;border-radius:999px;background:rgba(246,181,68,.15);color:#ffe2a8;font-weight:700;white-space:nowrap}
 .pk-arq{display:flex;flex-direction:column;gap:.6cqw;padding-top:1.2cqw;border-top:1px solid var(--line)}
 .pk-arq-head{display:flex;flex-wrap:wrap;align-items:center;gap:.7cqw}
@@ -548,8 +587,11 @@ s{opacity:.6}
   .cs-tbl{font-size:11px}
   .notas{left:12px;right:12px;bottom:70px;max-height:45%}
   .arq-row{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}
-  .plans.tres,.pl-rod{grid-template-columns:minmax(0,1fr)}
+  .plans.tres,.pl-rod,.fn-grid{grid-template-columns:minmax(0,1fr)}
+  .fn-et{grid-template-columns:minmax(0,1fr) 6em 8em}
   .nicho-chip .parc-chip{display:none}
+  .md-box{width:100%;padding:16px}
+  .md-row{grid-template-columns:minmax(0,1fr)}
   .arq-list{max-height:40vh}
   .slide.esp .esp-foto{position:relative;flex:none;align-self:stretch;width:calc(100% + 36px);max-width:none;height:320px;margin:-52px -18px 0}
   .slide.esp > :not(.esp-foto){max-width:100%}
@@ -686,7 +728,7 @@ s{opacity:.6}
         <div class="label">Parceiros · o cliente veio por indicação?</div>
         <p class="small">O estilo de parceiro vale por cima do nicho e fica guardado neste diagnóstico. Com parceiro de social mídia, a oferta sai sem social mídia e entra a tabela de parceiros.</p>
         <div class="pk-parc-list" id="pkParcList"></div>
-        <div class="pk-parc-nome" id="pkParcNomeBox" hidden><input class="pk-busca" id="pkParcNome" type="text" placeholder="Nome do parceiro (opcional): aparece nos slides" autocomplete="off"></div>
+        <div class="pk-parc-nome" id="pkParcNomeBox" hidden><span class="small" id="pkParcResumo"></span><button class="tb" id="pkParcBtn" type="button">Dados do parceiro e margem</button></div>
       </div>
       <div class="pk-arq" id="pkArq" hidden>
         <div class="pk-arq-head">
@@ -702,6 +744,20 @@ s{opacity:.6}
         <div class="label">Proteção de concorrente · <span id="pkSigNicho"></span></div>
         <p class="small">O cliente de hoje é do mesmo segmento de alguma dessas marcas? Clique para ocultar nome, logo e o que identifica a empresa. O case continua na apresentação. Fica guardado neste diagnóstico; "Novo diagnóstico" limpa.</p>
         <div class="pk-sig-list" id="pkSigList"></div>
+      </div>
+    </div>
+    <div class="modal" id="mdParc" hidden role="dialog" aria-modal="true" aria-labelledby="mdParcT">
+      <div class="md-box">
+        <div class="kicker">Parceiro · só você vê</div>
+        <h3 class="h3" id="mdParcT">Dados do parceiro e margem</h3>
+        <div class="md-row"><label for="mpSel">Parceiro cadastrado</label><select class="pk-busca" id="mpSel"></select></div>
+        <div class="md-row"><label for="mpNome">Nome do parceiro</label><input class="pk-busca" id="mpNome" type="text" placeholder="Ex.: nome da agência" autocomplete="off"></div>
+        <div class="md-row"><span>Margem do parceiro</span><div class="md-tipo"><button type="button" data-mt="pct">% sobre o plano</button><button type="button" data-mt="brl">R$ fixo por plano</button></div></div>
+        <table class="tbl md-tab"><thead><tr><th>Plano</th><th>Margem</th><th>Tabela parceiro</th><th>Cliente vê</th></tr></thead><tbody id="mpTab"></tbody></table>
+        <div class="small" id="mpFaixa"></div>
+        <div><button class="tb" type="button" id="mpTodos">Usar o primeiro valor em todos</button></div>
+        <p class="small">A margem não aparece para o cliente: os planos mostram só o preço final (tabela de parceiros + margem). A conta fica aqui e nas notas do slide de planos (tecla N).</p>
+        <div class="btn-row"><button class="btn ghost" id="mpExcluir" type="button">Excluir do cadastro</button><span style="flex:1"></span><button class="btn ghost" id="mpCancelar" type="button">Cancelar</button><button class="btn" id="mpSalvar" type="button">Salvar</button></div>
       </div>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -986,6 +1042,16 @@ window.MARCA = {
         fala: '"Esse é o case que eu mais gosto. Duas empresas que não existiam: sem site, sem rede social, sem cliente. A gente montou tudo, do site ao CRM. No primeiro mês, com uns dez mil de anúncio cada, uma faturou perto de cento e cinquenta mil e a outra, cento e oitenta mil. Hoje cada uma fatura entre quatrocentos e quinhentos mil por mês, com vinte e cinco mil de mídia. Se funciona começando do zero, imagina numa {empresa} que já tem {temHoje}."'
       }
     ]
+  },
+
+  // slide "Onde o seu funil vaza" (só nos nichos com "funil" e "indicadores", ex.: genérico e arquitetura)
+  funil: {
+    kicker: 'Raio-X · Funil',
+    titulo: 'Onde o seu funil *vaza*',
+    custosRotulo: 'Quanto custa cada etapa',
+    veredito: 'Onde está o gargalo',
+    vazio: 'Preencha o raio-x e os números do marketing e de vendas para ver onde o funil vaza.',
+    nota: 'Como ler: de cima para baixo, cada seta é a taxa de uma etapa para a próxima. CTR e clique → lead mostram se o anúncio funciona (marketing); lead → reunião e reunião → venda mostram se o atendimento converte (vendas). Verde: igual ou acima da referência; amarelo: até 30% abaixo; vermelho: mais que isso. Sem cor: não há referência pública, vale o número do cliente.\nFala, se o gargalo for vendas: "Seu problema não é falta de lead. É o que acontece com o lead depois que ele chega."\nFala, se for marketing: "Seu time não tem o que converter: o anúncio não está trazendo gente suficiente."'
   },
 
   // depois dos cases: os cases provam o método, não prometem o resultado. A conta usa os números do raio-x
@@ -1586,6 +1652,528 @@ NICHO({
     referencia: { base: 5, ticket: 88030 },  // enquanto não preenchem: 5 vendas de exemplo e o ticket médio dos seminovos
     baseRotulo: '+{n} vendas a mais por mês',
     explicacao: '50% a mais que as {hoje} vendas de hoje'
+  }
+});
+
+</script>
+<script>/* nichos/generico.js */
+/* Nicho: Genérico. Para quando aparece uma reunião sem preparo: qualquer empresa que vende por lead.
+   O raio-x separa os dois lados e o funil mostra onde está o gargalo, se em MARKETING ou em VENDAS:
+   - Marketing: anúncio, rastreamento, oferta, criativos, destino + CTR e clique → lead (com referência de mercado)
+   - Vendas: processo, meta, resposta, follow-up, CRM + lead → reunião/orçamento → venda
+   Indicadores calculados com os números de cada tela: CPM, CTR, CPC, CPL, custo por reunião ou orçamento, CAC, ROAS.
+   Só CTR e clique → lead têm referência pública e pontuam; os outros dependem do ticket e do ciclo de cada negócio,
+   então aparecem como número, sem julgamento. */
+NICHO({
+  id: 'generico',
+  nome: 'Genérico · vende por lead',
+  descricao: 'Para prospectar sem preparo: qualquer empresa que vende por lead. Mostra se o gargalo é marketing ou vendas.',
+
+  termos: {
+    empresa: 'empresa', empresas: 'empresas',
+    cliente: 'cliente', clientes: 'clientes',
+    venda: 'venda', vendas: 'vendas',
+    ticket: 'ticket médio',
+    receita: 'receita', suaReceita: 'sua receita',
+    fimJornada: 'o contrato assinado',
+    compraPensada: 'qualquer compra de valor alto',
+    temHoje: 'nome e clientes'
+  },
+
+  publico: ['Empresas de serviços', 'Indústria e distribuição (B2B)', 'Clínicas e saúde', 'Imobiliário e construção', 'Varejo de ticket alto'],
+
+  perfis: {
+    itens: [
+      { perfil: 'Serviços para o consumidor', dor: 'Lead chega pelo WhatsApp e esfria sem resposta' },
+      { perfil: 'B2B e indústria', dor: 'Ciclo longo: proposta enviada vira silêncio' },
+      { perfil: 'Clínicas e saúde', dor: 'Agenda vazia com anúncio rodando' },
+      { perfil: 'Imobiliário e construção', dor: 'Muito curioso, pouco orçamento qualificado' },
+      { perfil: 'Varejo de ticket alto', dor: 'Cliente aparece na loja e ninguém sabe de onde veio' }
+    ]
+  },
+
+  areas: [
+    { id: 'marketing', nome: 'Marketing' },
+    { id: 'comercial', nome: 'Vendas' }
+  ],
+
+  raiox: [
+    {
+      id: 'vendas', area: 'comercial',
+      kicker: 'Raio-X · Vendas',
+      titulo: 'Vendas e *Prospecção*',
+      campos: [
+        { id: 'equipe', rotulo: 'Quantas pessoas atendem e vendem?', suf: 'pessoas', unidade: 'pessoas' }
+      ],
+      perguntas: [
+        { id: 'quemvende', texto: 'Quem vende hoje?', tipo: 'multipla',
+          opcoes: ['Dono', 'Gerente', 'Vendedores', 'Pré-vendas / SDR', 'Recepção'] },
+        { id: 'processo', texto: 'Como a empresa vende?', tipo: 'unica',
+          opcoes: [{ t: 'Existe processo de venda definido', dor: 0 }, { t: 'Cada um vende do seu jeito', dor: 1 }],
+          acao: 'Definir um processo de venda único, com as mesmas etapas para todo mundo que atende.' },
+        { id: 'ativo', texto: 'O time faz prospecção ativa?', sub: 'Base de clientes, parcerias, indicação, eventos', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: '+ ou -', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          acao: 'Colocar prospecção ativa na rotina da semana: base de clientes, parcerias, indicação e eventos.' },
+        { id: 'meta', texto: 'Tem meta de vendas definida?', tipo: 'unica',
+          opcoes: [{ t: 'Sim, por pessoa e por semana', dor: 0 }, { t: 'Só mensal', dor: 0.5 }, { t: 'Não tem metas', dor: 1 }],
+          acao: 'Quebrar a meta do mês em meta de semana por pessoa, com acompanhamento à vista.' },
+        { id: 'lider', texto: 'Alguém acompanha o comercial com meta e cobrança?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Ter um responsável pelo comercial, que acompanha meta, funil e time toda semana.' }
+      ]
+    },
+    {
+      id: 'marketing', area: 'marketing',
+      kicker: 'Raio-X · Marketing',
+      titulo: 'Marketing e *Tráfego Pago*',
+      sub: 'Anúncio, rastreamento, redes sociais e capacidade de atendimento',
+      perguntas: [
+        { id: 'trafego', texto: 'Tem anúncio pago rodando hoje?', sub: 'Meta Ads (Instagram/Facebook), Google ou outro canal', tipo: 'unica',
+          opcoes: [{ t: 'Sim, onde?', dor: 0, campo: 'canal' }, { t: 'Já anunciou, mas parou', dor: 1 }, { t: 'Nunca anunciou', dor: 1 }],
+          acao: 'Começar campanha paga com verba controlada e custo por lead medido desde o primeiro dia.' },
+        { id: 'tracking', texto: 'Sabe quantos leads e vendas vieram de cada anúncio?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Mais ou menos', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'trafego', oculta: [2], motivo: 'nunca anunciou' },
+          acao: 'Instalar rastreamento (pixel, API de conversões e UTMs) para saber quanto cada campanha gera de lead e de venda.' },
+        { id: 'oferta', texto: 'O anúncio tem uma oferta clara?', sub: 'O que é, para quem, e por que agora', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: '+ ou -', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'trafego', oculta: [2], motivo: 'nunca anunciou' },
+          acao: 'Reescrever a oferta do anúncio: o que é, para quem e por que agora, com um próximo passo claro.' },
+        { id: 'criativos', texto: 'Testa criativos novos todo mês?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Às vezes', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'trafego', oculta: [2], motivo: 'nunca anunciou' },
+          acao: 'Testar criativos novos todo mês e pausar o que não traz lead: o anúncio cansa.' },
+        { id: 'destino', texto: 'Para onde o anúncio leva?', tipo: 'unica',
+          opcoes: ['WhatsApp', 'Formulário do Meta ou do Google', 'Site ou landing page', 'Direct do Instagram'],
+          depende: { q: 'trafego', oculta: [2], motivo: 'nunca anunciou' } },
+        { id: 'capacidade', texto: 'A empresa tem capacidade para atender mais clientes?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
+        { id: 'posta', tema: 'social', texto: 'Posta nas redes sociais com frequência?', tipo: 'unica',
+          opcoes: ['Sim, com frequência', 'Posta, mas sem frequência', 'Não posta'] },
+        { id: 'socialmidia', tema: 'social', texto: 'Tem um social mídia?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' },
+          acao: 'Ter alguém responsável pelas redes, com rotina de publicação definida.' },
+        { id: 'estrategia', tema: 'social', texto: 'Tem estratégia por trás das postagens?', sub: 'Pauta pensada para atrair, gerar confiança e chamar para a compra', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' },
+          acao: 'Montar linha editorial com pauta da semana, dividindo o conteúdo entre atrair, gerar confiança e chamar para a compra.' }
+      ]
+    },
+    {
+      id: 'leads', area: 'comercial',
+      kicker: 'Raio-X · Vendas',
+      titulo: 'Geração de Leads e *Posicionamento*',
+      sub: 'De onde vêm os clientes e como a empresa é lembrada',
+      perguntas: [
+        { id: 'funis', texto: 'De onde chegam os leads hoje?', tipo: 'multipla', bom: 3,
+          opcoes: ['Tráfego pago', 'Instagram orgânico', 'Google (busca e Perfil da Empresa)', 'Indicação', 'Parcerias', 'Base de clientes', 'Site', 'Eventos e feiras'],
+          acao: 'Abrir mais de uma origem de lead, para o resultado não depender de um canal só.' },
+        { id: 'posicionamento', texto: 'A empresa é conhecida por algo específico?', sub: 'Marca, não só preço', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: '+ ou -', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          acao: 'Definir pelo que a empresa quer ser reconhecida e repetir isso em toda comunicação.' },
+        { id: 'qualifica1', texto: 'Qualifica o lead no primeiro contato?', sub: 'Necessidade, prazo e orçamento antes de marcar reunião', tipo: 'unica',
+          opcoes: [{ t: 'Sempre', dor: 0 }, { t: 'Às vezes', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          acao: 'Qualificar no primeiro contato (necessidade, prazo e orçamento) para não gastar reunião com quem não compra.' }
+      ]
+    },
+    {
+      id: 'ferramentas', area: 'comercial',
+      kicker: 'Raio-X · Vendas',
+      titulo: '*Ferramentas*',
+      sub: 'O que já está implementado tecnicamente',
+      perguntas: [
+        { id: 'crm', texto: 'Tem CRM pra captação e organização dos leads?', tipo: 'unica',
+          opcoes: [{ t: 'Sim, qual?', dor: 0, campo: 'ferramenta' }, { t: 'Não', dor: 1 }],
+          acao: 'Implantar CRM para registrar todo lead que chega, com responsável e etapa.' },
+        { id: 'funilcrm', texto: 'O funil de vendas está desenhado dentro do CRM?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'crm', oculta: [1], resposta: 1, motivo: 'não tem CRM' },
+          acao: 'Desenhar as etapas do funil dentro do CRM, do primeiro contato até a venda.' },
+        { id: 'automacao', texto: 'Tem automação de mensagens (WhatsApp, Instagram e e-mail)?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Automatizar as mensagens de entrada, confirmação e lembrete, para nenhum lead esperar resposta.' },
+        { id: 'dashboard', texto: 'Tem relatório ou painel para acompanhar as métricas?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Montar um painel com leads, reuniões, vendas e custo por venda para acompanhar toda semana.' }
+      ]
+    },
+    {
+      id: 'atendimento', area: 'comercial',
+      kicker: 'Raio-X · Vendas',
+      titulo: 'Atendimento e *Follow-up*',
+      sub: 'Como o lead é tratado depois que chega',
+      perguntas: [
+        { id: 'tempoResp', texto: 'Tem tempo máximo de resposta ao lead?', tipo: 'unica',
+          opcoes: [{ t: 'Sim, e é medido', dor: 0 }, { t: 'Tem, mas ninguém mede', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          acao: 'Definir um tempo máximo de resposta ao lead e medir se ele está sendo cumprido.' },
+        { id: 'script', texto: 'Existe roteiro de atendimento?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Escrever o roteiro de atendimento, do primeiro contato até a reunião ou o orçamento.' },
+        { id: 'followup', texto: 'Tem follow-up estruturado depois do primeiro contato?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Criar régua de follow-up com prazo e responsável, do primeiro contato até a venda.' },
+        { id: 'perdas', texto: 'Registra por que cada venda foi perdida?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Registrar o motivo de cada venda perdida para corrigir preço, oferta ou atendimento com base em dado.' },
+        { id: 'reativacao', texto: 'Tem cadência de reativação de leads frios?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Criar cadência para reativar os leads frios e as propostas que não fecharam.' }
+      ]
+    },
+    {
+      id: 'numeros-mkt', area: 'marketing',
+      kicker: 'Raio-X · Marketing',
+      titulo: 'Números do *marketing*',
+      sub: 'Do Gerenciador de Anúncios, do último mês. Pode ser aproximado; o que não souber, marque "Não sei".',
+      campos: [
+        { id: 'midia', rotulo: 'Quanto investe por mês em anúncio?', pre: 'R$', suf: 'R$ / mês',
+          atalhos: [{ t: 'Não investe', v: 0 }] },
+        { id: 'impressoes', rotulo: 'Impressões por mês', sub: 'Quantas vezes o anúncio apareceu', suf: 'impressões / mês', unidade: 'impressões/mês',
+          atalhos: [{ t: 'Não sei', v: null }] },
+        { id: 'cliques', rotulo: 'Cliques por mês', sub: 'Cliques no link ou no botão do anúncio', suf: 'cliques / mês', unidade: 'cliques/mês',
+          atalhos: [{ t: 'Não sei', v: null }] },
+        { id: 'leads', rotulo: 'Quantos contatos novos chegam por mês?', sub: 'WhatsApp, formulário, Instagram, site e telefone', suf: 'contatos / mês', unidade: 'contatos/mês',
+          atalhos: [{ t: 'Não sei', v: null }] }
+      ],
+      calculos: { indicadores: ['cpm', 'ctr', 'cpc', 'cpl', 'cliqueLead'] },
+      perguntas: [
+        { id: 'origem', texto: 'De onde vêm esses números?', tipo: 'unica',
+          opcoes: [{ t: 'Do gerenciador e do CRM', dor: 0 }, { t: 'De cabeça, aproximado', dor: 0.5 }, { t: 'Não sabemos', dor: 1 }],
+          acao: 'Medir toda semana investimento, cliques, leads, reuniões e vendas, para saber onde o funil perde.' }
+      ]
+    },
+    {
+      id: 'numeros-vendas', area: 'comercial',
+      kicker: 'Raio-X · Vendas',
+      titulo: 'Números de *vendas*',
+      sub: 'Os números de hoje viram a base do comparativo mostrado mais à frente. Pode ser aproximado.',
+      campos: [
+        { id: 'reunioes', rotulo: 'Reuniões ou orçamentos por mês', sub: 'Leads que chegaram a uma conversa de venda de verdade', suf: 'por mês', unidade: 'por mês',
+          atalhos: [{ t: 'Não sei', v: null }] },
+        { id: 'vendas', rotulo: 'Vendas fechadas por mês', suf: 'vendas / mês', unidade: 'vendas/mês' },
+        { id: 'ticket', rotulo: 'Ticket médio', sub: 'Quanto vale uma venda, em média', pre: 'R$', suf: 'R$ por venda' }
+      ],
+      calculos: { indicadores: ['leadReuniao', 'reuniaoVenda', 'leadVenda', 'custoReuniao', 'cac', 'roas'] }
+    },
+    {
+      id: 'tempo', area: 'comercial',
+      kicker: 'Raio-X · O custo de esperar',
+      titulo: 'Tempo, investimento e *resultado*',
+      sub: 'As últimas respostas viram o comparativo da próxima tela.',
+      campos: [
+        { id: 'meses', rotulo: 'Há quantos meses vocês tentam ajustar o comercial?', suf: 'meses', unidade: 'meses' },
+        { id: 'custo', rotulo: 'Custo mensal do comercial e do marketing', sub: 'Pessoas · Anúncios · Ferramentas · Agência', pre: 'R$', suf: 'R$ / mês' },
+        { id: 'receitaIni', rotulo: 'Há {meses}, a receita mensal era de?', pre: 'R$', suf: 'R$ / mês, no início' },
+        { id: 'receitaHoje', rotulo: 'Hoje a receita mensal está em?', pre: 'R$', suf: 'R$ / mês, hoje' }
+      ]
+    }
+  ],
+
+  // indicadores: valor = a ÷ b × x. Com ref + area, pontua no placar e entra no plano de ação.
+  indicadores: [
+    { id: 'cpm', rotulo: 'CPM', a: 'midia', b: 'impressoes', x: 1000, formato: 'brl', dica: 'Custo para o anúncio aparecer mil vezes' },
+    { id: 'ctr', rotulo: 'CTR', a: 'cliques', b: 'impressoes', x: 100, formato: 'pct', area: 'marketing', ref: 2.7,
+      fonte: 'Taxa média de cliques em anúncios do Meta com objetivo de leads, todos os setores: 2,70%. Facebook Advertising Benchmarks 2026, LocaliQ e WordStream (atualizado em setembro de 2026).',
+      acao: 'Trocar criativos e ganchos: o anúncio aparece, mas pouca gente clica.' },
+    { id: 'cpc', rotulo: 'CPC', a: 'midia', b: 'cliques', formato: 'brl', dica: 'Custo de cada clique' },
+    { id: 'cpl', rotulo: 'CPL', a: 'midia', b: 'leads', formato: 'brl', dica: 'Custo de cada lead' },
+    { id: 'cliqueLead', rotulo: 'Clique → lead', a: 'leads', b: 'cliques', x: 100, formato: 'pct', area: 'marketing', ref: 8.54,
+      fonte: 'Conversão média de clique em lead em anúncios do Meta com objetivo de leads, todos os setores: 8,54%. Facebook Advertising Benchmarks 2026, LocaliQ e WordStream. No Brasil, landing pages convertem em média 11% das visitas (RD Station, dados de 2025).',
+      acao: 'Melhorar o destino do anúncio (página, formulário ou WhatsApp): muita gente clica e pouca vira contato.' },
+    { id: 'leadReuniao', rotulo: 'Lead → reunião', a: 'reunioes', b: 'leads', x: 100, formato: 'pct', dica: 'Quantos leads chegam a uma conversa de venda' },
+    { id: 'reuniaoVenda', rotulo: 'Reunião → venda', a: 'vendas', b: 'reunioes', x: 100, formato: 'pct', dica: 'Quantas reuniões ou orçamentos viram venda' },
+    { id: 'leadVenda', rotulo: 'Lead → venda', a: 'vendas', b: 'leads', x: 100, formato: 'pct' },
+    { id: 'custoReuniao', rotulo: 'Custo por reunião', a: 'midia', b: 'reunioes', formato: 'brl', dica: 'Anúncio gasto para cada reunião ou orçamento' },
+    { id: 'cac', rotulo: 'CAC de mídia', a: 'midia', b: 'vendas', formato: 'brl', dica: 'Anúncio gasto para cada venda' },
+    { id: 'roas', rotulo: 'ROAS', a: ['vendas', 'ticket'], b: 'midia', formato: 'x', dica: 'Quanto volta em vendas para cada R$ 1 de anúncio' }
+  ],
+
+  funil: {
+    etapas: [
+      { campo: 'impressoes', rotulo: 'Impressões' },
+      { campo: 'cliques', rotulo: 'Cliques' },
+      { campo: 'leads', rotulo: 'Leads' },
+      { campo: 'reunioes', rotulo: 'Reuniões ou orçamentos' },
+      { campo: 'vendas', rotulo: 'Vendas' }
+    ],
+    passos: ['ctr', 'cliqueLead', 'leadReuniao', 'reuniaoVenda'],
+    custos: ['cpm', 'cpc', 'cpl', 'custoReuniao', 'cac', 'roas']
+  },
+
+  projecao: {
+    recorrente: false,
+    multiplicador: 1.5,
+    conta: 'extra',
+    referencia: { base: 5, ticket: 1000 },   // exemplo enquanto o raio-x não tem números (aparece marcado como referência)
+    baseRotulo: '+{n} vendas a mais por mês',
+    explicacao: '50% a mais que as {hoje} vendas de hoje'
+  }
+});
+
+</script>
+<script>/* nichos/arquitetura.js */
+/* Nicho: Escritórios de arquitetura (residencial, interiores, comercial).
+   Serve para venda direta (todos os serviços) e para cliente indicado por parceiro (o estilo de parceiro
+   tira o que não pode ser vendido). O id "arquitetura" liga sozinho a proteção de concorrente do case Dua.
+   O funil do escritório: anúncio → clique → contato → briefing ou orçamento → contrato.
+   Referências usadas:
+   - CTR e clique → lead do setor "casa e reforma" (o mais próximo de arquitetura no estudo LocaliQ/WordStream 2026)
+   - mercado: 85% de quem constrói ou reforma não contrata arquiteto nem engenheiro (CAU/BR e Datafolha, 2015)
+   - honorário de projeto residencial: R$ 60 a R$ 140 por m² em portais de orçamento (2026), sem valor oficial do CAU
+   Taxa de orçamento → contrato não tem referência pública: aparece só o número do escritório. */
+NICHO({
+  id: 'arquitetura',
+  nome: 'Escritórios de arquitetura',
+  descricao: 'Arquitetura residencial, interiores e projetos comerciais. Do contato ao contrato assinado.',
+
+  termos: {
+    empresa: 'escritório', empresas: 'escritórios',
+    cliente: 'cliente', clientes: 'clientes',
+    venda: 'contrato', vendas: 'contratos',
+    ticket: 'ticket médio por projeto',
+    receita: 'receita', suaReceita: 'sua receita',
+    fimJornada: 'o contrato assinado',
+    compraPensada: 'o cliente que chega até o seu escritório',
+    temHoje: 'nome e portfólio'
+  },
+
+  capa: { tagline: 'Sistema comercial para escritórios de arquitetura' },
+
+  publico: ['Arquitetura residencial', 'Interiores', 'Projetos comerciais e corporativos', 'Paisagismo', 'Projeto + execução de obra'],
+
+  perfis: {
+    titulo: 'Cinco perfis de escritório, cada um com uma dor específica',
+    itens: [
+      { perfil: 'Residencial alto padrão', dor: 'Cliente pesquisa meses, compara portfólio e some depois do orçamento' },
+      { perfil: 'Interiores', dor: 'Muito pedido de orçamento, pouco projeto fechado' },
+      { perfil: 'Comercial e corporativo', dor: 'Quem decide é um grupo: a proposta precisa vender sozinha' },
+      { perfil: 'Escritório que vive de indicação', dor: 'Mês cheio e mês vazio, sem previsibilidade' },
+      { perfil: 'Projeto + execução de obra', dor: 'O projeto abre a porta da obra, onde está a margem' }
+    ]
+  },
+
+  areas: [
+    { id: 'marketing', nome: 'Marketing' },
+    { id: 'comercial', nome: 'Comercial' }
+  ],
+
+  raiox: [
+    {
+      id: 'vendas', area: 'comercial',
+      kicker: 'Raio-X · Comercial',
+      titulo: 'Atendimento e *Proposta*',
+      campos: [
+        { id: 'equipe', rotulo: 'Quantas pessoas atendem e vendem no escritório?', suf: 'pessoas', unidade: 'pessoas' }
+      ],
+      perguntas: [
+        { id: 'quemvende', texto: 'Quem atende e fecha os projetos hoje?', tipo: 'multipla',
+          opcoes: ['Sócio(s) arquiteto(s)', 'Arquiteto da equipe', 'Comercial dedicado', 'Secretária ou recepção'] },
+        { id: 'processo', texto: 'Existe um processo do primeiro contato ao contrato?', tipo: 'unica',
+          opcoes: [{ t: 'Sim, com etapas definidas', dor: 0 }, { t: 'Cada um conduz do seu jeito', dor: 1 }],
+          acao: 'Definir o processo comercial do escritório: primeiro contato, briefing, proposta, follow-up e contrato, com prazo em cada etapa.' },
+        { id: 'briefing', texto: 'Faz reunião de briefing antes de mandar o valor?', tipo: 'unica',
+          opcoes: [{ t: 'Sempre', dor: 0 }, { t: 'Às vezes', dor: 0.5 }, { t: 'Não, manda o valor direto', dor: 1 }],
+          acao: 'Fazer reunião de briefing antes de qualquer proposta: quem recebe só o valor compara só o preço.' },
+        { id: 'ativo', texto: 'O escritório prospecta ativamente?', sub: 'Construtoras, lojas de acabamento, marcenarias, corretores, condomínios', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: '+ ou -', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          acao: 'Montar parcerias de indicação com construtoras, lojas de acabamento, marcenarias e corretores, com rotina de contato.' },
+        { id: 'meta', texto: 'Tem meta de contratos por mês?', tipo: 'unica',
+          opcoes: [{ t: 'Sim, acompanhada toda semana', dor: 0 }, { t: 'Só uma ideia de faturamento', dor: 0.5 }, { t: 'Não tem meta', dor: 1 }],
+          acao: 'Definir meta de contratos e de propostas por mês e acompanhar toda semana.' },
+        { id: 'lider', texto: 'Alguém cuida do comercial com meta e cobrança?', sub: 'Ou o sócio vende no tempo que sobra do projeto', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Ter uma pessoa responsável pelo comercial, para o sócio não vender só no tempo que sobra dos projetos.' }
+      ]
+    },
+    {
+      id: 'marketing', area: 'marketing',
+      kicker: 'Raio-X · Marketing',
+      titulo: 'Marketing e *Tráfego Pago*',
+      sub: 'Anúncio, portfólio, redes sociais e capacidade de atender',
+      perguntas: [
+        { id: 'trafego', texto: 'Tem anúncio pago rodando hoje?', sub: 'Meta Ads (Instagram/Facebook), Google ou outro canal', tipo: 'unica',
+          opcoes: [{ t: 'Sim, onde?', dor: 0, campo: 'canal' }, { t: 'Já anunciou, mas parou', dor: 1 }, { t: 'Nunca anunciou', dor: 1 }],
+          acao: 'Começar campanha paga para quem está planejando obra ou reforma, com custo por contato medido desde o primeiro dia.' },
+        { id: 'tracking', texto: 'Sabe quantos orçamentos e contratos vieram de cada anúncio?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Mais ou menos', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'trafego', oculta: [2], motivo: 'nunca anunciou' },
+          acao: 'Rastrear de onde vem cada contato (pixel, UTMs e CRM) para saber quais campanhas geram contrato, não só curtida.' },
+        { id: 'criativos', texto: 'Anuncia com projetos reais?', sub: 'Antes e depois, obra pronta, vídeo do processo', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: '+ ou -', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'trafego', oculta: [2], motivo: 'nunca anunciou' },
+          acao: 'Anunciar com projetos reais: antes e depois, obra pronta e o arquiteto explicando o processo.' },
+        { id: 'destino', texto: 'Para onde o anúncio leva?', tipo: 'unica',
+          opcoes: ['WhatsApp', 'Formulário do Meta ou do Google', 'Site ou landing page', 'Direct do Instagram'],
+          depende: { q: 'trafego', oculta: [2], motivo: 'nunca anunciou' } },
+        { id: 'portfolio', texto: 'O portfólio está organizado e fácil de mostrar?', sub: 'Por tipo de projeto e faixa de investimento', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: '+ ou -', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          acao: 'Organizar o portfólio por tipo de projeto e faixa de investimento, para o cliente se ver nele.' },
+        { id: 'capacidade', texto: 'O escritório tem capacidade para pegar mais projetos por mês?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
+        { id: 'posta', tema: 'social', texto: 'Posta nas redes sociais com frequência?', tipo: 'unica',
+          opcoes: ['Sim, com frequência', 'Posta, mas sem frequência', 'Não posta'] },
+        { id: 'socialmidia', tema: 'social', texto: 'Tem alguém cuidando das redes?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' },
+          acao: 'Ter alguém responsável pelas redes, com rotina de publicação dos projetos.' },
+        { id: 'estrategia', tema: 'social', texto: 'Tem estratégia por trás das postagens?', sub: 'Pauta pensada para atrair, gerar confiança e chamar para o orçamento', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' },
+          acao: 'Montar linha editorial: projeto pronto, bastidor de obra, dúvida comum de cliente e chamada para o orçamento.' }
+      ]
+    },
+    {
+      id: 'leads', area: 'comercial',
+      kicker: 'Raio-X · Comercial',
+      titulo: 'Origem dos clientes e *Posicionamento*',
+      sub: '85% de quem constrói ou reforma não contrata arquiteto nem engenheiro (CAU/BR e Datafolha). O cliente precisa entender o valor antes de pedir orçamento.',
+      perguntas: [
+        { id: 'funis', texto: 'De onde chegam os clientes hoje?', tipo: 'multipla', bom: 3,
+          opcoes: ['Indicação de clientes', 'Parcerias (construtoras, lojas, marcenarias)', 'Instagram orgânico', 'Tráfego pago', 'Google (busca e Perfil da Empresa)', 'Site', 'Plataformas de orçamento', 'Mostras e feiras'],
+          acao: 'Abrir mais de uma origem de cliente, para o escritório não depender só de indicação.' },
+        { id: 'posicionamento', texto: 'O escritório é conhecido por um tipo de projeto ou público?', sub: 'Ex.: residencial alto padrão, interiores corporativos', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: '+ ou -', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          acao: 'Definir o tipo de projeto e de cliente que o escritório quer atrair e repetir isso em portfólio, redes e anúncios.' },
+        { id: 'qualifica1', texto: 'Pergunta a faixa de investimento e o prazo no primeiro contato?', tipo: 'unica',
+          opcoes: [{ t: 'Sempre', dor: 0 }, { t: 'Às vezes', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          acao: 'Perguntar faixa de investimento e prazo da obra no primeiro contato, para não gastar briefing com quem não cabe.' }
+      ]
+    },
+    {
+      id: 'ferramentas', area: 'comercial',
+      kicker: 'Raio-X · Comercial',
+      titulo: '*Ferramentas*',
+      sub: 'O que já está implementado tecnicamente',
+      perguntas: [
+        { id: 'crm', texto: 'Tem CRM para organizar os contatos e as propostas?', tipo: 'unica',
+          opcoes: [{ t: 'Sim, qual?', dor: 0, campo: 'ferramenta' }, { t: 'Não', dor: 1 }],
+          acao: 'Implantar CRM para registrar todo contato e toda proposta, com responsável e etapa.' },
+        { id: 'funilcrm', texto: 'As etapas (contato, briefing, proposta, contrato) estão no CRM?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          depende: { q: 'crm', oculta: [1], resposta: 1, motivo: 'não tem CRM' },
+          acao: 'Desenhar no CRM as etapas do escritório: contato, briefing, proposta enviada, negociação e contrato.' },
+        { id: 'propostaPadrao', texto: 'A proposta tem um modelo padrão?', sub: 'Escopo, etapas, prazos, valor e forma de pagamento', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Criar um modelo de proposta com escopo, etapas, prazos e formas de pagamento, que venda mesmo sem o arquiteto junto.' },
+        { id: 'automacao', texto: 'Tem automação de mensagens (WhatsApp, Instagram e e-mail)?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Automatizar a resposta inicial e o agendamento do briefing, para nenhum contato esperar.' },
+        { id: 'dashboard', texto: 'Tem relatório ou painel para acompanhar contatos, propostas e contratos?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Montar um painel com contatos, briefings, propostas e contratos do mês para acompanhar toda semana.' }
+      ]
+    },
+    {
+      id: 'atendimento', area: 'comercial',
+      kicker: 'Raio-X · Comercial',
+      titulo: 'Resposta e *Follow-up*',
+      sub: 'O que acontece com o contato e com a proposta depois que chegam',
+      perguntas: [
+        { id: 'tempoResp', texto: 'Tem tempo máximo para responder um contato novo?', tipo: 'unica',
+          opcoes: [{ t: 'Sim, e é medido', dor: 0 }, { t: 'Tem, mas ninguém mede', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          acao: 'Definir um tempo máximo de resposta ao contato novo e medir se ele está sendo cumprido.' },
+        { id: 'script', texto: 'Existe roteiro para o primeiro contato e para o briefing?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Escrever o roteiro do primeiro contato e do briefing, com as perguntas que qualificam o projeto.' },
+        { id: 'followup', texto: 'Faz follow-up depois de enviar a proposta?', tipo: 'unica',
+          opcoes: [{ t: 'Sim, com prazos definidos', dor: 0 }, { t: 'Às vezes', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          acao: 'Criar régua de follow-up da proposta (2, 5 e 10 dias depois do envio), sempre com um próximo passo.' },
+        { id: 'perdas', texto: 'Registra por que cada proposta foi perdida?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Registrar o motivo de cada proposta perdida (preço, prazo, escopo, concorrente) para ajustar a oferta.' },
+        { id: 'reativacao', texto: 'Volta a falar com quem pediu orçamento e não fechou?', tipo: 'unica',
+          opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
+          acao: 'Reativar orçamentos antigos a cada 60 a 90 dias: obra adiada não é obra cancelada.' },
+        { id: 'indicacao', texto: 'Pede indicação a quem já contratou?', tipo: 'unica',
+          opcoes: [{ t: 'Sempre, com rotina', dor: 0 }, { t: 'Às vezes', dor: 0.5 }, { t: 'Não', dor: 1 }],
+          acao: 'Pedir indicação na entrega do projeto e na obra pronta, com um roteiro simples.' }
+      ]
+    },
+    {
+      id: 'numeros-mkt', area: 'marketing',
+      kicker: 'Raio-X · Marketing',
+      titulo: 'Números do *marketing*',
+      sub: 'Do Gerenciador de Anúncios, do último mês. Pode ser aproximado; o que não souber, marque "Não sei".',
+      campos: [
+        { id: 'midia', rotulo: 'Quanto investe por mês em anúncio?', pre: 'R$', suf: 'R$ / mês',
+          atalhos: [{ t: 'Não investe', v: 0 }] },
+        { id: 'impressoes', rotulo: 'Impressões por mês', sub: 'Quantas vezes o anúncio apareceu', suf: 'impressões / mês', unidade: 'impressões/mês',
+          atalhos: [{ t: 'Não sei', v: null }] },
+        { id: 'cliques', rotulo: 'Cliques por mês', sub: 'Cliques no link ou no botão do anúncio', suf: 'cliques / mês', unidade: 'cliques/mês',
+          atalhos: [{ t: 'Não sei', v: null }] },
+        { id: 'leads', rotulo: 'Contatos novos por mês', sub: 'WhatsApp, Instagram, formulário, site e indicação', suf: 'contatos / mês', unidade: 'contatos/mês',
+          atalhos: [{ t: 'Não sei', v: null }] }
+      ],
+      calculos: { indicadores: ['cpm', 'ctr', 'cpc', 'cpl', 'cliqueLead'] },
+      perguntas: [
+        { id: 'origem', texto: 'De onde vêm esses números?', tipo: 'unica',
+          opcoes: [{ t: 'Do gerenciador e do CRM', dor: 0 }, { t: 'De cabeça, aproximado', dor: 0.5 }, { t: 'Não sabemos', dor: 1 }],
+          acao: 'Medir toda semana investimento, contatos, briefings, propostas e contratos, para saber onde o funil perde.' }
+      ]
+    },
+    {
+      id: 'numeros-vendas', area: 'comercial',
+      kicker: 'Raio-X · Comercial',
+      titulo: 'Números *comerciais*',
+      sub: 'Os números de hoje viram a base do comparativo mostrado mais à frente. Pode ser aproximado.',
+      campos: [
+        { id: 'reunioes', rotulo: 'Briefings ou orçamentos por mês', sub: 'Contatos que viraram reunião ou proposta enviada', suf: 'por mês', unidade: 'por mês',
+          atalhos: [{ t: 'Não sei', v: null }] },
+        { id: 'vendas', rotulo: 'Contratos fechados por mês', suf: 'contratos / mês', unidade: 'contratos/mês' },
+        { id: 'ticket', rotulo: 'Ticket médio por projeto', sub: 'Referência: R$ 60 a R$ 140 por m² no projeto residencial completo (portais de orçamento, 2026). Ex.: 150 m² × R$ 100 = R$ 15 mil.', pre: 'R$', suf: 'R$ por projeto' }
+      ],
+      calculos: { indicadores: ['leadReuniao', 'reuniaoVenda', 'leadVenda', 'custoReuniao', 'cac', 'roas'] }
+    },
+    {
+      id: 'tempo', area: 'comercial',
+      kicker: 'Raio-X · O custo de esperar',
+      titulo: 'Tempo, investimento e *resultado*',
+      sub: 'As últimas respostas viram o comparativo da próxima tela.',
+      campos: [
+        { id: 'meses', rotulo: 'Há quantos meses vocês tentam ajustar o comercial?', suf: 'meses', unidade: 'meses' },
+        { id: 'custo', rotulo: 'Custo mensal do comercial e do marketing', sub: 'Pessoas no atendimento · Anúncios · Ferramentas · Agência', pre: 'R$', suf: 'R$ / mês' },
+        { id: 'receitaIni', rotulo: 'Há {meses}, o escritório faturava por mês?', pre: 'R$', suf: 'R$ / mês, no início' },
+        { id: 'receitaHoje', rotulo: 'Hoje o escritório fatura por mês?', pre: 'R$', suf: 'R$ / mês, hoje' }
+      ]
+    }
+  ],
+
+  indicadores: [
+    { id: 'cpm', rotulo: 'CPM', a: 'midia', b: 'impressoes', x: 1000, formato: 'brl', dica: 'Custo para o anúncio aparecer mil vezes' },
+    { id: 'ctr', rotulo: 'CTR', a: 'cliques', b: 'impressoes', x: 100, formato: 'pct', area: 'marketing', ref: 2.14,
+      fonte: 'Taxa média de cliques em anúncios do Meta com objetivo de leads no setor casa e reforma (Home & Home Improvement): 2,14%. É o setor mais próximo de arquitetura no estudo. Facebook Advertising Benchmarks 2026, LocaliQ e WordStream.',
+      acao: 'Trocar criativos: projeto real, antes e depois e obra pronta chamam mais clique do que imagem genérica.' },
+    { id: 'cpc', rotulo: 'CPC', a: 'midia', b: 'cliques', formato: 'brl', dica: 'Custo de cada clique' },
+    { id: 'cpl', rotulo: 'Custo por contato', a: 'midia', b: 'leads', formato: 'brl', dica: 'Custo de cada contato novo' },
+    { id: 'cliqueLead', rotulo: 'Clique → contato', a: 'leads', b: 'cliques', x: 100, formato: 'pct', area: 'marketing', ref: 5.32,
+      fonte: 'Conversão média de clique em lead em anúncios do Meta com objetivo de leads no setor casa e reforma (Home & Home Improvement): 5,32%. Facebook Advertising Benchmarks 2026, LocaliQ e WordStream.',
+      acao: 'Melhorar o destino do anúncio (WhatsApp, formulário ou página) com portfólio, faixa de investimento e um próximo passo claro.' },
+    { id: 'leadReuniao', rotulo: 'Contato → briefing', a: 'reunioes', b: 'leads', x: 100, formato: 'pct', dica: 'Quantos contatos viram reunião ou orçamento' },
+    { id: 'reuniaoVenda', rotulo: 'Orçamento → contrato', a: 'vendas', b: 'reunioes', x: 100, formato: 'pct', dica: 'Quantas propostas viram contrato' },
+    { id: 'leadVenda', rotulo: 'Contato → contrato', a: 'vendas', b: 'leads', x: 100, formato: 'pct' },
+    { id: 'custoReuniao', rotulo: 'Custo por orçamento', a: 'midia', b: 'reunioes', formato: 'brl', dica: 'Anúncio gasto para cada briefing ou orçamento' },
+    { id: 'cac', rotulo: 'CAC de mídia', a: 'midia', b: 'vendas', formato: 'brl', dica: 'Anúncio gasto para cada contrato' },
+    { id: 'roas', rotulo: 'ROAS', a: ['vendas', 'ticket'], b: 'midia', formato: 'x', dica: 'Quanto volta em contratos para cada R$ 1 de anúncio' }
+  ],
+
+  funil: {
+    etapas: [
+      { campo: 'impressoes', rotulo: 'Impressões' },
+      { campo: 'cliques', rotulo: 'Cliques' },
+      { campo: 'leads', rotulo: 'Contatos' },
+      { campo: 'reunioes', rotulo: 'Briefings ou orçamentos' },
+      { campo: 'vendas', rotulo: 'Contratos' }
+    ],
+    passos: ['ctr', 'cliqueLead', 'leadReuniao', 'reuniaoVenda'],
+    custos: ['cpm', 'cpc', 'cpl', 'custoReuniao', 'cac', 'roas']
+  },
+
+  projecao: {
+    recorrente: false,                  // cada contrato entra uma vez: o resultado acumula
+    multiplicador: 1.5,
+    conta: 'extra',
+    referencia: { base: 1, ticket: 15000 },   // exemplo enquanto o raio-x não tem números: 150 m² × R$ 100/m²
+    baseRotulo: '+{n} contratos a mais por mês',
+    explicacao: '50% a mais que os {hoje} contratos de hoje'
   }
 });
 
@@ -2319,6 +2907,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       if(d == null) return;
       tot += d; n++; if(d >= 0.99) alertas++;
     });
+    indicadores().forEach(k => {
+      if(k.area !== aid || k.ref == null) return;
+      total++;
+      const d = dorInd(k);
+      if(d == null) return;
+      tot += d; n++; if(d >= 0.99) alertas++;
+    });
     return { dor: n ? tot / n : null, aprov: n ? Math.round((1 - tot / n) * 100) : null, n, total, alertas, respondidas, perguntas };
   }
   const areasQuePontuam = () => areas().filter(a => areaStats(a.id).total > 0);
@@ -2413,6 +3008,33 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
   function rotuloDoCampo(id){ const si = secaoDoCampo(id); if(si < 0) return id; const fi = secoes()[si].campos.findIndex(c => c.id === id); return plain(raw('raiox.' + si + '.campos.' + fi + '.rotulo')).replace(/\?$/, ''); }
 
+  // ============ indicadores do funil (CPM, CTR, CPC, CPL, custo por reunião, CAC, ROAS...) ============
+  // Definidos no nicho em "indicadores": valor = a ÷ b × x ("a" pode ser uma lista de campos multiplicados).
+  // Com "ref" e "area", o indicador pontua no placar daquela área (como uma pergunta) e entra no plano de ação:
+  // igual ou melhor que a referência = 0; até 30% abaixo = 0,5; mais que isso = 1.
+  const indicadores = () => list('indicadores');
+  const indDef = id => indicadores().find(k => k.id === id);
+  function valorInd(k){
+    if(!k) return null;
+    const as = Array.isArray(k.a) ? k.a : [k.a], b = num(k.b);
+    if(!(b > 0) || as.some(id => !(num(id) > 0))) return null;
+    return as.reduce((p, id) => p * num(id), 1) / b * (k.x || 1);
+  }
+  function fmtInd(k, v){
+    if(v == null) return '--';
+    if(k.formato === 'pct') return new Intl.NumberFormat('pt-BR', { maximumFractionDigits:v < 10 ? 2 : 1 }).format(v) + '%';
+    if(k.formato === 'x') return nf1.format(v) + 'x';
+    if(k.formato === 'brl') return v < 10 ? 'R$ ' + v.toFixed(2).replace('.', ',') : brl(v);
+    return nf1.format(v);
+  }
+  function dorInd(k){
+    if(!k || k.ref == null || !k.area) return null;
+    const v = valorInd(k);
+    if(v == null) return null;
+    const r = k.melhor === 'menor' ? k.ref / v : v / k.ref;
+    return r >= 1 ? 0 : r >= 0.7 ? 0.5 : 1;
+  }
+
   // ============ faixa de verba (planos por faixa) ============
   function faixaAtual(){
     const fs = list('planos.faixas');
@@ -2424,9 +3046,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return { i:i < 0 ? fs.length - 1 : i, auto:true };
   }
   const valorBRL = v => parseFloat(String(plain(v || '')).replace(/[^\d,]/g, '').replace(',', '.'));
+  // margem do parceiro (oculta do cliente): % sobre o plano ou R$ fixo por plano, somada ao preço da tabela de parceiros.
+  // O cliente vê só o preço final, arredondado para a dezena.
+  function margemPlano(base, i){
+    const m = PA && dx.margem;
+    if(!(base > 0) || !m || !Array.isArray(m.valores)) return { final:base, add:0 };
+    const v = parseFloat(String(m.valores[i] == null ? '' : m.valores[i]).replace(',', '.'));
+    if(!(v > 0)) return { final:base, add:0 };
+    const final = Math.round((m.tipo === 'brl' ? base + v : base * (1 + v / 100)) / 10) * 10;
+    return { final, add:final - base, v, tipo:m.tipo };
+  }
   function precoMaisCompleto(){
     const fa = faixaAtual();
-    const vals = list('planos.itens').map(p => valorBRL(fa ? (p.precos || [])[fa.i] : p.preco)).filter(v => v > 0);
+    const vals = list('planos.itens').map((p, i) => fa ? margemPlano(valorBRL((p.precos || [])[fa.i]), i).final : valorBRL(p.preco)).filter(v => v > 0);
     return vals.length ? Math.max.apply(null, vals) : 0;
   }
 
@@ -2635,6 +3267,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       ${T(cp('obs'), 'div', 'cs-obs reveal')}`;
     },
 
+    // onde o funil vaza: etapas do anúncio à venda, taxa entre elas (com referência) e custos
+    funil: () => `
+      ${T('funil.kicker', 'div', 'kicker reveal')}
+      ${T('funil.titulo', 'h2', 'h2 reveal')}
+      <div class="fn-grid reveal">
+        <div class="fn-etapas" id="fnEtapas"></div>
+        <div class="fn-lado">${T('funil.custosRotulo', 'div', 'label')}<div class="fn-custos" id="fnCustos"></div><div class="card hero fn-ver" id="fnVer"></div></div>
+      </div>`,
+
     ponte: () => `
       ${T('ponte.kicker', 'div', 'kicker reveal')}
       ${T('ponte.titulo', 'h2', 'h2 reveal')}
@@ -2727,7 +3368,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           <ul>${(p.beneficios || []).map((x, j) => T(b + '.beneficios.' + j, 'li')).join('')}</ul></div>`;
       }).join('')}</div>
       <div class="pl-rod reveal">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
-      ${T('planos.nota', 'div', 'note reveal')}`,
+      ${T('planos.nota', 'div', 'note reveal')}
+      <aside class="notas"><div class="label">Notas do apresentador · N esconde</div><div class="nt" id="plNota"></div></aside>`,
 
     garantia: () => `
       ${T('garantia.kicker', 'div', 'kicker reveal')}
@@ -2775,6 +3417,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     ];
     secoes().forEach((s, si) => d.push({ id:'rx-' + s.id, html:() => B.secao(s, si) }));
     d.push(
+      ...(list('funil.etapas').length ? [{ id:'funil', html:B.funil, nota:'funil.nota' }] : []),
       { id:'painel', html:B.painel, nota:'painel.nota' },
       { id:'resolvemos', html:B.resolvemos },
       { id:'perfis', html:B.perfis },
@@ -2944,6 +3587,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     });
     $$('[data-calc]', slidesEl).forEach(el => {
       const cfg = (secoes()[+el.dataset.calc] || {}).calculos || {};
+      if(cfg.indicadores){
+        el.innerHTML = '<span class="dl">Calculado na hora</span>' + cfg.indicadores.map(indDef).filter(Boolean).map(k => {
+          const v = valorInd(k);
+          return `<span class="dchip"${k.dica ? ` title="${esc(k.dica)}"` : ''}>${esc(k.rotulo)}: <b>${esc(fmtInd(k, v))}</b>${k.ref != null ? ` <span class="dref">ref. ${esc(fmtInd(k, k.ref))}</span><i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(k.fonte || '')}">i</i>` : ''}</span>`;
+        }).join('');
+        return;
+      }
       const L = num('leads'), V = num('vendas'), I = num('midia'), og = origemDe('leads'), out = [];
       if(L > 0 && V > 0) out.push(`Conversão de vocês: <b>${pct(V / L * 100)}</b> (${nf1.format(V)} de ${nf0.format(L)} contatos)`);
       else out.push('Conversão: ' + (og && og.vazio ? 'sem a contagem de contatos não dá pra calcular' : 'preencha contatos e ' + esc(termo('vendas'))));
@@ -3055,16 +3705,57 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       } else { set('ptN', '--'); set('ptL', ''); set('ptDet', ''); }
     }
 
+    // ---- funil ----
+    // as três últimas etapas em uma frase: "De 400 contatos, 40 viraram orçamentos e 4 viraram contratos."
+    const vazamento = (es, vals) => {
+      const n = es.length;
+      if(n < 3 || !(vals[n - 3] > 0) || !(vals[n - 2] >= 0) || !(vals[n - 1] >= 0) || (vals[n - 2] === 0 && vals[n - 1] === 0)) return '';
+      const r = i => plain(es[i].rotulo).toLowerCase();
+      return ' De <b>' + nf0.format(vals[n - 3]) + '</b> ' + esc(r(n - 3)) + ', <b>' + nf0.format(vals[n - 2]) + '</b> viraram ' + esc(r(n - 2)) + ' e <b>' + nf0.format(vals[n - 1]) + '</b> viraram ' + esc(r(n - 1)) + '.';
+    };
+    if($('#fnEtapas')){
+      const es = list('funil.etapas'), ps = list('funil.passos');
+      const vals = es.map(e => num(e.campo)), mx = Math.max.apply(null, vals.map(v => v > 0 ? Math.log10(v + 1) : 0).concat(1));
+      const nomeA = id => { const a = areas().find(x => x.id === id); return a ? nomeArea(a) : ''; };
+      set('fnEtapas', es.map((e, i) => {
+        const v = vals[i], w = v > 0 ? Math.max(14, Math.log10(v + 1) / mx * 100) : 0;
+        let passo = '';
+        if(i < es.length - 1){
+          const k = indDef(ps[i]), pv = valorInd(k), d = dorInd(k);
+          const st = d == null ? 'sem' : d === 0 ? 'ok' : d === 0.5 ? 'warn' : 'bad';
+          passo = k ? `<div class="fn-passo ${st}"><span class="fn-seta">↓</span><b>${esc(fmtInd(k, pv))}</b> ${esc(k.rotulo)}${k.ref != null ? ` <span class="dref">ref. ${esc(fmtInd(k, k.ref))}</span>` : ''}${k.area ? `<span class="fn-area">${esc(nomeA(k.area))}</span>` : ''}</div>` : '';
+        }
+        return `<div class="fn-et"><div class="fn-bar"><i style="width:${w.toFixed(1)}%"></i></div><div class="fn-n">${v > 0 ? nf0.format(v) : '<span class="empty">não informado</span>'}</div><div class="fn-l">${esc(plain(e.rotulo))}</div></div>${passo}`;
+      }).join(''));
+      set('fnCustos', list('funil.custos').map(indDef).filter(Boolean).map(k => `<div class="fn-c"${k.dica ? ` title="${esc(k.dica)}"` : ''}><span>${esc(k.rotulo)}</span><b>${esc(fmtInd(k, valorInd(k)))}</b></div>`).join(''));
+      // veredito: área com menor aproveitamento (perguntas + indicadores) e o indicador mais abaixo da referência
+      const st = areasQuePontuam().map(a => ({ a, s:areaStats(a.id) })).filter(x => x.s.aprov != null);
+      const piorK = indicadores().filter(k => dorInd(k) > 0).sort((x, y) => (valorInd(x) / x.ref) - (valorInd(y) / y.ref))[0];
+      if(!st.length) set('fnVer', '<span class="empty">' + esc(plain(raw('funil.vazio')) || 'Preencha o raio-x para ver onde o funil vaza.') + '</span>');
+      else {
+        const pior = st.slice().sort((x, y) => x.s.aprov - y.s.aprov)[0];
+        set('fnVer', '<div class="label">' + esc(plain(raw('funil.veredito')) || 'Onde está o gargalo') + '</div>' +
+          '<div class="fn-placar">' + st.map(x => `<span class="${tier(x.s.aprov)}">${esc(nomeArea(x.a))} <b>${x.s.aprov}%</b></span>`).join('') + '</div>' +
+          '<div class="phrase">' + (st.length > 1 ? 'O gargalo maior está em <b>' + esc(nomeArea(pior.a)) + '</b>.' : '') +
+          (piorK ? ' ' + esc(plain(piorK.rotulo)) + ' de <b>' + esc(fmtInd(piorK, valorInd(piorK))) + '</b>, abaixo da referência de ' + esc(fmtInd(piorK, piorK.ref)) + '.' : '') +
+          vazamento(es, vals) + '</div>');
+      }
+    }
+
     // ---- planos por faixa de verba ----
     if($('#plFaixas')){
       const fa = faixaAtual();
       $$('#plFaixas [data-faixa]').forEach(b => b.classList.toggle('on', +b.dataset.faixa === fa.i));
+      const contas = [];
       list('planos.itens').forEach((p, i) => {
-        const v = plain((p.precos || [])[fa.i] || '');
-        set('plP' + i, esc(v || '--'));
-        const per = document.getElementById('plPer' + i); if(per) per.hidden = !/\d/.test(v);
+        const v = plain((p.precos || [])[fa.i] || ''), base = valorBRL(v), mg = margemPlano(base, i);
+        set('plP' + i, esc(base > 0 ? brl(mg.final) : (v || '--')));
+        const per = document.getElementById('plPer' + i); if(per) per.hidden = !(base > 0);
+        if(base > 0) contas.push(plain(p.nome) + ': tabela ' + brl(base) + (mg.add ? ' + margem ' + brl(mg.add) + (mg.tipo === 'pct' ? ' (' + nf1.format(mg.v) + '%)' : '') : '') + ' = ' + brl(mg.final));
       });
       set('plFaixaHint', fa.semVerba ? 'Sem verba no raio-x: clique na faixa' : fa.auto ? 'Pela verba informada no raio-x' : '');
+      set('plNota', esc(PA && dx.margem ? 'Margem de ' + (dx.parceiroNome || 'parceiro') + ' (não aparece para o cliente). ' : 'Sem margem de parceiro: o cliente vê a tabela de parceiros. ') +
+        esc(contas.join(' · ')) + (contas.length ? '' : esc('Faixa sob consulta.')));
     }
 
     // ---- salvar ----
@@ -3156,6 +3847,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       if(e.key === 'Escape') t.blur();
       return;
     }
+    if(!$('#mdParc').hidden){ if(e.key === 'Escape') fecharModalParceiro(); return; }
     if(!$('#picker').hidden){ if(e.key === 'Escape' && N) fecharPicker(); return; }
     if((e.key === ' ' || e.key === 'Enter') && t && t.closest && t.closest('button,[role="button"],a')) return;
     if(['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)){ e.preventDefault(); next(); }
@@ -3205,9 +3897,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     if(a === 'novo') return confirmar(btn, 'Clique de novo para começar outro', () => {
       gravarDx();
       const tinha = temConteudo(dx);
-      const parc = dx.parceiro, parcNome = dx.parceiroNome;
+      const parc = { parceiro:dx.parceiro, parceiroAg:dx.parceiroAg, parceiroNome:dx.parceiroNome, margem:dx.margem };
       dx = novoDx();
-      if(parc){ dx.parceiro = parc; dx.parceiroNome = parcNome; }
+      if(parc.parceiro) Object.keys(parc).forEach(k => { if(parc[k] != null) dx[k] = JSON.parse(JSON.stringify(parc[k])); });
       gravarDx(); abertos.clear(); montar(slides[idx] && slides[idx].id);
       toast((tinha ? 'Novo diagnóstico. O anterior ficou em "Diagnósticos salvos" (botão Nicho).' : 'Novo diagnóstico.') + (PA ? ' ' + (PA.chip || PA.nome) + ' continua ligado.' : ''));
     });
@@ -3343,7 +4035,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         let mudou = false;
         snap.docs.forEach(d => {
           const v = d.data();
-          if(!v || !v.id) return;
+          if(d.id === 'cadastro-parceiros' || !v || !v.id) return;
           naNuvem.add(v.id);
           nuvemUltimo.set(v.id, JSON.stringify(v));
           if(v.apagado){ if(a[v.id] && (a[v.id].ts || 0) <= (v.ts || 0)){ delete a[v.id]; mudou = true; } return; }
@@ -3351,6 +4043,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         });
         if(mudou) guardarArquivo(a);
         Object.values(a).forEach(it => { if(!naNuvem.has(it.id)) nuvemAgendar(it); });
+        const cp = snap.docs.find(d => d.id === 'cadastro-parceiros'), regN = cp && cp.data() && cp.data().itens;
+        if(regN){
+          const reg = cadastro(); let mud = false;
+          Object.values(regN).forEach(r => { if(r && r.id && (!reg[r.id] || (r.ts || 0) > (reg[r.id].ts || 0))){ reg[r.id] = r; mud = true; } });
+          if(mud) store.set(PARC_KEY, reg);
+        }
+        nuvemParceiros();
         if(!$('#picker').hidden) montarArquivo();
       }catch(e){ nuvem = null; }
     })();
@@ -3360,6 +4059,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     iniciarNuvem();
     nuvemFila.set(it.id, it);
     clearTimeout(nuvemT); nuvemT = setTimeout(nuvemDrenar, 4000);
+  }
+  async function nuvemParceiros(){
+    if(!nuvem) return;
+    try{ await nuvem.collection('data/users/' + nuvemUid).doc('cadastro-parceiros').set({ itens:cadastro(), ts:Date.now() }); }catch(e){}
   }
   function nuvemApagar(id){ nuvemFila.set(id, { id, apagado:true, ts:Date.now() }); clearTimeout(nuvemT); nuvemT = setTimeout(nuvemDrenar, 500); }
   async function nuvemDrenar(){
@@ -3401,24 +4104,101 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     const cur = dx.parceiro || '';
     const cards = [{ id:'', nome:'Venda direta', descricao:'Sem parceiro: a oferta completa da Ribeker, com social mídia.' }].concat(PARCEIROS);
     $('#pkParcList').innerHTML = cards.map(p => `<button class="pk-pc${(p.id || '') === cur ? ' cur' : ''}" type="button" data-parc="${esc(p.id)}" aria-pressed="${(p.id || '') === cur}"><b>${esc(p.nome)}</b><span>${esc(p.descricao || '')}</span></button>`).join('');
-    $('#pkParcNomeBox').hidden = !PARCEIROS.find(p => p.id === cur);
-    $('#pkParcNome').value = dx.parceiroNome || '';
+    const pa = PARCEIROS.find(p => p.id === cur);
+    $('#pkParcNomeBox').hidden = !pa;
+    if(pa) $('#pkParcResumo').innerHTML = '<b>' + esc(dx.parceiroNome || 'Parceiro sem nome') + '</b> · ' + esc(resumoMargem(dx.margem));
   }
+  function resumoMargem(m){
+    const vs = m && Array.isArray(m.valores) ? m.valores.map(v => parseFloat(String(v).replace(',', '.'))).filter(v => v > 0) : [];
+    if(!vs.length) return 'sem margem';
+    const f = v => m.tipo === 'brl' ? brl(v) : nf1.format(v) + '%';
+    return 'margem ' + (vs.every(v => v === vs[0]) ? f(vs[0]) : vs.map(f).join(' / ')) + (m.tipo === 'brl' ? ' por plano' : '');
+  }
+
+  // ---- cadastro de parceiros (nome + margem), na janela "Dados do parceiro e margem" ----
+  const PARC_KEY = 'rb:parcs';
+  const cadastro = () => store.get(PARC_KEY) || {};
+  let mpEstado = null;
+  function abrirModalParceiro(){
+    if(!PA) return;
+    const regs = Object.values(cadastro()).filter(r => r.estilo === PA.id).sort((a, b) => a.nome.localeCompare(b.nome));
+    $('#mpSel').innerHTML = '<option value="">Novo parceiro</option>' + regs.map(r => `<option value="${esc(r.id)}">${esc(r.nome)}</option>`).join('');
+    $('#mpSel').value = dx.parceiroAg && cadastro()[dx.parceiroAg] ? dx.parceiroAg : '';
+    mpEstado = { nome:dx.parceiroNome || '', margem:JSON.parse(JSON.stringify(dx.margem || { tipo:'pct', valores:[] })) };
+    pintarModal();
+    $('#mdParc').hidden = false;
+    $('#mpNome').focus();
+  }
+  function pintarModal(){
+    $('#mpNome').value = mpEstado.nome;
+    $$('#mdParc [data-mt]').forEach(b => b.classList.toggle('on', b.dataset.mt === mpEstado.margem.tipo));
+    const fa = faixaAtual(), fs = list('planos.faixas'), salva = dx.margem;
+    dx.margem = mpEstado.margem;                       // prévia com a margem que está sendo digitada
+    $('#mpTab').innerHTML = list('planos.itens').map((p, i) => {
+      const base = fa ? valorBRL((p.precos || [])[fa.i]) : 0, mg = margemPlano(base, i), v = mpEstado.margem.valores[i];
+      return `<tr><td>${esc(plain(p.nome))}</td><td><span class="mp-in"><input type="number" inputmode="decimal" min="0" step="any" data-mv="${i}" value="${v == null ? '' : esc(v)}" placeholder="0"><em>${mpEstado.margem.tipo === 'brl' ? 'R$' : '%'}</em></span></td>
+        <td>${base > 0 ? brl(base) : 'Sob consulta'}</td><td><b>${base > 0 ? brl(mg.final) : '--'}</b></td></tr>`;
+    }).join('');
+    dx.margem = salva;
+    $('#mpFaixa').textContent = fa && fs[fa.i] ? 'Prévia na faixa ' + plain(fs[fa.i].t) + ' de verba de anúncios. O cliente vê só a última coluna, arredondada para a dezena.' : '';
+    $('#mpExcluir').hidden = !$('#mpSel').value;
+  }
+  function fecharModalParceiro(){ $('#mdParc').hidden = true; mpEstado = null; }
+  $('#pkParcBtn').addEventListener('click', abrirModalParceiro);
+  $('#mpSel').addEventListener('change', e => {
+    const r = cadastro()[e.target.value];
+    mpEstado = r ? { nome:r.nome, margem:JSON.parse(JSON.stringify(r.margem || { tipo:'pct', valores:[] })) } : { nome:'', margem:{ tipo:'pct', valores:[] } };
+    pintarModal();
+  });
+  $('#mpNome').addEventListener('input', e => { mpEstado.nome = e.target.value; });
+  $('#mdParc').addEventListener('click', e => {
+    const mt = e.target.closest('[data-mt]');
+    if(mt){ mpEstado.margem.tipo = mt.dataset.mt; pintarModal(); }
+    if(e.target === $('#mdParc')) fecharModalParceiro();
+  });
+  $('#mpTab').addEventListener('input', e => {
+    const i = e.target.dataset.mv; if(i == null) return;
+    mpEstado.margem.valores[+i] = e.target.value;
+    const foco = +i, pos = e.target.selectionStart;
+    pintarModal();
+    const el = $('#mpTab [data-mv="' + foco + '"]'); if(el){ el.focus(); try{ el.setSelectionRange(pos, pos); }catch(err){} }
+  });
+  $('#mpTodos').addEventListener('click', () => {
+    const v = mpEstado.margem.valores.find(x => x !== '' && x != null);
+    if(v == null){ toast('Digite a margem do primeiro plano.'); return; }
+    mpEstado.margem.valores = list('planos.itens').map(() => v); pintarModal();
+  });
+  $('#mpCancelar').addEventListener('click', fecharModalParceiro);
+  $('#mpSalvar').addEventListener('click', () => {
+    const nome = mpEstado.nome.trim();
+    if(!nome){ toast('Digite o nome do parceiro.'); $('#mpNome').focus(); return; }
+    const reg = cadastro(), id = $('#mpSel').value || ('p' + Date.now().toString(36));
+    reg[id] = { id, estilo:PA.id, nome, margem:mpEstado.margem, ts:Date.now() };
+    store.set(PARC_KEY, reg); nuvemParceiros();
+    dx.parceiroAg = id; dx.parceiroNome = nome; dx.margem = JSON.parse(JSON.stringify(mpEstado.margem));
+    gravarDx(); fecharModalParceiro();
+    montar(slides[idx] && slides[idx].id); montarParceiros(); montarArquivo();
+    toast(nome + ' salvo: ' + resumoMargem(dx.margem) + '. O cliente vê só o preço final.');
+  });
+  $('#mpExcluir').addEventListener('click', e => confirmar(e.currentTarget, 'Confirmar exclusão', () => {
+    const id = $('#mpSel').value, reg = cadastro();
+    if(!id) return;
+    delete reg[id]; store.set(PARC_KEY, reg); nuvemParceiros();
+    if(dx.parceiroAg === id){ delete dx.parceiroAg; delete dx.parceiroNome; delete dx.margem; gravarDx(); montar(slides[idx] && slides[idx].id); }
+    fecharModalParceiro(); montarParceiros(); toast('Parceiro excluído do cadastro.');
+  }));
   $('#pkParcList').addEventListener('click', e => {
     const c = e.target.closest('[data-parc]');
     if(!c || !N) return;
     const id = c.dataset.parc || null;
     if((dx.parceiro || null) === id) return;
     if(id) dx.parceiro = id; else delete dx.parceiro;
-    delete dx.faixa;
+    delete dx.faixa; delete dx.parceiroAg; delete dx.parceiroNome; delete dx.margem;
     gravarDx(); montar(slides[idx] && slides[idx].id);
     montarParceiros(); montarArquivo();
     toast(PA ? (PA.chip || PA.nome) + ': ' + (PA.aviso || 'estilo de parceiro ligado.') : 'Venda direta: oferta completa.');
   });
-  $('#pkParcNome').addEventListener('change', e => {
-    dx.parceiroNome = e.target.value.trim();
-    gravarDx(); montar(slides[idx] && slides[idx].id); montarArquivo();
-  });
+
   function montarSigilo(){
     const box = $('#pkSig'), ms = marcasComId();
     box.hidden = !N || !ms.length;
@@ -3541,6 +4321,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       if(!isFinite(n)) return;
       out.push([rot, valorCampo(c, n) + (o && o.tipo === 'media' ? ' (média de mercado)' : '')]);
     }));
+    if(indicadores().length){
+      indicadores().forEach(k => { const v = valorInd(k); if(v != null) out.push([plain(k.rotulo) + ' (calculado)', fmtInd(k, v)]); });
+      return out;
+    }
     const L = num('leads'), V = num('vendas'), I = num('midia');
     if(L > 0 && V > 0) out.push(['Conversão (calculada)', pct(V / L * 100)]);
     const mgi = margemPct();
@@ -3556,6 +4340,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       (s.campos || []).forEach(c => { const o = origemDe(c.id); if(o && o.tipo === 'media') out.push(o.t + ': ' + o.fonte); });
       if(s.calculos && s.calculos.conversao) out.push('Conversão média do mercado (' + pct(s.calculos.conversao.v) + '): ' + s.calculos.conversao.fonte);
     });
+    indicadores().forEach(k => { if(k.ref != null && k.fonte && valorInd(k) != null) out.push(plain(k.rotulo) + ' (referência ' + fmtInd(k, k.ref) + '): ' + k.fonte); });
     return out;
   }
   function acoesPorArea(){
@@ -3566,6 +4351,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         const d = dorQ(sc, q, qi), acao = plain(raw(qPath(si, qi) + '.acao'));
         if(d == null || d === 0 || !acao) return;
         itens.push({ acao, pergunta:plain(raw(qPath(si, qi) + '.texto')), dor:d });
+      });
+      indicadores().forEach(k => {
+        if(k.area !== a.id) return;
+        const d = dorInd(k), ac = plain(k.acao || '');
+        if(!d || !ac) return;
+        itens.push({ acao:ac, pergunta:plain(k.rotulo) + ' de ' + fmtInd(k, valorInd(k)) + ', referência ' + fmtInd(k, k.ref), dor:d });
       });
       itens.sort((x, y) => y.dor - x.dor);
       return { nome:nomeArea(a), pct:s.aprov, itens };

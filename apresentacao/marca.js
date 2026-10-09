@@ -272,6 +272,16 @@ window.MARCA = {
     ]
   },
 
+  // slide "Onde o seu funil vaza" (só nos nichos com "funil" e "indicadores", ex.: genérico e arquitetura)
+  funil: {
+    kicker: 'Raio-X · Funil',
+    titulo: 'Onde o seu funil *vaza*',
+    custosRotulo: 'Quanto custa cada etapa',
+    veredito: 'Onde está o gargalo',
+    vazio: 'Preencha o raio-x e os números do marketing e de vendas para ver onde o funil vaza.',
+    nota: 'Como ler: de cima para baixo, cada seta é a taxa de uma etapa para a próxima. CTR e clique → lead mostram se o anúncio funciona (marketing); lead → reunião e reunião → venda mostram se o atendimento converte (vendas). Verde: igual ou acima da referência; amarelo: até 30% abaixo; vermelho: mais que isso. Sem cor: não há referência pública, vale o número do cliente.\nFala, se o gargalo for vendas: "Seu problema não é falta de lead. É o que acontece com o lead depois que ele chega."\nFala, se for marketing: "Seu time não tem o que converter: o anúncio não está trazendo gente suficiente."'
+  },
+
   // depois dos cases: os cases provam o método, não prometem o resultado. A conta usa os números do raio-x
   ponte: {
     kicker: 'Dos cases para a sua {empresa}',

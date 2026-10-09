@@ -176,6 +176,30 @@ s{opacity:.6}
 .derived .dl{font:700 clamp(8px,.68cqw,11px)/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--mut2)}
 .dchip{display:inline-flex;align-items:center;gap:.45em;padding:.5cqw .9cqw;border-radius:999px;background:rgba(59,142,243,.1);border:1px solid rgba(59,142,243,.32);font-size:clamp(9.5px,.82cqw,13px);color:var(--mut)}
 .dchip b{color:var(--tx);font-variant-numeric:tabular-nums}
+.dref{color:var(--mut2);font-size:.9em}
+/* onde o funil vaza */
+.fn-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:1.6cqw;width:100%;align-items:start}
+.fn-etapas{display:flex;flex-direction:column;gap:.25cqw}
+.fn-et{display:grid;grid-template-columns:minmax(0,1fr) 7.5em 11em;align-items:center;gap:1cqw}
+.fn-bar{height:1.5cqw;min-height:12px;border-radius:.4cqw;background:rgba(150,190,255,.07);overflow:hidden}
+.fn-bar i{display:block;height:100%;border-radius:.4cqw;background:linear-gradient(90deg,var(--acc-strong),var(--acc));transition:width .8s cubic-bezier(.16,1,.3,1)}
+.fn-n{font:800 clamp(14px,1.45cqw,23px)/1 var(--f-disp);text-align:right;font-variant-numeric:tabular-nums}
+.fn-n .empty{font:500 clamp(9px,.74cqw,12px)/1 var(--f-body)}
+.fn-l{font-size:clamp(10px,.86cqw,14px);color:var(--mut)}
+.fn-passo{display:flex;align-items:center;flex-wrap:wrap;gap:.5em;padding:.2cqw 0 .2cqw 1cqw;font-size:clamp(9.5px,.8cqw,13px);color:var(--mut)}
+.fn-passo b{font-variant-numeric:tabular-nums;color:var(--tx)}
+.fn-seta{color:var(--mut2)}
+.fn-passo.ok b{color:var(--ok)} .fn-passo.warn b{color:var(--warn)} .fn-passo.bad b{color:var(--bad)}
+.fn-area{padding:.15em .6em;border-radius:999px;border:1px solid var(--line);font-size:.85em;color:var(--mut2)}
+.fn-lado{display:flex;flex-direction:column;gap:.7cqw}
+.fn-custos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6cqw}
+.fn-c{display:flex;flex-direction:column;gap:.2cqw;padding:.7cqw 1cqw;border-radius:.8cqw;border:1px solid var(--line);background:var(--panel)}
+.fn-c span{font-size:clamp(8.5px,.72cqw,11.5px);color:var(--mut2);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.fn-c b{font:800 clamp(14px,1.35cqw,22px)/1.1 var(--f-disp);font-variant-numeric:tabular-nums}
+.fn-ver{gap:.5cqw}
+.fn-placar{display:flex;flex-wrap:wrap;gap:.6cqw}
+.fn-placar span{padding:.3em .8em;border-radius:999px;background:var(--panel2);font-size:clamp(10px,.86cqw,14px);color:var(--mut)}
+.fn-placar span.red{background:rgba(255,107,107,.14);color:var(--bad)} .fn-placar span.yellow{background:rgba(246,181,68,.14);color:var(--warn)} .fn-placar span.green{background:rgba(56,211,159,.14);color:var(--ok)}
 .quote{max-width:64cqw;padding:.9cqw 1.3cqw;border-left:3px solid var(--acc);background:var(--panel);border-radius:0 .8cqw .8cqw 0;font:500 clamp(11px,.98cqw,16px)/1.55 var(--f-body);color:var(--mut);font-style:italic}
 /* 5 por linha; a última linha fica centralizada */
 .brands{display:flex;flex-wrap:wrap;justify-content:center;gap:.9cqw;width:100%}
@@ -495,7 +519,22 @@ s{opacity:.6}
 .pk-pc span{font-size:clamp(9.5px,.8cqw,12.5px);color:var(--mut2);line-height:1.4}
 .pk-pc:hover{border-color:var(--acc)}
 .pk-pc.cur{border-color:var(--warn);background:rgba(246,181,68,.08);box-shadow:0 0 0 1px var(--warn)}
-.pk-parc-nome .pk-busca{width:min(100%,40cqw)}
+.pk-parc-nome{display:flex;flex-wrap:wrap;align-items:center;gap:.8cqw}
+.pk-parc-nome b{color:var(--tx)}
+.modal{position:absolute;inset:0;z-index:60;display:grid;place-items:center;padding:3cqw;background:rgba(2,8,22,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.md-box{display:flex;flex-direction:column;gap:.9cqw;width:min(100%,62cqw);max-height:100%;overflow-y:auto;padding:2cqw 2.2cqw;border-radius:1.2cqw;border:1px solid var(--line);background:#081a3c;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.md-row{display:grid;grid-template-columns:12em minmax(0,1fr);align-items:center;gap:1cqw;font-size:clamp(10.5px,.9cqw,14px);color:var(--mut)}
+.md-row .pk-busca{width:100%}
+.md-row select.pk-busca{appearance:auto}
+.md-tipo{display:flex;flex-wrap:wrap;gap:.5cqw}
+.md-tipo button{padding:.45cqw 1cqw;min-height:30px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--mut);font:600 clamp(10px,.85cqw,13.5px)/1 var(--f-body)}
+.md-tipo button.on{border-color:var(--acc);background:var(--acc-soft);color:#fff}
+.md-tab{font-size:clamp(10px,.86cqw,13.5px)}
+.md-tab td{padding:.45cqw .4cqw;vertical-align:middle}
+.md-tab b{color:var(--acc)}
+.mp-in{display:inline-flex;align-items:center;gap:.35em}
+.mp-in input{width:6.5em;padding:.3em .5em;border-radius:.4cqw;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--tx);font:600 clamp(11px,.9cqw,14px)/1.2 var(--f-body);text-align:right}
+.mp-in em{font-style:normal;color:var(--mut2)}
 .parc-chip{font-style:normal;padding:.15em .6em;border-radius:999px;background:rgba(246,181,68,.15);color:#ffe2a8;font-weight:700;white-space:nowrap}
 .pk-arq{display:flex;flex-direction:column;gap:.6cqw;padding-top:1.2cqw;border-top:1px solid var(--line)}
 .pk-arq-head{display:flex;flex-wrap:wrap;align-items:center;gap:.7cqw}
@@ -548,8 +587,11 @@ s{opacity:.6}
   .cs-tbl{font-size:11px}
   .notas{left:12px;right:12px;bottom:70px;max-height:45%}
   .arq-row{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}
-  .plans.tres,.pl-rod{grid-template-columns:minmax(0,1fr)}
+  .plans.tres,.pl-rod,.fn-grid{grid-template-columns:minmax(0,1fr)}
+  .fn-et{grid-template-columns:minmax(0,1fr) 6em 8em}
   .nicho-chip .parc-chip{display:none}
+  .md-box{width:100%;padding:16px}
+  .md-row{grid-template-columns:minmax(0,1fr)}
   .arq-list{max-height:40vh}
   .slide.esp .esp-foto{position:relative;flex:none;align-self:stretch;width:calc(100% + 36px);max-width:none;height:320px;margin:-52px -18px 0}
   .slide.esp > :not(.esp-foto){max-width:100%}
@@ -686,7 +728,7 @@ s{opacity:.6}
         <div class="label">Parceiros · o cliente veio por indicação?</div>
         <p class="small">O estilo de parceiro vale por cima do nicho e fica guardado neste diagnóstico. Com parceiro de social mídia, a oferta sai sem social mídia e entra a tabela de parceiros.</p>
         <div class="pk-parc-list" id="pkParcList"></div>
-        <div class="pk-parc-nome" id="pkParcNomeBox" hidden><input class="pk-busca" id="pkParcNome" type="text" placeholder="Nome do parceiro (opcional): aparece nos slides" autocomplete="off"></div>
+        <div class="pk-parc-nome" id="pkParcNomeBox" hidden><span class="small" id="pkParcResumo"></span><button class="tb" id="pkParcBtn" type="button">Dados do parceiro e margem</button></div>
       </div>
       <div class="pk-arq" id="pkArq" hidden>
         <div class="pk-arq-head">
@@ -704,6 +746,20 @@ s{opacity:.6}
         <div class="pk-sig-list" id="pkSigList"></div>
       </div>
     </div>
+    <div class="modal" id="mdParc" hidden role="dialog" aria-modal="true" aria-labelledby="mdParcT">
+      <div class="md-box">
+        <div class="kicker">Parceiro · só você vê</div>
+        <h3 class="h3" id="mdParcT">Dados do parceiro e margem</h3>
+        <div class="md-row"><label for="mpSel">Parceiro cadastrado</label><select class="pk-busca" id="mpSel"></select></div>
+        <div class="md-row"><label for="mpNome">Nome do parceiro</label><input class="pk-busca" id="mpNome" type="text" placeholder="Ex.: nome da agência" autocomplete="off"></div>
+        <div class="md-row"><span>Margem do parceiro</span><div class="md-tipo"><button type="button" data-mt="pct">% sobre o plano</button><button type="button" data-mt="brl">R$ fixo por plano</button></div></div>
+        <table class="tbl md-tab"><thead><tr><th>Plano</th><th>Margem</th><th>Tabela parceiro</th><th>Cliente vê</th></tr></thead><tbody id="mpTab"></tbody></table>
+        <div class="small" id="mpFaixa"></div>
+        <div><button class="tb" type="button" id="mpTodos">Usar o primeiro valor em todos</button></div>
+        <p class="small">A margem não aparece para o cliente: os planos mostram só o preço final (tabela de parceiros + margem). A conta fica aqui e nas notas do slide de planos (tecla N).</p>
+        <div class="btn-row"><button class="btn ghost" id="mpExcluir" type="button">Excluir do cadastro</button><span style="flex:1"></span><button class="btn ghost" id="mpCancelar" type="button">Cancelar</button><button class="btn" id="mpSalvar" type="button">Salvar</button></div>
+      </div>
+    </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </div>
 </div>
@@ -717,6 +773,8 @@ window.PARCEIROS = []; window.PARCEIRO = function(p){ window.PARCEIROS.push(p); 
 <!-- Para adicionar um nicho: crie nichos/<nome>.js e acrescente uma linha aqui. -->
 <script src="nichos/escolas.js"></script>
 <script src="nichos/veiculos.js"></script>
+<script src="nichos/generico.js"></script>
+<script src="nichos/arquitetura.js"></script>
 <script src="parceiros/social-midia.js"></script>
 <script src="motor.js"></script>
 </body>

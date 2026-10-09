@@ -15,7 +15,7 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
   python3 build.py
   ```
 
-## Roteiro (30 slides)
+## Roteiro (30 a 32 slides, conforme o nicho)
 
 1. Capa · Especialista · Quem somos
 2. Antes de tudo: nome, WhatsApp do lead e data
@@ -55,6 +55,29 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
   funciona sem internet). "Copiar resumo" copia um texto para colar no WhatsApp ou no CRM. "Novo diagnóstico" começa
   o próximo cliente e guarda o atual em "Diagnósticos salvos".
 
+## Nichos com funil: Genérico e Arquitetura
+
+- **Genérico · vende por lead:** para quando aparece uma reunião sem preparo. O raio-x separa **Marketing** e **Vendas**
+  (cada um com placar próprio) e mostra onde está o gargalo.
+- **Escritórios de arquitetura:** o mesmo método com o funil do escritório (contato → briefing ou orçamento → contrato),
+  perguntas de briefing, proposta, portfólio, parcerias e indicação. O id `arquitetura` liga sozinho a proteção do case Dua.
+- Telas **Números do marketing** (verba, impressões, cliques, contatos) e **Números de vendas** (reuniões ou orçamentos,
+  vendas, ticket) calculam na hora: **CPM, CTR, CPC, CPL, clique → lead, lead → reunião, reunião → venda, custo por
+  reunião ou orçamento, CAC de mídia e ROAS**.
+- Slide **"Onde o seu funil vaza"**: as etapas do anúncio à venda, a taxa entre elas e o veredito ("o gargalo maior
+  está em Vendas. De 400 contatos, 40 viraram orçamentos e 4 viraram contratos").
+- Só CTR e clique → lead têm referência pública e pontuam (verde: igual ou acima; amarelo: até 30% abaixo; vermelho:
+  mais que isso). Os outros dependem do ticket e do ciclo de cada negócio e aparecem sem julgamento.
+
+| Indicador | Genérico | Arquitetura | Fonte |
+|---|---|---|---|
+| CTR (anúncio de lead no Meta) | 2,70% | 2,14% (casa e reforma) | LocaliQ/WordStream, Facebook Ads Benchmarks 2026 |
+| Clique → lead | 8,54% | 5,32% (casa e reforma) | LocaliQ/WordStream 2026; no Brasil, landing pages: 11% (RD Station, dados de 2025) |
+| Mercado de arquitetura | | 85% das obras sem arquiteto ou engenheiro | CAU/BR e Datafolha, 2015 |
+| Honorário residencial | | R$ 60 a R$ 140 por m² | portais de orçamento, 2026 (sem valor oficial do CAU) |
+
+Para outro nicho com funil, use `indicadores` e `funil` no arquivo do nicho, no modelo de `generico.js`.
+
 ## Cases e marcas
 
 O slide de marcas mostra que o método não é de um nicho só: são destaques entre os mais de 20 clientes, de
@@ -92,8 +115,12 @@ conflito de interesse, a oferta sai sem social mídia:
 - Planos: a tabela exclusiva de parceiros (Tráfego pago · Tráfego + CRM · Tráfego + CRM + Performance comercial),
   com o preço da faixa de verba de anúncios informada no raio-x. Dá para trocar a faixa clicando nela.
   Acima de R$ 50 mil: sob consulta. A conta da ponte usa o plano mais completo da faixa.
-- Nome do parceiro (opcional) no seletor: entra nos textos como `{parceiro}`.
-- "Novo diagnóstico" mantém o parceiro ligado; para tirar, escolha "Venda direta".
+- **Dados do parceiro e margem** (botão no seletor, com o parceiro ligado): nome do parceiro e a margem dele,
+  em **% sobre o plano** ou **R$ fixo por plano**. O cliente vê só o preço final (tabela de parceiros + margem,
+  arredondado para a dezena); a conta aparece só na janela e nas notas do slide de planos (tecla N).
+  Os parceiros ficam num cadastro para reusar (e, pelo link do claude.ai, na sua conta).
+- O nome do parceiro entra nos textos como `{parceiro}` (ex.: "clientes indicados por Agência X").
+- "Novo diagnóstico" mantém o parceiro e a margem; para tirar, escolha "Venda direta".
 
 Para criar outro estilo de parceiro, peça ao Claude Code: *"crie o parceiro X em apresentacao/parceiros/, no modelo de
 social-midia.js, e registre no index.html"*. Qualquer chave de `marca.js` pode ser sobrescrita no parceiro.

@@ -227,6 +227,13 @@
       if(d == null) return;
       tot += d; n++; if(d >= 0.99) alertas++;
     });
+    indicadores().forEach(k => {
+      if(k.area !== aid || k.ref == null) return;
+      total++;
+      const d = dorInd(k);
+      if(d == null) return;
+      tot += d; n++; if(d >= 0.99) alertas++;
+    });
     return { dor: n ? tot / n : null, aprov: n ? Math.round((1 - tot / n) * 100) : null, n, total, alertas, respondidas, perguntas };
   }
   const areasQuePontuam = () => areas().filter(a => areaStats(a.id).total > 0);
@@ -321,6 +328,33 @@
   }
   function rotuloDoCampo(id){ const si = secaoDoCampo(id); if(si < 0) return id; const fi = secoes()[si].campos.findIndex(c => c.id === id); return plain(raw('raiox.' + si + '.campos.' + fi + '.rotulo')).replace(/\?$/, ''); }
 
+  // ============ indicadores do funil (CPM, CTR, CPC, CPL, custo por reunião, CAC, ROAS...) ============
+  // Definidos no nicho em "indicadores": valor = a ÷ b × x ("a" pode ser uma lista de campos multiplicados).
+  // Com "ref" e "area", o indicador pontua no placar daquela área (como uma pergunta) e entra no plano de ação:
+  // igual ou melhor que a referência = 0; até 30% abaixo = 0,5; mais que isso = 1.
+  const indicadores = () => list('indicadores');
+  const indDef = id => indicadores().find(k => k.id === id);
+  function valorInd(k){
+    if(!k) return null;
+    const as = Array.isArray(k.a) ? k.a : [k.a], b = num(k.b);
+    if(!(b > 0) || as.some(id => !(num(id) > 0))) return null;
+    return as.reduce((p, id) => p * num(id), 1) / b * (k.x || 1);
+  }
+  function fmtInd(k, v){
+    if(v == null) return '--';
+    if(k.formato === 'pct') return new Intl.NumberFormat('pt-BR', { maximumFractionDigits:v < 10 ? 2 : 1 }).format(v) + '%';
+    if(k.formato === 'x') return nf1.format(v) + 'x';
+    if(k.formato === 'brl') return v < 10 ? 'R$ ' + v.toFixed(2).replace('.', ',') : brl(v);
+    return nf1.format(v);
+  }
+  function dorInd(k){
+    if(!k || k.ref == null || !k.area) return null;
+    const v = valorInd(k);
+    if(v == null) return null;
+    const r = k.melhor === 'menor' ? k.ref / v : v / k.ref;
+    return r >= 1 ? 0 : r >= 0.7 ? 0.5 : 1;
+  }
+
   // ============ faixa de verba (planos por faixa) ============
   function faixaAtual(){
     const fs = list('planos.faixas');
@@ -332,9 +366,19 @@
     return { i:i < 0 ? fs.length - 1 : i, auto:true };
   }
   const valorBRL = v => parseFloat(String(plain(v || '')).replace(/[^\d,]/g, '').replace(',', '.'));
+  // margem do parceiro (oculta do cliente): % sobre o plano ou R$ fixo por plano, somada ao preço da tabela de parceiros.
+  // O cliente vê só o preço final, arredondado para a dezena.
+  function margemPlano(base, i){
+    const m = PA && dx.margem;
+    if(!(base > 0) || !m || !Array.isArray(m.valores)) return { final:base, add:0 };
+    const v = parseFloat(String(m.valores[i] == null ? '' : m.valores[i]).replace(',', '.'));
+    if(!(v > 0)) return { final:base, add:0 };
+    const final = Math.round((m.tipo === 'brl' ? base + v : base * (1 + v / 100)) / 10) * 10;
+    return { final, add:final - base, v, tipo:m.tipo };
+  }
   function precoMaisCompleto(){
     const fa = faixaAtual();
-    const vals = list('planos.itens').map(p => valorBRL(fa ? (p.precos || [])[fa.i] : p.preco)).filter(v => v > 0);
+    const vals = list('planos.itens').map((p, i) => fa ? margemPlano(valorBRL((p.precos || [])[fa.i]), i).final : valorBRL(p.preco)).filter(v => v > 0);
     return vals.length ? Math.max.apply(null, vals) : 0;
   }
 
@@ -543,6 +587,15 @@
       ${T(cp('obs'), 'div', 'cs-obs reveal')}`;
     },
 
+    // onde o funil vaza: etapas do anúncio à venda, taxa entre elas (com referência) e custos
+    funil: () => `
+      ${T('funil.kicker', 'div', 'kicker reveal')}
+      ${T('funil.titulo', 'h2', 'h2 reveal')}
+      <div class="fn-grid reveal">
+        <div class="fn-etapas" id="fnEtapas"></div>
+        <div class="fn-lado">${T('funil.custosRotulo', 'div', 'label')}<div class="fn-custos" id="fnCustos"></div><div class="card hero fn-ver" id="fnVer"></div></div>
+      </div>`,
+
     ponte: () => `
       ${T('ponte.kicker', 'div', 'kicker reveal')}
       ${T('ponte.titulo', 'h2', 'h2 reveal')}
@@ -635,7 +688,8 @@
           <ul>${(p.beneficios || []).map((x, j) => T(b + '.beneficios.' + j, 'li')).join('')}</ul></div>`;
       }).join('')}</div>
       <div class="pl-rod reveal">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
-      ${T('planos.nota', 'div', 'note reveal')}`,
+      ${T('planos.nota', 'div', 'note reveal')}
+      <aside class="notas"><div class="label">Notas do apresentador · N esconde</div><div class="nt" id="plNota"></div></aside>`,
 
     garantia: () => `
       ${T('garantia.kicker', 'div', 'kicker reveal')}
@@ -683,6 +737,7 @@
     ];
     secoes().forEach((s, si) => d.push({ id:'rx-' + s.id, html:() => B.secao(s, si) }));
     d.push(
+      ...(list('funil.etapas').length ? [{ id:'funil', html:B.funil, nota:'funil.nota' }] : []),
       { id:'painel', html:B.painel, nota:'painel.nota' },
       { id:'resolvemos', html:B.resolvemos },
       { id:'perfis', html:B.perfis },
@@ -852,6 +907,13 @@
     });
     $$('[data-calc]', slidesEl).forEach(el => {
       const cfg = (secoes()[+el.dataset.calc] || {}).calculos || {};
+      if(cfg.indicadores){
+        el.innerHTML = '<span class="dl">Calculado na hora</span>' + cfg.indicadores.map(indDef).filter(Boolean).map(k => {
+          const v = valorInd(k);
+          return `<span class="dchip"${k.dica ? ` title="${esc(k.dica)}"` : ''}>${esc(k.rotulo)}: <b>${esc(fmtInd(k, v))}</b>${k.ref != null ? ` <span class="dref">ref. ${esc(fmtInd(k, k.ref))}</span><i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(k.fonte || '')}">i</i>` : ''}</span>`;
+        }).join('');
+        return;
+      }
       const L = num('leads'), V = num('vendas'), I = num('midia'), og = origemDe('leads'), out = [];
       if(L > 0 && V > 0) out.push(`Conversão de vocês: <b>${pct(V / L * 100)}</b> (${nf1.format(V)} de ${nf0.format(L)} contatos)`);
       else out.push('Conversão: ' + (og && og.vazio ? 'sem a contagem de contatos não dá pra calcular' : 'preencha contatos e ' + esc(termo('vendas'))));
@@ -963,16 +1025,57 @@
       } else { set('ptN', '--'); set('ptL', ''); set('ptDet', ''); }
     }
 
+    // ---- funil ----
+    // as três últimas etapas em uma frase: "De 400 contatos, 40 viraram orçamentos e 4 viraram contratos."
+    const vazamento = (es, vals) => {
+      const n = es.length;
+      if(n < 3 || !(vals[n - 3] > 0) || !(vals[n - 2] >= 0) || !(vals[n - 1] >= 0) || (vals[n - 2] === 0 && vals[n - 1] === 0)) return '';
+      const r = i => plain(es[i].rotulo).toLowerCase();
+      return ' De <b>' + nf0.format(vals[n - 3]) + '</b> ' + esc(r(n - 3)) + ', <b>' + nf0.format(vals[n - 2]) + '</b> viraram ' + esc(r(n - 2)) + ' e <b>' + nf0.format(vals[n - 1]) + '</b> viraram ' + esc(r(n - 1)) + '.';
+    };
+    if($('#fnEtapas')){
+      const es = list('funil.etapas'), ps = list('funil.passos');
+      const vals = es.map(e => num(e.campo)), mx = Math.max.apply(null, vals.map(v => v > 0 ? Math.log10(v + 1) : 0).concat(1));
+      const nomeA = id => { const a = areas().find(x => x.id === id); return a ? nomeArea(a) : ''; };
+      set('fnEtapas', es.map((e, i) => {
+        const v = vals[i], w = v > 0 ? Math.max(14, Math.log10(v + 1) / mx * 100) : 0;
+        let passo = '';
+        if(i < es.length - 1){
+          const k = indDef(ps[i]), pv = valorInd(k), d = dorInd(k);
+          const st = d == null ? 'sem' : d === 0 ? 'ok' : d === 0.5 ? 'warn' : 'bad';
+          passo = k ? `<div class="fn-passo ${st}"><span class="fn-seta">↓</span><b>${esc(fmtInd(k, pv))}</b> ${esc(k.rotulo)}${k.ref != null ? ` <span class="dref">ref. ${esc(fmtInd(k, k.ref))}</span>` : ''}${k.area ? `<span class="fn-area">${esc(nomeA(k.area))}</span>` : ''}</div>` : '';
+        }
+        return `<div class="fn-et"><div class="fn-bar"><i style="width:${w.toFixed(1)}%"></i></div><div class="fn-n">${v > 0 ? nf0.format(v) : '<span class="empty">não informado</span>'}</div><div class="fn-l">${esc(plain(e.rotulo))}</div></div>${passo}`;
+      }).join(''));
+      set('fnCustos', list('funil.custos').map(indDef).filter(Boolean).map(k => `<div class="fn-c"${k.dica ? ` title="${esc(k.dica)}"` : ''}><span>${esc(k.rotulo)}</span><b>${esc(fmtInd(k, valorInd(k)))}</b></div>`).join(''));
+      // veredito: área com menor aproveitamento (perguntas + indicadores) e o indicador mais abaixo da referência
+      const st = areasQuePontuam().map(a => ({ a, s:areaStats(a.id) })).filter(x => x.s.aprov != null);
+      const piorK = indicadores().filter(k => dorInd(k) > 0).sort((x, y) => (valorInd(x) / x.ref) - (valorInd(y) / y.ref))[0];
+      if(!st.length) set('fnVer', '<span class="empty">' + esc(plain(raw('funil.vazio')) || 'Preencha o raio-x para ver onde o funil vaza.') + '</span>');
+      else {
+        const pior = st.slice().sort((x, y) => x.s.aprov - y.s.aprov)[0];
+        set('fnVer', '<div class="label">' + esc(plain(raw('funil.veredito')) || 'Onde está o gargalo') + '</div>' +
+          '<div class="fn-placar">' + st.map(x => `<span class="${tier(x.s.aprov)}">${esc(nomeArea(x.a))} <b>${x.s.aprov}%</b></span>`).join('') + '</div>' +
+          '<div class="phrase">' + (st.length > 1 ? 'O gargalo maior está em <b>' + esc(nomeArea(pior.a)) + '</b>.' : '') +
+          (piorK ? ' ' + esc(plain(piorK.rotulo)) + ' de <b>' + esc(fmtInd(piorK, valorInd(piorK))) + '</b>, abaixo da referência de ' + esc(fmtInd(piorK, piorK.ref)) + '.' : '') +
+          vazamento(es, vals) + '</div>');
+      }
+    }
+
     // ---- planos por faixa de verba ----
     if($('#plFaixas')){
       const fa = faixaAtual();
       $$('#plFaixas [data-faixa]').forEach(b => b.classList.toggle('on', +b.dataset.faixa === fa.i));
+      const contas = [];
       list('planos.itens').forEach((p, i) => {
-        const v = plain((p.precos || [])[fa.i] || '');
-        set('plP' + i, esc(v || '--'));
-        const per = document.getElementById('plPer' + i); if(per) per.hidden = !/\d/.test(v);
+        const v = plain((p.precos || [])[fa.i] || ''), base = valorBRL(v), mg = margemPlano(base, i);
+        set('plP' + i, esc(base > 0 ? brl(mg.final) : (v || '--')));
+        const per = document.getElementById('plPer' + i); if(per) per.hidden = !(base > 0);
+        if(base > 0) contas.push(plain(p.nome) + ': tabela ' + brl(base) + (mg.add ? ' + margem ' + brl(mg.add) + (mg.tipo === 'pct' ? ' (' + nf1.format(mg.v) + '%)' : '') : '') + ' = ' + brl(mg.final));
       });
       set('plFaixaHint', fa.semVerba ? 'Sem verba no raio-x: clique na faixa' : fa.auto ? 'Pela verba informada no raio-x' : '');
+      set('plNota', esc(PA && dx.margem ? 'Margem de ' + (dx.parceiroNome || 'parceiro') + ' (não aparece para o cliente). ' : 'Sem margem de parceiro: o cliente vê a tabela de parceiros. ') +
+        esc(contas.join(' · ')) + (contas.length ? '' : esc('Faixa sob consulta.')));
     }
 
     // ---- salvar ----
@@ -1064,6 +1167,7 @@
       if(e.key === 'Escape') t.blur();
       return;
     }
+    if(!$('#mdParc').hidden){ if(e.key === 'Escape') fecharModalParceiro(); return; }
     if(!$('#picker').hidden){ if(e.key === 'Escape' && N) fecharPicker(); return; }
     if((e.key === ' ' || e.key === 'Enter') && t && t.closest && t.closest('button,[role="button"],a')) return;
     if(['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)){ e.preventDefault(); next(); }
@@ -1113,9 +1217,9 @@
     if(a === 'novo') return confirmar(btn, 'Clique de novo para começar outro', () => {
       gravarDx();
       const tinha = temConteudo(dx);
-      const parc = dx.parceiro, parcNome = dx.parceiroNome;
+      const parc = { parceiro:dx.parceiro, parceiroAg:dx.parceiroAg, parceiroNome:dx.parceiroNome, margem:dx.margem };
       dx = novoDx();
-      if(parc){ dx.parceiro = parc; dx.parceiroNome = parcNome; }
+      if(parc.parceiro) Object.keys(parc).forEach(k => { if(parc[k] != null) dx[k] = JSON.parse(JSON.stringify(parc[k])); });
       gravarDx(); abertos.clear(); montar(slides[idx] && slides[idx].id);
       toast((tinha ? 'Novo diagnóstico. O anterior ficou em "Diagnósticos salvos" (botão Nicho).' : 'Novo diagnóstico.') + (PA ? ' ' + (PA.chip || PA.nome) + ' continua ligado.' : ''));
     });
@@ -1251,7 +1355,7 @@
         let mudou = false;
         snap.docs.forEach(d => {
           const v = d.data();
-          if(!v || !v.id) return;
+          if(d.id === 'cadastro-parceiros' || !v || !v.id) return;
           naNuvem.add(v.id);
           nuvemUltimo.set(v.id, JSON.stringify(v));
           if(v.apagado){ if(a[v.id] && (a[v.id].ts || 0) <= (v.ts || 0)){ delete a[v.id]; mudou = true; } return; }
@@ -1259,6 +1363,13 @@
         });
         if(mudou) guardarArquivo(a);
         Object.values(a).forEach(it => { if(!naNuvem.has(it.id)) nuvemAgendar(it); });
+        const cp = snap.docs.find(d => d.id === 'cadastro-parceiros'), regN = cp && cp.data() && cp.data().itens;
+        if(regN){
+          const reg = cadastro(); let mud = false;
+          Object.values(regN).forEach(r => { if(r && r.id && (!reg[r.id] || (r.ts || 0) > (reg[r.id].ts || 0))){ reg[r.id] = r; mud = true; } });
+          if(mud) store.set(PARC_KEY, reg);
+        }
+        nuvemParceiros();
         if(!$('#picker').hidden) montarArquivo();
       }catch(e){ nuvem = null; }
     })();
@@ -1268,6 +1379,10 @@
     iniciarNuvem();
     nuvemFila.set(it.id, it);
     clearTimeout(nuvemT); nuvemT = setTimeout(nuvemDrenar, 4000);
+  }
+  async function nuvemParceiros(){
+    if(!nuvem) return;
+    try{ await nuvem.collection('data/users/' + nuvemUid).doc('cadastro-parceiros').set({ itens:cadastro(), ts:Date.now() }); }catch(e){}
   }
   function nuvemApagar(id){ nuvemFila.set(id, { id, apagado:true, ts:Date.now() }); clearTimeout(nuvemT); nuvemT = setTimeout(nuvemDrenar, 500); }
   async function nuvemDrenar(){
@@ -1309,24 +1424,101 @@
     const cur = dx.parceiro || '';
     const cards = [{ id:'', nome:'Venda direta', descricao:'Sem parceiro: a oferta completa da Ribeker, com social mídia.' }].concat(PARCEIROS);
     $('#pkParcList').innerHTML = cards.map(p => `<button class="pk-pc${(p.id || '') === cur ? ' cur' : ''}" type="button" data-parc="${esc(p.id)}" aria-pressed="${(p.id || '') === cur}"><b>${esc(p.nome)}</b><span>${esc(p.descricao || '')}</span></button>`).join('');
-    $('#pkParcNomeBox').hidden = !PARCEIROS.find(p => p.id === cur);
-    $('#pkParcNome').value = dx.parceiroNome || '';
+    const pa = PARCEIROS.find(p => p.id === cur);
+    $('#pkParcNomeBox').hidden = !pa;
+    if(pa) $('#pkParcResumo').innerHTML = '<b>' + esc(dx.parceiroNome || 'Parceiro sem nome') + '</b> · ' + esc(resumoMargem(dx.margem));
   }
+  function resumoMargem(m){
+    const vs = m && Array.isArray(m.valores) ? m.valores.map(v => parseFloat(String(v).replace(',', '.'))).filter(v => v > 0) : [];
+    if(!vs.length) return 'sem margem';
+    const f = v => m.tipo === 'brl' ? brl(v) : nf1.format(v) + '%';
+    return 'margem ' + (vs.every(v => v === vs[0]) ? f(vs[0]) : vs.map(f).join(' / ')) + (m.tipo === 'brl' ? ' por plano' : '');
+  }
+
+  // ---- cadastro de parceiros (nome + margem), na janela "Dados do parceiro e margem" ----
+  const PARC_KEY = 'rb:parcs';
+  const cadastro = () => store.get(PARC_KEY) || {};
+  let mpEstado = null;
+  function abrirModalParceiro(){
+    if(!PA) return;
+    const regs = Object.values(cadastro()).filter(r => r.estilo === PA.id).sort((a, b) => a.nome.localeCompare(b.nome));
+    $('#mpSel').innerHTML = '<option value="">Novo parceiro</option>' + regs.map(r => `<option value="${esc(r.id)}">${esc(r.nome)}</option>`).join('');
+    $('#mpSel').value = dx.parceiroAg && cadastro()[dx.parceiroAg] ? dx.parceiroAg : '';
+    mpEstado = { nome:dx.parceiroNome || '', margem:JSON.parse(JSON.stringify(dx.margem || { tipo:'pct', valores:[] })) };
+    pintarModal();
+    $('#mdParc').hidden = false;
+    $('#mpNome').focus();
+  }
+  function pintarModal(){
+    $('#mpNome').value = mpEstado.nome;
+    $$('#mdParc [data-mt]').forEach(b => b.classList.toggle('on', b.dataset.mt === mpEstado.margem.tipo));
+    const fa = faixaAtual(), fs = list('planos.faixas'), salva = dx.margem;
+    dx.margem = mpEstado.margem;                       // prévia com a margem que está sendo digitada
+    $('#mpTab').innerHTML = list('planos.itens').map((p, i) => {
+      const base = fa ? valorBRL((p.precos || [])[fa.i]) : 0, mg = margemPlano(base, i), v = mpEstado.margem.valores[i];
+      return `<tr><td>${esc(plain(p.nome))}</td><td><span class="mp-in"><input type="number" inputmode="decimal" min="0" step="any" data-mv="${i}" value="${v == null ? '' : esc(v)}" placeholder="0"><em>${mpEstado.margem.tipo === 'brl' ? 'R$' : '%'}</em></span></td>
+        <td>${base > 0 ? brl(base) : 'Sob consulta'}</td><td><b>${base > 0 ? brl(mg.final) : '--'}</b></td></tr>`;
+    }).join('');
+    dx.margem = salva;
+    $('#mpFaixa').textContent = fa && fs[fa.i] ? 'Prévia na faixa ' + plain(fs[fa.i].t) + ' de verba de anúncios. O cliente vê só a última coluna, arredondada para a dezena.' : '';
+    $('#mpExcluir').hidden = !$('#mpSel').value;
+  }
+  function fecharModalParceiro(){ $('#mdParc').hidden = true; mpEstado = null; }
+  $('#pkParcBtn').addEventListener('click', abrirModalParceiro);
+  $('#mpSel').addEventListener('change', e => {
+    const r = cadastro()[e.target.value];
+    mpEstado = r ? { nome:r.nome, margem:JSON.parse(JSON.stringify(r.margem || { tipo:'pct', valores:[] })) } : { nome:'', margem:{ tipo:'pct', valores:[] } };
+    pintarModal();
+  });
+  $('#mpNome').addEventListener('input', e => { mpEstado.nome = e.target.value; });
+  $('#mdParc').addEventListener('click', e => {
+    const mt = e.target.closest('[data-mt]');
+    if(mt){ mpEstado.margem.tipo = mt.dataset.mt; pintarModal(); }
+    if(e.target === $('#mdParc')) fecharModalParceiro();
+  });
+  $('#mpTab').addEventListener('input', e => {
+    const i = e.target.dataset.mv; if(i == null) return;
+    mpEstado.margem.valores[+i] = e.target.value;
+    const foco = +i, pos = e.target.selectionStart;
+    pintarModal();
+    const el = $('#mpTab [data-mv="' + foco + '"]'); if(el){ el.focus(); try{ el.setSelectionRange(pos, pos); }catch(err){} }
+  });
+  $('#mpTodos').addEventListener('click', () => {
+    const v = mpEstado.margem.valores.find(x => x !== '' && x != null);
+    if(v == null){ toast('Digite a margem do primeiro plano.'); return; }
+    mpEstado.margem.valores = list('planos.itens').map(() => v); pintarModal();
+  });
+  $('#mpCancelar').addEventListener('click', fecharModalParceiro);
+  $('#mpSalvar').addEventListener('click', () => {
+    const nome = mpEstado.nome.trim();
+    if(!nome){ toast('Digite o nome do parceiro.'); $('#mpNome').focus(); return; }
+    const reg = cadastro(), id = $('#mpSel').value || ('p' + Date.now().toString(36));
+    reg[id] = { id, estilo:PA.id, nome, margem:mpEstado.margem, ts:Date.now() };
+    store.set(PARC_KEY, reg); nuvemParceiros();
+    dx.parceiroAg = id; dx.parceiroNome = nome; dx.margem = JSON.parse(JSON.stringify(mpEstado.margem));
+    gravarDx(); fecharModalParceiro();
+    montar(slides[idx] && slides[idx].id); montarParceiros(); montarArquivo();
+    toast(nome + ' salvo: ' + resumoMargem(dx.margem) + '. O cliente vê só o preço final.');
+  });
+  $('#mpExcluir').addEventListener('click', e => confirmar(e.currentTarget, 'Confirmar exclusão', () => {
+    const id = $('#mpSel').value, reg = cadastro();
+    if(!id) return;
+    delete reg[id]; store.set(PARC_KEY, reg); nuvemParceiros();
+    if(dx.parceiroAg === id){ delete dx.parceiroAg; delete dx.parceiroNome; delete dx.margem; gravarDx(); montar(slides[idx] && slides[idx].id); }
+    fecharModalParceiro(); montarParceiros(); toast('Parceiro excluído do cadastro.');
+  }));
   $('#pkParcList').addEventListener('click', e => {
     const c = e.target.closest('[data-parc]');
     if(!c || !N) return;
     const id = c.dataset.parc || null;
     if((dx.parceiro || null) === id) return;
     if(id) dx.parceiro = id; else delete dx.parceiro;
-    delete dx.faixa;
+    delete dx.faixa; delete dx.parceiroAg; delete dx.parceiroNome; delete dx.margem;
     gravarDx(); montar(slides[idx] && slides[idx].id);
     montarParceiros(); montarArquivo();
     toast(PA ? (PA.chip || PA.nome) + ': ' + (PA.aviso || 'estilo de parceiro ligado.') : 'Venda direta: oferta completa.');
   });
-  $('#pkParcNome').addEventListener('change', e => {
-    dx.parceiroNome = e.target.value.trim();
-    gravarDx(); montar(slides[idx] && slides[idx].id); montarArquivo();
-  });
+
   function montarSigilo(){
     const box = $('#pkSig'), ms = marcasComId();
     box.hidden = !N || !ms.length;
@@ -1449,6 +1641,10 @@
       if(!isFinite(n)) return;
       out.push([rot, valorCampo(c, n) + (o && o.tipo === 'media' ? ' (média de mercado)' : '')]);
     }));
+    if(indicadores().length){
+      indicadores().forEach(k => { const v = valorInd(k); if(v != null) out.push([plain(k.rotulo) + ' (calculado)', fmtInd(k, v)]); });
+      return out;
+    }
     const L = num('leads'), V = num('vendas'), I = num('midia');
     if(L > 0 && V > 0) out.push(['Conversão (calculada)', pct(V / L * 100)]);
     const mgi = margemPct();
@@ -1464,6 +1660,7 @@
       (s.campos || []).forEach(c => { const o = origemDe(c.id); if(o && o.tipo === 'media') out.push(o.t + ': ' + o.fonte); });
       if(s.calculos && s.calculos.conversao) out.push('Conversão média do mercado (' + pct(s.calculos.conversao.v) + '): ' + s.calculos.conversao.fonte);
     });
+    indicadores().forEach(k => { if(k.ref != null && k.fonte && valorInd(k) != null) out.push(plain(k.rotulo) + ' (referência ' + fmtInd(k, k.ref) + '): ' + k.fonte); });
     return out;
   }
   function acoesPorArea(){
@@ -1474,6 +1671,12 @@
         const d = dorQ(sc, q, qi), acao = plain(raw(qPath(si, qi) + '.acao'));
         if(d == null || d === 0 || !acao) return;
         itens.push({ acao, pergunta:plain(raw(qPath(si, qi) + '.texto')), dor:d });
+      });
+      indicadores().forEach(k => {
+        if(k.area !== a.id) return;
+        const d = dorInd(k), ac = plain(k.acao || '');
+        if(!d || !ac) return;
+        itens.push({ acao:ac, pergunta:plain(k.rotulo) + ' de ' + fmtInd(k, valorInd(k)) + ', referência ' + fmtInd(k, k.ref), dor:d });
       });
       itens.sort((x, y) => y.dor - x.dor);
       return { nome:nomeArea(a), pct:s.aprov, itens };
