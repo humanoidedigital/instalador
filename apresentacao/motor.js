@@ -10,6 +10,7 @@
 
   const MARCA = window.MARCA || {};
   const NICHOS = (window.NICHOS || []).filter(n => n && n.id);
+  const PARCEIROS = (window.PARCEIROS || []).filter(p => p && p.id);
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 
@@ -33,6 +34,7 @@
 
   // ============ estado ============
   let N = null;                       // nicho ativo
+  let PA = null;                      // estilo de parceiro ativo no diagnóstico (parceiros/*.js), por cima do nicho
   let dx = novoDx();                  // diagnóstico em andamento
   let slides = [];
   let idx = 0;
@@ -51,45 +53,68 @@
 
   // ============ edições (modo edição) ============
   const ED_KEY = 'rb:edicoes';
-  const norm = e => ({ marca: Object.assign({}, e && e.marca), nichos: Object.assign({}, e && e.nichos) });
+  const norm = e => ({ marca: Object.assign({}, e && e.marca), nichos: Object.assign({}, e && e.nichos), parceiros: Object.assign({}, e && e.parceiros) });
   let embutidas = {};
   try{ embutidas = JSON.parse(($('#edicoes-embutidas') || {}).textContent || '{}'); }catch(e){}
   embutidas = norm(embutidas);
   let localEd = norm(store.get(ED_KEY));
-  const ED = { marca:{}, nicho:{} };
+  const ED = { marca:{}, nicho:{}, parceiro:{} };
   function refreshED(){
+    PA = (dx && dx.parceiro && PARCEIROS.find(p => p.id === dx.parceiro)) || null;
     ED.marca = Object.assign({}, embutidas.marca, localEd.marca);
     ED.nicho = N ? Object.assign({}, embutidas.nichos[N.id], localEd.nichos[N.id]) : {};
+    ED.parceiro = PA ? Object.assign({}, embutidas.parceiros[PA.id], localEd.parceiros[PA.id]) : {};
   }
   function setEdit(sc, path, v){
-    const original = getPath(sc === 'nicho' ? N : MARCA, path);
-    const alvo = sc === 'nicho' ? (localEd.nichos[N.id] = localEd.nichos[N.id] || {}) : localEd.marca;
-    const base = sc === 'nicho' ? (embutidas.nichos[N.id] || {}) : embutidas.marca;
+    const original = getPath(sc === 'parceiro' ? PA : sc === 'nicho' ? N : MARCA, path);
+    const alvo = sc === 'parceiro' ? (localEd.parceiros[PA.id] = localEd.parceiros[PA.id] || {})
+      : sc === 'nicho' ? (localEd.nichos[N.id] = localEd.nichos[N.id] || {}) : localEd.marca;
+    const base = sc === 'parceiro' ? (embutidas.parceiros[PA.id] || {}) : sc === 'nicho' ? (embutidas.nichos[N.id] || {}) : embutidas.marca;
     if(String(v) === String(original == null ? '' : original) && !Object.prototype.hasOwnProperty.call(base, path)) delete alvo[path];
     else alvo[path] = v;
     store.set(ED_KEY, localEd);
     refreshED();
   }
 
-  // ============ leitura: edição → nicho → marca ============
+  // ============ leitura: edição → parceiro → nicho → marca ============
   function getPath(o, p){ return String(p).split('.').reduce((a, k) => (a == null ? undefined : a[k]), o); }
+  // uma lista definida numa camada (parceiro ou nicho) substitui a lista inteira: o que estiver dentro dela
+  // não completa com itens da camada de baixo (ex.: o selo do 2º plano da marca não aparece nos planos do parceiro)
+  function dentroDeLista(o, path){
+    const ks = String(path).split('.');
+    for(let i = 0; i < ks.length - 1; i++){ if(o == null) return false; o = o[ks[i]]; if(Array.isArray(o)) return true; }
+    return false;
+  }
   function resolve(path){
+    if(PA){
+      if(Object.prototype.hasOwnProperty.call(ED.parceiro, path)) return { sc:'parceiro', v:ED.parceiro[path] };
+      const v = getPath(PA, path);
+      if(v !== undefined || dentroDeLista(PA, path)) return { sc:'parceiro', v };
+    }
     if(N){
       if(Object.prototype.hasOwnProperty.call(ED.nicho, path)) return { sc:'nicho', v:ED.nicho[path] };
       const v = getPath(N, path);
-      if(v !== undefined) return { sc:'nicho', v };
+      if(v !== undefined || dentroDeLista(N, path)) return { sc:'nicho', v };
     }
     if(Object.prototype.hasOwnProperty.call(ED.marca, path)) return { sc:'marca', v:ED.marca[path] };
     return { sc:'marca', v:getPath(MARCA, path) };
   }
   const raw = path => resolve(path).v;
-  function list(path){ const a = N && getPath(N, path); if(Array.isArray(a)) return a; const b = getPath(MARCA, path); return Array.isArray(b) ? b : []; }
-  function merged(key){ return Object.assign({}, MARCA[key], N && N[key]); }
+  function list(path){
+    const p = PA && getPath(PA, path); if(Array.isArray(p)) return p;
+    const a = N && getPath(N, path); if(Array.isArray(a)) return a;
+    const b = getPath(MARCA, path); return Array.isArray(b) ? b : [];
+  }
+  function merged(key){ return Object.assign({}, MARCA[key], N && N[key], PA && PA[key]); }
 
   const TERMOS_PADRAO = { empresa:'empresa', empresas:'empresas', cliente:'cliente', clientes:'clientes', venda:'venda', vendas:'vendas',
     ticket:'ticket médio', receita:'receita', suaReceita:'sua receita', fimJornada:'a venda fechada' };
   function termo(k){
     if(k === 'marca' || k === 'Marca') return MARCA.curto || MARCA.nome || '';
+    if(k === 'parceiro' || k === 'Parceiro'){
+      const v = (dx && dx.parceiroNome) || (PA && PA.parceiroPadrao) || 'o seu parceiro';
+      return k === 'Parceiro' ? v.charAt(0).toUpperCase() + v.slice(1) : v;
+    }
     const t = Object.assign({}, TERMOS_PADRAO, MARCA.termos, N && N.termos);
     if(t[k] != null) return t[k];
     const low = k.charAt(0).toLowerCase() + k.slice(1);
@@ -156,6 +181,8 @@
     return r;
   }
   function estadoQ(s, q, qi, pilha){
+    // tema escondido pelo parceiro (ex.: perguntas de redes sociais com parceiro de social mídia): sai do raio-x e da nota
+    if(q.tema && PA && (PA.ocultarTemas || []).includes(q.tema)) return { oculta:true, auto:null, motivo:'' };
     if(!q.depende) return { oculta:false };
     pilha = pilha || [];
     const eu = q.id || qkey(s, q, qi);
@@ -293,6 +320,23 @@
     const a = (f.atalhos || [])[o.i]; return a ? { tipo:'atalho', t:a.t, vazio:a.v == null } : null;
   }
   function rotuloDoCampo(id){ const si = secaoDoCampo(id); if(si < 0) return id; const fi = secoes()[si].campos.findIndex(c => c.id === id); return plain(raw('raiox.' + si + '.campos.' + fi + '.rotulo')).replace(/\?$/, ''); }
+
+  // ============ faixa de verba (planos por faixa) ============
+  function faixaAtual(){
+    const fs = list('planos.faixas');
+    if(!fs.length) return null;
+    if(dx.faixa != null && fs[dx.faixa]) return { i:dx.faixa, manual:true };
+    const m = num('midia');
+    if(!(m > 0)) return { i:0, semVerba:true };
+    const i = fs.findIndex(f => f.ate == null || m <= f.ate);
+    return { i:i < 0 ? fs.length - 1 : i, auto:true };
+  }
+  const valorBRL = v => parseFloat(String(plain(v || '')).replace(/[^\d,]/g, '').replace(',', '.'));
+  function precoMaisCompleto(){
+    const fa = faixaAtual();
+    const vals = list('planos.itens').map(p => valorBRL(fa ? (p.precos || [])[fa.i] : p.preco)).filter(v => v > 0);
+    return vals.length ? Math.max.apply(null, vals) : 0;
+  }
 
   // ============ proteção de concorrente ============
   // Cliente da reunião do mesmo segmento de uma marca dos cases: nome, logo e o que identifica a empresa somem,
@@ -563,6 +607,7 @@
 
     planos: () => {
       const ps = list('planos.itens');
+      if(list('planos.faixas').length) return B.planosFaixa(ps);
       return `
       ${T('planos.kicker', 'div', 'kicker reveal')}
       ${T('planos.titulo', 'h2', 'h2 reveal')}
@@ -575,6 +620,22 @@
       ${T('planos.nota', 'div', 'note reveal')}
       ${T('planos.implantacao', 'div', 'note reveal')}`;
     },
+
+    // tabela por faixa de verba de anúncios (ex.: parceiro de social mídia). O preço muda ao vivo com a faixa.
+    planosFaixa: ps => `
+      ${T('planos.kicker', 'div', 'kicker reveal')}
+      ${T('planos.titulo', 'h2', 'h2 reveal')}
+      ${raw('planos.sub') ? T('planos.sub', 'p', 'sub reveal') : ''}
+      <div class="faixas reveal" id="plFaixas">${T('planos.faixaRotulo', 'span', 'label')}${list('planos.faixas').map((f, i) => `<button class="fx-chip" type="button" data-faixa="${i}">${T('planos.faixas.' + i + '.t')}</button>`).join('')}<span class="fx-hint" id="plFaixaHint"></span></div>
+      <div class="plans tres reveal" style="--n:${ps.length}">${ps.map((p, i) => {
+        const b = 'planos.itens.' + i;
+        return `<div class="plan${p.destaque ? ' hi' : ''}">${raw(b + '.selo') ? T(b + '.selo', 'div', 'badge') : ''}${T(b + '.nome', 'div', 'pn')}
+          <div class="pv"><span id="plP${i}">--</span><small id="plPer${i}">${esc(plain(raw(b + '.per') || ''))}</small></div>${T(b + '.detalhe', 'div', 'pd')}
+          ${raw(b + '.inclui') ? T(b + '.inclui', 'div', 'pinc') : ''}
+          <ul>${(p.beneficios || []).map((x, j) => T(b + '.beneficios.' + j, 'li')).join('')}</ul></div>`;
+      }).join('')}</div>
+      <div class="pl-rod reveal">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
+      ${T('planos.nota', 'div', 'note reveal')}`,
 
     garantia: () => `
       ${T('garantia.kicker', 'div', 'kicker reveal')}
@@ -666,6 +727,7 @@
     idx = -1;
     ir(novo < 0 ? 0 : novo, true);
     $('#nichoNome').textContent = N ? N.nome : 'Escolher';
+    const pc = $('#parcChip'); pc.hidden = !PA; pc.textContent = PA ? (PA.chip || PA.nome) : '';
     computar();
   }
   function marcarQuick(){
@@ -890,8 +952,7 @@
 
     // ---- ponte: quantas {vendas} a mais pagam a operação (preço do plano mais completo) ----
     if($('#ptN')){
-      const precos = list('planos.itens').map(p => parseFloat(String(plain(p.preco || '')).replace(/[^\d,]/g, '').replace(',', '.'))).filter(v => v > 0);
-      const preco = precos.length ? Math.max.apply(null, precos) : 0;
+      const preco = precoMaisCompleto();
       if(preco > 0 && pr.Tk > 0){
         const n = Math.max(1, Math.ceil(preco / pr.Tk)), um = n === 1;
         set('ptN', nf0.format(n) + ' ' + esc(termo(um ? 'venda' : 'vendas')) + ' a mais' + (pr.P.recorrente ? '' : ' por mês'));
@@ -900,6 +961,18 @@
           (pr.P.recorrente ? ' ' + esc('Cada ' + termo('cliente') + ' novo paga todo mês.') : '') +
           (pr.ref ? ' <span class="ph">[referência: preencha os números do raio-x]</span>' : ''));
       } else { set('ptN', '--'); set('ptL', ''); set('ptDet', ''); }
+    }
+
+    // ---- planos por faixa de verba ----
+    if($('#plFaixas')){
+      const fa = faixaAtual();
+      $$('#plFaixas [data-faixa]').forEach(b => b.classList.toggle('on', +b.dataset.faixa === fa.i));
+      list('planos.itens').forEach((p, i) => {
+        const v = plain((p.precos || [])[fa.i] || '');
+        set('plP' + i, esc(v || '--'));
+        const per = document.getElementById('plPer' + i); if(per) per.hidden = !/\d/.test(v);
+      });
+      set('plFaixaHint', fa.semVerba ? 'Sem verba no raio-x: clique na faixa' : fa.auto ? 'Pela verba informada no raio-x' : '');
     }
 
     // ---- salvar ----
@@ -934,6 +1007,8 @@
 
   // ============ interação ============
   slidesEl.addEventListener('click', e => {
+    const fx = !editing && e.target.closest('[data-faixa]');
+    if(fx){ dx.faixa = +fx.dataset.faixa; salvarDx(); computar(); return; }
     const act = e.target.closest('[data-act]');
     if(act){ acao(act.dataset.act, act); return; }
     const acc = e.target.closest('[data-acc]');
@@ -1038,8 +1113,11 @@
     if(a === 'novo') return confirmar(btn, 'Clique de novo para começar outro', () => {
       gravarDx();
       const tinha = temConteudo(dx);
-      dx = novoDx(); gravarDx(); abertos.clear(); montar(slides[idx] && slides[idx].id);
-      toast(tinha ? 'Novo diagnóstico. O anterior ficou em "Diagnósticos salvos" (botão Nicho).' : 'Novo diagnóstico.');
+      const parc = dx.parceiro, parcNome = dx.parceiroNome;
+      dx = novoDx();
+      if(parc){ dx.parceiro = parc; dx.parceiroNome = parcNome; }
+      gravarDx(); abertos.clear(); montar(slides[idx] && slides[idx].id);
+      toast((tinha ? 'Novo diagnóstico. O anterior ficou em "Diagnósticos salvos" (botão Nicho).' : 'Novo diagnóstico.') + (PA ? ' ' + (PA.chip || PA.nome) + ' continua ligado.' : ''));
     });
     if(a === 'pdf') return gerarPdf(false, btn);
     if(a === 'pdf-plano') return gerarPdf(true, btn);
@@ -1109,11 +1187,12 @@
     const itens = Object.values(arquivo()).sort((x, y) => (y.ts || 0) - (x.ts || 0));
     box.hidden = !N;
     const nome = id => { const n = NICHOS.find(x => x.id === id); return n ? n.nome : id; };
+    const parcDe = it => { const d = it.dx || {}, p = d.parceiro && PARCEIROS.find(x => x.id === d.parceiro); return p ? 'via ' + (d.parceiroNome || p.chip || p.nome) : ''; };
     const achados = itens.filter(it => !busca || [it.empresa, it.whatsapp, nome(it.nicho)].join(' ').toLowerCase().includes(busca) || String(it.whatsapp).replace(/\D/g, '').includes(busca.replace(/\D/g, '') || '§'));
     $('#pkArqList').innerHTML = achados.slice(0, 60).map(it => {
       const cur = dx && dx.id === it.id && N && N.id === it.nicho;
       return `<div class="arq-row${cur ? ' cur' : ''}">
-        <div class="arq-n"><b>${esc(it.empresa || 'Sem nome')}</b><span>${esc([nome(it.nicho), it.data ? dataBR(it.data) : '', it.whatsapp].filter(Boolean).join(' · '))}${cur ? ' · aberto agora' : ''}</span></div>
+        <div class="arq-n"><b>${esc(it.empresa || 'Sem nome')}</b><span>${esc([nome(it.nicho), parcDe(it), it.data ? dataBR(it.data) : '', it.whatsapp].filter(Boolean).join(' · '))}${cur ? ' · aberto agora' : ''}</span></div>
         <span class="arq-p tier ${tier(it.aprov)}">${it.aprov == null ? '--' : it.aprov + '%'}</span>
         <button class="tb" type="button" data-abrir="${esc(it.id)}">${cur ? 'Aberto' : 'Abrir'}</button>
         <button class="tb" type="button" data-excluir="${esc(it.id)}">Excluir</button>
@@ -1215,6 +1294,7 @@
     }).join('') || '<p class="sub">Nenhum nicho carregado. Confira as linhas &lt;script src="nichos/..."&gt; no index.html.</p>';
     $('#pkClose').hidden = !N;
     if(saveT) gravarDx();
+    montarParceiros();
     montarArquivo();
     iniciarNuvem().then(() => { if(!$('#picker').hidden) montarArquivo(); });
     montarSigilo();
@@ -1222,6 +1302,31 @@
     const first = $('.pk-card', $('#picker')); if(first) first.focus();
   }
   function fecharPicker(){ $('#picker').hidden = true; }
+  function montarParceiros(){
+    const box = $('#pkParc');
+    box.hidden = !N || !PARCEIROS.length;
+    if(box.hidden) return;
+    const cur = dx.parceiro || '';
+    const cards = [{ id:'', nome:'Venda direta', descricao:'Sem parceiro: a oferta completa da Ribeker, com social mídia.' }].concat(PARCEIROS);
+    $('#pkParcList').innerHTML = cards.map(p => `<button class="pk-pc${(p.id || '') === cur ? ' cur' : ''}" type="button" data-parc="${esc(p.id)}" aria-pressed="${(p.id || '') === cur}"><b>${esc(p.nome)}</b><span>${esc(p.descricao || '')}</span></button>`).join('');
+    $('#pkParcNomeBox').hidden = !PARCEIROS.find(p => p.id === cur);
+    $('#pkParcNome').value = dx.parceiroNome || '';
+  }
+  $('#pkParcList').addEventListener('click', e => {
+    const c = e.target.closest('[data-parc]');
+    if(!c || !N) return;
+    const id = c.dataset.parc || null;
+    if((dx.parceiro || null) === id) return;
+    if(id) dx.parceiro = id; else delete dx.parceiro;
+    delete dx.faixa;
+    gravarDx(); montar(slides[idx] && slides[idx].id);
+    montarParceiros(); montarArquivo();
+    toast(PA ? (PA.chip || PA.nome) + ': ' + (PA.aviso || 'estilo de parceiro ligado.') : 'Venda direta: oferta completa.');
+  });
+  $('#pkParcNome').addEventListener('change', e => {
+    dx.parceiroNome = e.target.value.trim();
+    gravarDx(); montar(slides[idx] && slides[idx].id); montarArquivo();
+  });
   function montarSigilo(){
     const box = $('#pkSig'), ms = marcasComId();
     box.hidden = !N || !ms.length;
@@ -1297,8 +1402,9 @@
     localEd = norm(null); store.del(ED_KEY); montar(slides[idx] && slides[idx].id); toast('Edições deste navegador apagadas.');
   }));
   function todasEdicoes(){
-    const out = { marca:Object.assign({}, embutidas.marca, localEd.marca), nichos:{} };
+    const out = { marca:Object.assign({}, embutidas.marca, localEd.marca), nichos:{}, parceiros:{} };
     new Set(Object.keys(embutidas.nichos).concat(Object.keys(localEd.nichos))).forEach(id => { out.nichos[id] = Object.assign({}, embutidas.nichos[id], localEd.nichos[id]); });
+    new Set(Object.keys(embutidas.parceiros).concat(Object.keys(localEd.parceiros))).forEach(id => { out.parceiros[id] = Object.assign({}, embutidas.parceiros[id], localEd.parceiros[id]); });
     return out;
   }
   $('#ebJson').addEventListener('click', () => {

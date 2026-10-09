@@ -18,6 +18,8 @@
        tipo 'multipla' → várias respostas. Com "bom: 3" pontua (3 ou mais = estruturado, 2 = parcial, 1 = atenção).
                          Sem "bom" só registra.
        acao            → entra no plano de ação do PDF quando a resposta indica dor
+       tema            → assunto da pergunta. Um estilo de parceiro pode esconder um tema inteiro
+                         (ex.: 'social' some com o parceiro de social mídia)
        id              → nome da pergunta, usado por "depende"
        area            → troca a área do placar só desta pergunta (ex.: uma pergunta de tela informativa que pontua)
        depende         → pergunta condicional. Some da tela quando outra pergunta tem certa resposta:
@@ -100,22 +102,22 @@ NICHO({
         { id: 'resultado', texto: 'Já teve resultado positivo com anúncio pago?', tipo: 'unica', opcoes: ['Sim', 'Não'],
           depende: { q: 'trafego', oculta: [2], motivo: 'nunca anunciou' } },
         { id: 'capacidade', texto: 'A escola tem capacidade para atender uma demanda maior de alunos?', tipo: 'unica', opcoes: ['Sim', 'Não'] },
-        { id: 'posta', texto: 'Posta nas redes sociais com frequência?', tipo: 'unica',
+        { id: 'posta', tema: 'social', texto: 'Posta nas redes sociais com frequência?', tipo: 'unica',
           opcoes: ['Sim, com frequência', 'Posta, mas sem frequência', 'Não posta'] },
         // as próximas só aparecem para quem posta; para quem não posta valem "Não" automaticamente
-        { id: 'socialmidia', area: 'comercial', texto: 'Tem um social mídia?', tipo: 'unica',
+        { id: 'socialmidia', tema: 'social', area: 'comercial', texto: 'Tem um social mídia?', tipo: 'unica',
           opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
           depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' },
           acao: 'Ter alguém responsável pelas redes, com rotina de publicação definida.' },
-        { id: 'estrategia', area: 'comercial', texto: 'Tem estratégia por trás das postagens?', sub: 'Pauta pensada para atrair, gerar confiança e chamar para a matrícula', tipo: 'unica',
+        { id: 'estrategia', tema: 'social', area: 'comercial', texto: 'Tem estratégia por trás das postagens?', sub: 'Pauta pensada para atrair, gerar confiança e chamar para a matrícula', tipo: 'unica',
           opcoes: [{ t: 'Sim', dor: 0 }, { t: 'Não', dor: 1 }],
           depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' },
           acao: 'Montar linha editorial com pauta da semana, dividindo o conteúdo entre atrair, gerar confiança e chamar para a matrícula.' },
-        { id: 'conteudo', texto: 'Produz vídeos e fotos próprios (escola, aulas, alunos)?', tipo: 'unica', opcoes: ['Sim', 'Não'],
+        { id: 'conteudo', tema: 'social', texto: 'Produz vídeos e fotos próprios (escola, aulas, alunos)?', tipo: 'unica', opcoes: ['Sim', 'Não'],
           depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' } },
-        { id: 'venderedes', texto: 'Já fecha matrícula pelas redes sociais?', tipo: 'unica', opcoes: ['Sim', 'Não'],
+        { id: 'venderedes', tema: 'social', texto: 'Já fecha matrícula pelas redes sociais?', tipo: 'unica', opcoes: ['Sim', 'Não'],
           depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' } },
-        { id: 'redesprontas', texto: 'As redes sociais estão preparadas para receber clientes?', tipo: 'unica', opcoes: ['Sim', '+ ou -', 'Não'],
+        { id: 'redesprontas', tema: 'social', texto: 'As redes sociais estão preparadas para receber clientes?', tipo: 'unica', opcoes: ['Sim', '+ ou -', 'Não'],
           depende: { q: 'posta', oculta: [2], resposta: 2, motivo: 'não posta nas redes' } }
       ]
     },

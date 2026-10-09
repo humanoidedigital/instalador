@@ -77,6 +77,27 @@ gancho, antes, virada, resultado, moral, e uma linha `obs` dizendo de onde vem o
 - Para trocar a ordem, mude a ordem em `cases.lista`. Para esconder um case num nicho: modo edição → Ocultar slide.
 - Logo novo: salve em `assets/marcas/` e informe em `marcas.lista[].logo` e `cases.lista[].logos`.
 
+## Parceiros (indicação)
+
+No seletor (botão Nicho), a categoria **Parceiros** pergunta se o cliente veio por indicação. O estilo de parceiro vale
+por cima do nicho e fica guardado no diagnóstico; o selo aparece ao lado do nicho, no rodapé.
+
+**Parceiro de social mídia** (`parceiros/social-midia.js`): agência de social mídia que indica a Ribeker. Para não haver
+conflito de interesse, a oferta sai sem social mídia:
+
+- As perguntas de redes sociais saem do raio-x (`tema: 'social'`): não pontuam e não vão para o relatório, para o
+  diagnóstico não julgar o trabalho do parceiro na frente do cliente.
+- "Vendas Ribeker" mostra social mídia como a parte do parceiro ("Com {parceiro}: atenção e permanência do seu lead").
+- Marketing vira "Tudo que o tráfego faz por você"; valores de mercado sem social mídia (total R$ 12.537/mês).
+- Planos: a tabela exclusiva de parceiros (Tráfego pago · Tráfego + CRM · Tráfego + CRM + Performance comercial),
+  com o preço da faixa de verba de anúncios informada no raio-x. Dá para trocar a faixa clicando nela.
+  Acima de R$ 50 mil: sob consulta. A conta da ponte usa o plano mais completo da faixa.
+- Nome do parceiro (opcional) no seletor: entra nos textos como `{parceiro}`.
+- "Novo diagnóstico" mantém o parceiro ligado; para tirar, escolha "Venda direta".
+
+Para criar outro estilo de parceiro, peça ao Claude Code: *"crie o parceiro X em apresentacao/parceiros/, no modelo de
+social-midia.js, e registre no index.html"*. Qualquer chave de `marca.js` pode ser sobrescrita no parceiro.
+
 ## Proteção de concorrente
 
 Apresentando para alguém do mesmo segmento de uma marca dos cases (ex.: um escritório de arquitetura e o case Dua)?
@@ -204,6 +225,7 @@ apresentacao/
   motor.js          lógica: slides, raio-x, contas, edição, PDF
   marca.js          pitch e dados da Ribeker, iguais em todo nicho
   nichos/*.js       um arquivo por nicho
+  parceiros/*.js    estilos de parceiro (indicação), por cima do nicho
   assets/           logo e imagens
   vendor/           biblioteca do PDF (jsPDF), para funcionar offline
   build.py          gera dist/ribeker-apresentacao.html
