@@ -59,9 +59,14 @@ PARCEIRO({
   // tabela exclusiva de parceiros: o preço depende da verba mensal de anúncios.
   // A faixa vem da resposta "Quanto investe por mês em anúncio?" do raio-x; dá para trocar clicando na faixa.
   planos: {
-    kicker: 'Seu investimento',
-    titulo: 'Planos de *tráfego pago*',
-    sub: 'Condição de parceria, para clientes indicados por {parceiro}. O valor acompanha a verba mensal de anúncios.',
+    // 1º slide: a tabela completa (faixas × planos), com a margem do parceiro já somada
+    tabelaKicker: 'Seu investimento',
+    tabelaTitulo: 'Planos de *tráfego pago*',
+    tabelaSub: 'Condição de parceria, para clientes indicados por {parceiro}. O valor acompanha a verba mensal de anúncios.',
+    // 2º slide: o que entra em cada plano, na faixa de verba do cliente
+    kicker: 'Seu investimento · o que entra',
+    titulo: 'O que entra em *cada plano*',
+    sub: 'Valores da faixa de verba de vocês. Clique em outra faixa para comparar.',
     faixaRotulo: 'Verba mensal de anúncios',
     faixas: [
       { t: 'Até R$ 5 mil', ate: 5000 },

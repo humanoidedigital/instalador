@@ -28,6 +28,8 @@
                            resposta  → opção que passa a valer sozinha (entra no placar e no relatório, com o motivo).
                                        Sem "resposta", a pergunta só sai da conta.
                          { q: 'funis', semOpcao: 0 } → some quando a múltipla de origem foi respondida sem a opção 0.
+                         { q: 'metricas', exige: [1] } → só aparece quando a de origem foi respondida com a opção 1.
+                         Campos (números) também aceitam "depende"; "antesDosCampos: true" põe a pergunta antes dos números.
                          Com q: ['a', 'b'], só some se todas as de origem indicarem. Aceita uma lista de condições. */
 NICHO({
   id: 'escolas',

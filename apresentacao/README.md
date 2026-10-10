@@ -18,7 +18,7 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
 ## Roteiro (30 a 32 slides, conforme o nicho)
 
 1. Capa · Especialista · Quem somos
-2. Antes de tudo: nome, WhatsApp do lead e data
+2. Antes de tudo: nome, WhatsApp do lead e data (com a anotação "Venda direta" ou "Indicação · parceiro")
 3. Raio-X em 7 telas: Vendas e Prospecção · Marketing e Tráfego Pago · Geração de Leads e Marketing · Ferramentas ·
    Atendimento e Follow-up · Resultados · Tempo, investimento e resultado
 4. O que o diagnóstico mostrou: custo de esperar, "o que você empilhou sozinho" x estimativa da Ribeker, placar
@@ -50,6 +50,7 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
   social mídia, estratégia, conteúdo, venda pelas redes e redes preparadas: elas valem "Não" sozinhas e aparecem assim
   no relatório, com o motivo. Sem CRM, "funil dentro do CRM" vira "Não". "Resultado com anúncio" some para quem nunca
   anunciou. Em veículos, "leads dos portais no CRM" só aparece para quem marcou Portais nas origens de lead.
+  Em Genérico e Arquitetura, "Tem acesso às métricas do anúncio?" decide a tela de números do marketing (abaixo).
   No modo edição todas aparecem, com contorno amarelo nas condicionais.
 - **Último slide:** "Relatório" e "Relatório + plano de ação" baixam o PDF (desenhado direto, com texto de verdade,
   funciona sem internet). "Copiar resumo" copia um texto para colar no WhatsApp ou no CRM. "Novo diagnóstico" começa
@@ -66,6 +67,12 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
   reunião ou orçamento, CAC de mídia e ROAS**.
 - Slide **"Onde o seu funil vaza"**: as etapas do anúncio à venda, a taxa entre elas e o veredito ("o gargalo maior
   está em Vendas. De 400 contatos, 40 viraram orçamentos e 4 viraram contratos").
+- **Cliente sem métricas:** antes dos números vem "Tem acesso às métricas do anúncio?". **Sim**: aparecem impressões
+  e cliques. **Não tem ou não sabe**: impressões e cliques somem (ficam fora das contas, sem inventar número) e entram
+  4 perguntas simples de triagem: o anúncio traz contato novo todo dia? os contatos têm o perfil de cliente? sabe
+  quanto custa cada contato? quem cuida dos anúncios? Elas pontuam no Marketing e vão para o plano de ação. O funil
+  começa nos contatos, com a nota "sem as métricas do anúncio... medir é o primeiro passo do plano". Para quem não
+  anuncia, a pergunta nem aparece.
 - Só CTR e clique → lead têm referência pública e pontuam (verde: igual ou acima; amarelo: até 30% abaixo; vermelho:
   mais que isso). Os outros dependem do ticket e do ciclo de cada negócio e aparecem sem julgamento.
 
@@ -103,8 +110,13 @@ gancho, antes, virada, resultado, moral, e uma linha `obs` dizendo de onde vem o
 ## Parceiros (indicação)
 
 No seletor (botão Nicho), escolha o nicho e, em **Parceiros**, se o cliente veio por indicação; depois clique em
-**Começar a apresentação**. A ordem não importa: o parceiro escolhido acompanha a troca de nicho. O estilo de parceiro vale
-por cima do nicho e fica guardado no diagnóstico; o selo aparece ao lado do nicho, no rodapé.
+**Começar a apresentação**. A ordem não importa: o parceiro vale **para a reunião inteira** (parceiro, nome e margem),
+então trocar de nicho, mesmo para um nicho que já tinha diagnóstico, mantém o parceiro. Ele fica guardado também no
+diagnóstico; o selo aparece ao lado do nicho, no rodapé.
+
+**Conferência no slide "Antes de tudo":** abaixo dos dados do lead aparece, bem pequeno, **"Venda direta"** (cinza) ou
+**"Indicação · Parceiro de social mídia (nome)"** (âmbar). Não é para escolher ali, é para conferir: se estiver errado,
+clique na anotação e o seletor abre para corrigir.
 
 **Parceiro de social mídia** (`parceiros/social-midia.js`): agência de social mídia que indica a Ribeker. Para não haver
 conflito de interesse, a oferta sai sem social mídia:
@@ -113,9 +125,14 @@ conflito de interesse, a oferta sai sem social mídia:
   diagnóstico não julgar o trabalho do parceiro na frente do cliente.
 - "Vendas Ribeker" mostra social mídia como a parte do parceiro ("Com {parceiro}: atenção e permanência do seu lead").
 - Marketing vira "Tudo que o tráfego faz por você"; valores de mercado sem social mídia (total R$ 12.537/mês).
-- Planos: a tabela exclusiva de parceiros (Tráfego pago · Tráfego + CRM · Tráfego + CRM + Performance comercial),
-  com o preço da faixa de verba de anúncios informada no raio-x. Dá para trocar a faixa clicando nela.
-  Acima de R$ 50 mil: sob consulta. A conta da ponte usa o plano mais completo da faixa.
+- Planos em dois slides:
+  1. **"Planos de tráfego pago"**: a tabela de parceiros inteira (Tráfego pago · Tráfego + CRM · Tráfego + CRM +
+     Performance comercial × 6 faixas de verba), já com a margem somada, com a faixa do cliente em destaque e o
+     rodapé (verba de anúncios separada, relatório mensal, escopo padrão, projetos especiais) e a nota de contrato sem
+     fidelidade. Acima de R$ 50 mil: sob consulta.
+  2. **"O que entra em cada plano"**: os 3 cards da faixa do cliente, com o que cada plano inclui. Dá para trocar
+     a faixa clicando nela.
+  A faixa vem da verba informada no raio-x. A conta da ponte usa o plano mais completo da faixa.
 - **Dados do parceiro e margem** (botão no seletor, com o parceiro ligado): nome do parceiro e a margem dele,
   em **% sobre o plano** ou **R$ fixo por plano**. O cliente vê só o preço final (tabela de parceiros + margem,
   arredondado para a dezena); a conta aparece só na janela e nas notas do slide de planos (tecla N).
@@ -209,7 +226,10 @@ Peça assim:
 | `capa.tagline`, `publico`, `perfis.itens`, `case` | Conteúdo dos slides deste nicho |
 | `areas` | Áreas do placar. Só as que têm pergunta com peso entram na nota (Marketing e Tráfego Pago é informativo, como no original) |
 | `raiox` | As telas do raio-x, com `campos` (números) e `perguntas` (com `dor` 0 / 0,5 / 1 e `acao` para o plano) |
-| `perguntas[].id` e `depende` | Pergunta condicional: `depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' }` (explicado no topo de `escolas.js`) |
+| `perguntas[].id` e `depende` | Pergunta condicional: `depende: { q: 'posta', oculta: [2], resposta: 1, motivo: 'não posta nas redes' }` (explicado no topo de `escolas.js`). `exige: [1]` faz o contrário: só aparece com aquela resposta (triagem de quem não tem métricas) |
+| `perguntas[].tema` | `tema: 'social'`: some quando o parceiro esconde esse tema (parceiro de social mídia) |
+| `perguntas[].antesDosCampos` | A pergunta aparece antes dos números da tela (ex.: "Tem acesso às métricas do anúncio?") |
+| `campos[].depende` | Campo condicional, com a mesma regra das perguntas. Campo escondido fica fora das contas |
 | `perguntas[].area` | Faz uma pergunta pontuar em outra área (ex.: "anúncio rodando hoje" fica na tela de Marketing, mas pontua no Comercial) |
 | `campos[].medias` | Botões de média do mercado: `{ t, v, fonte }` |
 | `campos[].atalhos` | Botões rápidos: `{ t: 'Não sei', v: null }`, `{ t: 'Não investe', v: 0 }` |

@@ -189,7 +189,10 @@
     if(pilha.includes(eu)) return { oculta:false };
     for(const c of (Array.isArray(q.depende) ? q.depende : [q.depende])){
       const sels = (Array.isArray(c.q) ? c.q : [c.q]).map(id => { const g = acharPergunta(id); return g ? respEfetiva(g.s, g.q, g.qi, pilha.concat(eu)).sel : null; });
-      const some = c.semOpcao != null
+      // "exige": só aparece quando a pergunta de origem foi respondida com uma dessas opções (some enquanto não responde)
+      const some = c.exige != null
+        ? !sels.some(sel => sel && sel.length && c.exige.includes(sel[0]))
+        : c.semOpcao != null
         ? sels.every(sel => sel && sel.length && !sel.includes(c.semOpcao))
         : sels.every(sel => sel && sel.length && (c.oculta || []).includes(sel[0]));
       if(some) return { oculta:true, auto: c.resposta != null ? c.resposta : null, motivo: c.motivo || '' };
@@ -334,11 +337,17 @@
   // igual ou melhor que a referência = 0; até 30% abaixo = 0,5; mais que isso = 1.
   const indicadores = () => list('indicadores');
   const indDef = id => indicadores().find(k => k.id === id);
+  // campo com "depende" (mesmo formato das perguntas) some e sai das contas quando a condição bate
+  function campoOculto(id){
+    for(const sc of secoes()) for(const f of (sc.campos || [])) if(f.id === id) return !!(f.depende && estadoQ(sc, f, -1).oculta);
+    return false;
+  }
+  const numA = id => campoOculto(id) ? 0 : num(id);
   function valorInd(k){
     if(!k) return null;
-    const as = Array.isArray(k.a) ? k.a : [k.a], b = num(k.b);
-    if(!(b > 0) || as.some(id => !(num(id) > 0))) return null;
-    return as.reduce((p, id) => p * num(id), 1) / b * (k.x || 1);
+    const as = Array.isArray(k.a) ? k.a : [k.a], b = numA(k.b);
+    if(!(b > 0) || as.some(id => !(numA(id) > 0))) return null;
+    return as.reduce((p, id) => p * numA(id), 1) / b * (k.x || 1);
   }
   function fmtInd(k, v){
     if(v == null) return '--';
@@ -430,7 +439,7 @@
   }
   function campo(si, fi){
     const f = secoes()[si].campos[fi], b = 'raiox.' + si + '.campos.' + fi;
-    return `<div class="field">
+    return `<div class="field${f.depende ? ' q-cond' : ''}" data-cid="${esc(f.id)}">
       ${T(b + '.rotulo', 'label')}
       ${f.sub != null ? T(b + '.sub', 'div', 'fhint') : ''}
       <div class="inwrap">${f.pre ? `<span class="pre">${esc(f.pre)}</span>` : ''}<input id="n-${esc(f.id)}" data-num="${esc(f.id)}" type="number" inputmode="decimal" placeholder="0" autocomplete="off"></div>
@@ -484,6 +493,7 @@
         <div class="field"><label for="id-whatsapp">WhatsApp do lead</label><div class="inwrap"><input class="txt" id="id-whatsapp" data-id="whatsapp" type="tel" inputmode="tel" placeholder="(00) 00000-0000" autocomplete="off"></div></div>
         <div class="field"><label for="id-data">Data</label><div class="inwrap"><input class="txt" id="id-data" data-id="data" type="date"></div></div>
       </div>
+      ${PARCEIROS.length ? '<button type="button" class="origem-lead reveal" id="origemLead"></button>' : ''}
       <div class="btn-row reveal"><button class="btn ghost" type="button" data-act="novo">Novo diagnóstico</button></div>`,
 
     secao: (s, si) => {
@@ -492,9 +502,13 @@
       ${T(b + '.kicker', 'div', 'kicker reveal')}
       ${T(b + '.titulo', 'h2', 'h2 reveal')}
       ${s.sub != null ? T(b + '.sub', 'p', 'sub reveal') : ''}
+      ${grade(ps.map((q, qi) => q.antesDosCampos ? qi : -1).filter(i => i >= 0))}
       ${cs.length ? `<div class="fields ${cs.length === 1 ? 'um' : cs.length >= 5 ? 'tres' : ''} reveal">${cs.map((c, fi) => campo(si, fi)).join('')}</div>` : ''}
       ${s.calculos ? `<div class="derived reveal" data-calc="${si}"></div>` : ''}
-      ${ps.length ? `<div class="qgrid ${ps.length <= 2 ? 'uma' : ''} reveal">${ps.map((q, qi) => {
+      ${grade(ps.map((q, qi) => q.antesDosCampos ? -1 : qi).filter(i => i >= 0))}`;
+      function grade(ids){
+        if(!ids.length) return '';
+        return `<div class="qgrid ${ids.length <= 2 ? 'uma' : ''} reveal">${ids.map(qi => { const q = ps[qi];
         const multi = q.tipo === 'multipla', qp = qPath(si, qi);
         return `<div class="q${q.depende ? ' q-cond' : ''}" data-q="${esc(qkey(s, q, qi))}" data-si="${si}" data-qi="${qi}" data-multi="${multi ? 1 : 0}">
           ${T(qp + '.texto', 'div', 'q-t')}
@@ -504,7 +518,8 @@
             return `<div class="opt" role="button" tabindex="0" data-oi="${oi}">${T(optPath(si, qi, oi))}${ob.campo ? ` <input class="opt-in" type="text" data-campo="${oi}" placeholder="${esc(ob.campo)}" aria-label="${esc(ob.campo)}">` : ''}</div>`;
           }).join('')}</div>
         </div>`;
-      }).join('')}</div>` : ''}`;
+      }).join('')}</div>`;
+      }
     },
 
     painel: () => `
@@ -673,6 +688,19 @@
       ${T('planos.implantacao', 'div', 'note reveal')}`;
     },
 
+    // tabela completa por faixa de verba (a tabela de parceiros, com a margem já somada); a faixa do cliente fica marcada
+    planosTabela: () => {
+      const ps = list('planos.itens'), fs = list('planos.faixas');
+      return `
+      ${T('planos.tabelaKicker', 'div', 'kicker reveal')}
+      ${T('planos.tabelaTitulo', 'h2', 'h2 reveal')}
+      ${raw('planos.tabelaSub') ? T('planos.tabelaSub', 'p', 'sub reveal') : ''}
+      <table class="pt-tab reveal"><thead><tr><th>${T('planos.faixaRotulo')}</th>${ps.map((p, i) => `<th class="${p.destaque ? 'hi' : ''}">${T('planos.itens.' + i + '.nome', 'div', 'ptn')}${T('planos.itens.' + i + '.detalhe', 'div', 'ptd')}</th>`).join('')}</tr></thead>
+        <tbody>${fs.map((f, fi) => `<tr data-faixa="${fi}" id="ptRow${fi}"><td>${T('planos.faixas.' + fi + '.t')}<span class="pt-voce">verba de vocês</span></td>${ps.map((p, i) => `<td class="${p.destaque ? 'hi' : ''}" id="ptc${fi}_${i}">--</td>`).join('')}</tr>`).join('')}</tbody></table>
+      <div class="pl-rod reveal">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
+      <aside class="notas"><div class="label">Notas do apresentador · N esconde</div><div class="nt" id="plNota2"></div></aside>`;
+    },
+
     // tabela por faixa de verba de anúncios (ex.: parceiro de social mídia). O preço muda ao vivo com a faixa.
     planosFaixa: ps => `
       ${T('planos.kicker', 'div', 'kicker reveal')}
@@ -749,6 +777,7 @@
       { id:'empilhamento-6', html:() => B.empilhamento(6), nota:notaEmp },
       { id:'empilhamento-12', html:() => B.empilhamento(12), nota:notaEmp },
       { id:'valores', html:B.valores },
+      ...(list('planos.faixas').length ? [{ id:'planos-tabela', html:B.planosTabela }] : []),
       { id:'planos', html:B.planos },
       { id:'garantia', html:B.garantia },
       { id:'fechamento', html:B.fechamento, cls:'centro' },
@@ -773,6 +802,7 @@
     slides = $$('.slide', slidesEl).map(el => ({ id:el.dataset.id, el }));
     slides.forEach(s => $$('.reveal', s.el).forEach((r, i) => r.style.setProperty('--i', i)));
     preencherCampos();
+    pintarOrigem();
     anonimizar(slidesEl);
     if(editing) entrarEdicao();
     $('#dots').innerHTML = slides.map((s, i) => `<button class="dot" type="button" aria-label="Ir para o slide ${i + 1}" data-go="${i}"></button>`).join('');
@@ -890,6 +920,9 @@
     $$('.live[data-live="meses"]').forEach(s => { s.textContent = M > 0 ? (M === 1 ? '1 mês' : M + ' meses') : '___ meses'; });
     const r12 = pr.total(12) / Math.max(1, pr.total(6));
     $$('.live[data-live="fator12"]').forEach(s => { s.textContent = r12 >= 3 ? 'mais que triplica' : r12 > 2.05 ? 'mais que dobra' : 'dobra'; });
+
+    // ---- campos que dependem de perguntas ----
+    $$('.field[data-cid]', slidesEl).forEach(el => el.classList.toggle('q-oculta', !editing && campoOculto(el.dataset.cid)));
 
     // ---- perguntas que dependem de outras ----
     $$('.q[data-si]', slidesEl).forEach(el => {
@@ -1033,7 +1066,7 @@
     };
     if($('#fnEtapas')){
       const es = list('funil.etapas'), ps = list('funil.passos');
-      const vals = es.map(e => num(e.campo)), mx = Math.max.apply(null, vals.map(v => v > 0 ? Math.log10(v + 1) : 0).concat(1));
+      const vals = es.map(e => numA(e.campo)), mx = Math.max.apply(null, vals.map(v => v > 0 ? Math.log10(v + 1) : 0).concat(1));
       const nomeA = id => { const a = areas().find(x => x.id === id); return a ? nomeArea(a) : ''; };
       set('fnEtapas', es.map((e, i) => {
         const v = vals[i], w = v > 0 ? Math.max(14, Math.log10(v + 1) / mx * 100) : 0;
@@ -1043,7 +1076,7 @@
           const st = d == null ? 'sem' : d === 0 ? 'ok' : d === 0.5 ? 'warn' : 'bad';
           passo = k ? `<div class="fn-passo ${st}"><span class="fn-seta">↓</span><b>${esc(fmtInd(k, pv))}</b> ${esc(k.rotulo)}${k.ref != null ? ` <span class="dref">ref. ${esc(fmtInd(k, k.ref))}</span>` : ''}${k.area ? `<span class="fn-area">${esc(nomeA(k.area))}</span>` : ''}</div>` : '';
         }
-        return `<div class="fn-et"><div class="fn-bar"><i style="width:${w.toFixed(1)}%"></i></div><div class="fn-n">${v > 0 ? nf0.format(v) : '<span class="empty">não informado</span>'}</div><div class="fn-l">${esc(plain(e.rotulo))}</div></div>${passo}`;
+        return `<div class="fn-et"><div class="fn-bar"><i style="width:${w.toFixed(1)}%"></i></div><div class="fn-n">${v > 0 ? nf0.format(v) : `<span class="empty">${campoOculto(e.campo) ? 'sem métrica' : 'não informado'}</span>`}</div><div class="fn-l">${esc(plain(e.rotulo))}</div></div>${passo}`;
       }).join(''));
       set('fnCustos', list('funil.custos').map(indDef).filter(Boolean).map(k => `<div class="fn-c"${k.dica ? ` title="${esc(k.dica)}"` : ''}><span>${esc(k.rotulo)}</span><b>${esc(fmtInd(k, valorInd(k)))}</b></div>`).join(''));
       // veredito: área com menor aproveitamento (perguntas + indicadores) e o indicador mais abaixo da referência
@@ -1056,7 +1089,8 @@
           '<div class="fn-placar">' + st.map(x => `<span class="${tier(x.s.aprov)}">${esc(nomeArea(x.a))} <b>${x.s.aprov}%</b></span>`).join('') + '</div>' +
           '<div class="phrase">' + (st.length > 1 ? 'O gargalo maior está em <b>' + esc(nomeArea(pior.a)) + '</b>.' : '') +
           (piorK ? ' ' + esc(plain(piorK.rotulo)) + ' de <b>' + esc(fmtInd(piorK, valorInd(piorK))) + '</b>, abaixo da referência de ' + esc(fmtInd(piorK, piorK.ref)) + '.' : '') +
-          vazamento(es, vals) + '</div>');
+          vazamento(es, vals) + '</div>' +
+          (es.slice(0, 2).some(e => campoOculto(e.campo) || !(num(e.campo) > 0)) && vals.slice(2).some(v => v > 0) ? '<div class="small">' + esc(plain(raw('funil.semMetricas'))) + '</div>' : ''));
       }
     }
 
@@ -1072,8 +1106,17 @@
         if(base > 0) contas.push(plain(p.nome) + ': tabela ' + brl(base) + (mg.add ? ' + margem ' + brl(mg.add) + (mg.tipo === 'pct' ? ' (' + nf1.format(mg.v) + '%)' : '') : '') + ' = ' + brl(mg.final));
       });
       set('plFaixaHint', fa.semVerba ? 'Sem verba no raio-x: clique na faixa' : fa.auto ? 'Pela verba informada no raio-x' : '');
-      set('plNota', esc(PA && dx.margem ? 'Margem de ' + (dx.parceiroNome || 'parceiro') + ' (não aparece para o cliente). ' : 'Sem margem de parceiro: o cliente vê a tabela de parceiros. ') +
-        esc(contas.join(' · ')) + (contas.length ? '' : esc('Faixa sob consulta.')));
+      const notaM = esc(PA && dx.margem ? 'Margem de ' + (dx.parceiroNome || 'parceiro') + ' (não aparece para o cliente). ' : 'Sem margem de parceiro: o cliente vê a tabela de parceiros. ') +
+        esc(contas.join(' · ')) + (contas.length ? '' : esc('Faixa sob consulta.'));
+      set('plNota', notaM); set('plNota2', notaM);
+      // tabela completa: todas as faixas com a margem somada, faixa do cliente marcada
+      list('planos.faixas').forEach((f, fi) => {
+        const row = document.getElementById('ptRow' + fi); if(row) row.classList.toggle('on', fi === fa.i);
+        list('planos.itens').forEach((p, i) => {
+          const base = valorBRL((p.precos || [])[fi]);
+          set('ptc' + fi + '_' + i, base > 0 ? brl(margemPlano(base, i).final) : esc(plain((p.precos || [])[fi] || '--')));
+        });
+      });
     }
 
     // ---- salvar ----
@@ -1108,6 +1151,7 @@
 
   // ============ interação ============
   slidesEl.addEventListener('click', e => {
+    if(!editing && e.target.closest('#origemLead')){ abrirPicker(); return; }
     const fx = !editing && e.target.closest('[data-faixa]');
     if(fx){ dx.faixa = +fx.dataset.faixa; salvarDx(); computar(); return; }
     const act = e.target.closest('[data-act]');
@@ -1275,6 +1319,7 @@
     try{ history.replaceState(null, '', '#' + n.id); }catch(e){}
     dx = Object.assign(novoDx(), JSON.parse(JSON.stringify(it.dx)));
     store.set(dxKey(), dx);
+    guardarParceiroReuniao();                 // o diagnóstico aberto define o parceiro da reunião
     abertos.clear(); montar(); fecharPicker();
     toast('Diagnóstico de ' + (it.empresa || 'cliente sem nome') + ' aberto. Continua de onde parou.');
   }
@@ -1499,7 +1544,7 @@
     reg[id] = { id, estilo:PA.id, nome, margem:mpEstado.margem, ts:Date.now() };
     store.set(PARC_KEY, reg); nuvemParceiros();
     dx.parceiroAg = id; dx.parceiroNome = nome; dx.margem = JSON.parse(JSON.stringify(mpEstado.margem));
-    gravarDx(); fecharModalParceiro();
+    guardarParceiroReuniao(); gravarDx(); fecharModalParceiro();
     montar(slides[idx] && slides[idx].id); montarParceiros(); montarArquivo(); atualizarGo();
     toast(nome + ' salvo: ' + resumoMargem(dx.margem) + '. O cliente vê só o preço final.');
   });
@@ -1507,17 +1552,13 @@
     const id = $('#mpSel').value, reg = cadastro();
     if(!id) return;
     delete reg[id]; store.set(PARC_KEY, reg); nuvemParceiros();
-    if(dx.parceiroAg === id){ delete dx.parceiroAg; delete dx.parceiroNome; delete dx.margem; gravarDx(); montar(slides[idx] && slides[idx].id); }
+    if(dx.parceiroAg === id){ delete dx.parceiroAg; delete dx.parceiroNome; delete dx.margem; guardarParceiroReuniao(); gravarDx(); montar(slides[idx] && slides[idx].id); }
     fecharModalParceiro(); montarParceiros(); toast('Parceiro excluído do cadastro.');
   }));
   $('#pkParcList').addEventListener('click', e => {
     const c = e.target.closest('[data-parc]');
     if(!c || !N) return;
-    const id = c.dataset.parc || null;
-    if((dx.parceiro || null) === id) return;
-    if(id) dx.parceiro = id; else delete dx.parceiro;
-    delete dx.faixa; delete dx.parceiroAg; delete dx.parceiroNome; delete dx.margem;
-    gravarDx(); montar(slides[idx] && slides[idx].id);
+    if(!definirParceiro(c.dataset.parc)) return;
     montarParceiros(); montarArquivo(); atualizarGo();
     toast(PA ? (PA.chip || PA.nome) + ': ' + (PA.aviso || 'estilo de parceiro ligado.') : 'Venda direta: oferta completa.');
   });
@@ -1552,18 +1593,46 @@
     const pc = $('#pkParc'); if(pc && !pc.hidden) pc.scrollIntoView({ block:'center', behavior:'smooth' });
   });
   $('#pkGo').addEventListener('click', () => { if(N){ fecharPicker(); ir(0, true); } });
+  // Parceiro da reunião (rb:reuniao-parceiro): escolhido no seletor, vale para qualquer nicho até ser trocado.
+  // Cada diagnóstico guarda uma cópia (nome e margem incluídos) para reabrir igual depois.
   const CAMPOS_PARCEIRO = ['parceiro', 'parceiroAg', 'parceiroNome', 'margem'];
+  const PARC_REUNIAO = 'rb:reuniao-parceiro';
+  function definirParceiro(id){
+    id = id || null;
+    if((dx.parceiro || null) === id) return false;
+    if(id) dx.parceiro = id; else delete dx.parceiro;
+    delete dx.faixa; delete dx.parceiroAg; delete dx.parceiroNome; delete dx.margem;
+    guardarParceiroReuniao(); gravarDx(); montar(slides[idx] && slides[idx].id);
+    return true;
+  }
+  // conferência no slide dos dados do lead: anotação pequena do modo da reunião (venda direta ou parceiro).
+  // A configuração é feita no seletor; clicar na anotação abre o seletor para corrigir.
+  function pintarOrigem(){
+    const el = $('#origemLead');
+    if(!el) return;
+    el.className = 'origem-lead reveal' + (PA ? ' parc' : '');
+    el.title = 'Configurado no seletor (botão Nicho). Clique para conferir ou trocar.';
+    el.innerHTML = '<i></i>' + (PA ? esc('Indicação · ' + PA.nome + (dx.parceiroNome ? ' (' + dx.parceiroNome + ')' : '')) : 'Venda direta');
+  }
+  function guardarParceiroReuniao(){
+    const o = {}; CAMPOS_PARCEIRO.forEach(k => { if(dx[k] != null) o[k] = JSON.parse(JSON.stringify(dx[k])); });
+    if(o.parceiro) store.set(PARC_REUNIAO, o); else store.del(PARC_REUNIAO);
+  }
+  function aplicarParceiroReuniao(){
+    const g = store.get(PARC_REUNIAO), antes = JSON.stringify(CAMPOS_PARCEIRO.map(k => dx[k]));
+    CAMPOS_PARCEIRO.forEach(k => delete dx[k]);
+    if(g && g.parceiro && PARCEIROS.find(p => p.id === g.parceiro)) Object.assign(dx, JSON.parse(JSON.stringify(g)));
+    return antes !== JSON.stringify(CAMPOS_PARCEIRO.map(k => dx[k]));
+  }
   function escolherNicho(id){
     const n = NICHOS.find(x => x.id === id);
     if(!n) return;
     if(saveT) gravarDx();
-    // a reunião é a mesma: o parceiro escolhido vai junto para o nicho novo, se lá ainda não tem diagnóstico
-    const parc = {}; CAMPOS_PARCEIRO.forEach(k => { if(dx && dx[k] != null) parc[k] = JSON.parse(JSON.stringify(dx[k])); });
     N = n;
     store.set('rb:nicho', id);
     try{ history.replaceState(null, '', '#' + id); }catch(e){}
     dx = Object.assign(novoDx(), store.get(dxKey()) || {});
-    if(parc.parceiro && !dx.parceiro && !temConteudo(dx)){ Object.assign(dx, parc); gravarDx(); }
+    if(aplicarParceiroReuniao()) gravarDx();
     abertos.clear();
     montar();
     if(dx.ident && dx.ident.empresa) toast('Diagnóstico de ' + dx.ident.empresa + ' retomado.');
@@ -1650,7 +1719,7 @@
       const rot = plain(raw('raiox.' + si + '.campos.' + fi + '.rotulo')).replace(/\?$/, ''), o = origemDe(c.id);
       if(o && o.tipo === 'atalho' && o.vazio){ out.push([rot, 'Não sabe']); return; }
       const v = dx.nums[c.id];
-      if(v == null || v === '') return;
+      if(v == null || v === '' || campoOculto(c.id)) return;
       const n = parseFloat(String(v).replace(',', '.'));
       if(!isFinite(n)) return;
       out.push([rot, valorCampo(c, n) + (o && o.tipo === 'media' ? ' (média de mercado)' : '')]);
@@ -2096,5 +2165,5 @@
   const hash = (location.hash || '').replace('#', '');
   const inicial = NICHOS.find(n => n.id === hash) || NICHOS.find(n => n.id === store.get('rb:nicho')) || (NICHOS.length === 1 ? NICHOS[0] : null);
   if(inicial) escolherNicho(inicial.id);
-  else { N = NICHOS[0] || null; if(N){ dx = Object.assign(novoDx(), store.get(dxKey()) || {}); montar(); } abrirPicker(); }
+  else { N = NICHOS[0] || null; if(N){ dx = Object.assign(novoDx(), store.get(dxKey()) || {}); aplicarParceiroReuniao(); montar(); } abrirPicker(); }
 })();
