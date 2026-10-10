@@ -436,7 +436,25 @@ s{opacity:.6}
 .pt-tab tr.on td:first-child{color:#fff;box-shadow:inset 3px 0 0 var(--acc)}
 .pt-voce{display:none;margin-left:.6em;padding:.15em .55em;border-radius:999px;background:var(--acc);color:#fff;font:700 clamp(7.5px,.6cqw,10px)/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;vertical-align:middle}
 .pt-tab tr.on .pt-voce{display:inline-block}
-.pl-rod{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1cqw;width:100%}
+.pl-rod{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:1cqw;width:100%}
+/* valores de mercado × planos */
+.vm-tab td{cursor:default;padding:.5cqw 1.1cqw}
+.vm-tab td:first-child{white-space:normal}
+.vm-tab td:first-child .tip{margin-left:.5em;font-size:.75em}
+.vm-tab th.vm-c,.vm-tab td.vm-c{text-align:right;white-space:nowrap;color:var(--mut)}
+.vm-tab th.vm-c{font:700 clamp(8.5px,.72cqw,11.5px)/1.3 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--mut2)}
+.vm-tab thead th:nth-child(n+3){width:16%}
+.vm-tab tfoot td{white-space:nowrap}
+.vm-tab td.vm-c{font:600 clamp(10px,.9cqw,14.5px)/1.2 var(--f-body)}
+.vm-ok{color:var(--ok,#3ecf8e);font-size:1.1em}
+.vm-no{color:var(--mut2);opacity:.6}
+.vm-tab tfoot td{border-bottom:0;border-top:1px solid var(--line)}
+.vm-tab tfoot td:first-child{color:var(--tx);font-weight:700}
+.vm-tab tfoot small{font-size:.6em;color:var(--mut2);font-weight:600;margin-left:.15em}
+.vm-sep td{color:var(--mut)}
+.vm-pl td{font-size:clamp(13px,1.35cqw,22px);background:rgba(59,142,243,.08)}
+.vm-pl td.hi{color:var(--acc)}
+.vm-fx{display:block;font:600 clamp(8.5px,.7cqw,11px)/1.3 var(--f-body);color:var(--mut2);margin-top:.2cqw}
 .pl-rod div{display:flex;flex-direction:column;gap:.2cqw;font-size:clamp(8.5px,.72cqw,11.5px);color:var(--mut2);line-height:1.4}
 .pl-rod b{color:var(--mut);font-size:1.05em}
 .note b{color:var(--tx)}
@@ -609,6 +627,12 @@ s{opacity:.6}
   .plans.tres,.pl-rod,.fn-grid{grid-template-columns:minmax(0,1fr)}
   .pt-tab th,.pt-tab td{padding:6px 5px}
   .pt-tab .ptd{display:none}
+  .vm-tab th,.vm-tab td{padding:5px 3px;font-size:10px}
+  .vm-tab thead th:nth-child(n+3){width:auto}
+  .vm-tab .ptn{font-size:10px}
+  .vm-tab td.vm-c,.vm-tab tfoot td{white-space:normal}
+  .vm-tab small,.vm-tab .tag-est,.vm-tab .tip{display:none}
+  .vm-pl td{font-size:11.5px}
   .fn-et{grid-template-columns:minmax(0,1fr) 6em 8em}
   .nicho-chip .parc-chip{display:none}
   .md-box{width:100%;padding:16px}
@@ -2279,17 +2303,30 @@ PARCEIRO({
     ]
   },
 
+  // valores de mercado cruzados com os planos: cada função com um profissional dedicado (salário médio, sem encargos)
+  // e os planos que cobrem essa função ("planos": índices de planos.itens, 0 = Tráfego pago).
+  // A tabela soma o custo separado de cada plano e mostra o preço do plano na faixa de verba do cliente (com a margem).
   valores: {
+    sub: 'O que cada plano cobre e quanto custaria ter um profissional dedicado a cada função.',
+    funcaoRotulo: 'Função',
+    custoRotulo: 'Mercado',
     itens: [
-      { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês',
+      { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês', planos: [0, 1, 2],
         fonte: 'Salário médio de Gestor de Tráfego Pago no Brasil: R$ 3.000 por mês. Glassdoor, abril de 2026.' },
-      { nome: 'Especialista em RevOps (orienta o time de vendas)', valor: 'R$ 9.150/mês',
+      { nome: 'T.I. de tracking e dados (pixels, conversões, integrações)', valor: 'R$ 4.120/mês', planos: [0, 1, 2],
+        fonte: 'Média salarial de Analista de Web Analytics (tags, tracking e dados de conversão) no Brasil: R$ 4.120,46 por mês. Catho, consultado em outubro de 2026.' },
+      { nome: 'Especialista em B.I. (relatórios e painéis)', valor: 'R$ 5.760/mês', planos: [1, 2],
+        fonte: 'Média salarial de Analista de BI no Brasil: R$ 5.760,03 por mês (mediana R$ 4.293), salário base CLT. Novo CAGED, set/2025 a ago/2026, via Salario.com.br (atualizado em 08/10/2026).' },
+      { nome: 'CRM com WhatsApp e IA (3 usuários)', valor: 'R$ 387/mês', planos: [1, 2],
+        fonte: 'Kommo, plano Avançado (automações, Salesbot e agente de IA): R$ 129 por usuário por mês no plano anual. 3 usuários = R$ 387. Tabela de 2026.' },
+      { nome: 'Especialista em RevOps (processo e treinamento comercial)', valor: 'R$ 9.150/mês', planos: [2],
         fonte: 'Salário médio de RevOps Specialist no Brasil: R$ 9.150 por mês (faixa comum de R$ 5.375 a R$ 14.600). Glassdoor, junho de 2026.' },
-      { nome: 'CRM com WhatsApp e IA (3 usuários)', valor: 'R$ 387/mês',
-        fonte: 'Kommo, plano Avançado (automações, Salesbot e agente de IA): R$ 129 por usuário por mês no plano anual. 3 usuários = R$ 387. Tabela de 2026.' }
+      { nome: 'Analista de automação e IA (agente no WhatsApp)', valor: 'R$ 6.086/mês', planos: [2],
+        fonte: 'Média salarial de Analista de Sistemas de Automação (CBO 2124-15) no Brasil: R$ 6.086,24 por mês (mediana R$ 5.000), salário base CLT. Novo CAGED, set/2025 a ago/2026, via Salario.com.br (atualizado em 08/10/2026).' }
     ],
-    total: 'R$ 12.537/mês',
-    nota: 'Salários médios, sem encargos e sem a verba de anúncio.'
+    separadoRotulo: 'Contratando separado',
+    planoRotulo: 'No plano Ribeker',
+    nota: 'Salários médios, sem encargos e sem a verba de anúncio. Os tokens da IA são pagos pelo cliente direto ao provedor do modelo.'
   },
 
   // tabela exclusiva de parceiros: o preço depende da verba mensal de anúncios.
@@ -2319,16 +2356,17 @@ PARCEIRO({
       { nome: 'Tráfego + CRM', detalhe: 'Do anúncio à oportunidade', per: '/mês', inclui: 'Tudo do Tráfego pago, mais:',
         precos: ['R$ 2.500', 'R$ 3.250', 'R$ 4.750', 'R$ 6.000', 'R$ 8.000', 'Sob consulta'],
         beneficios: ['Implantação e organização do CRM', 'Estruturação do funil de vendas', 'Automações essenciais', 'Distribuição e acompanhamento das oportunidades', 'Indicadores de conversão até vendas', 'Relatório integrado (tráfego + comercial)'] },
-      { nome: 'Tráfego + CRM + Performance comercial', detalhe: 'Da oportunidade à venda', per: '/mês', inclui: 'Tudo dos planos anteriores, mais:',
+      { nome: 'Tráfego + CRM + Performance comercial', detalhe: 'Da oportunidade à venda, com IA', per: '/mês', inclui: 'Tudo dos planos anteriores, mais:',
         selo: 'Mais completo', destaque: true,
         precos: ['R$ 3.500', 'R$ 4.250', 'R$ 6.000', 'R$ 7.500', 'R$ 10.000', 'Sob consulta'],
-        beneficios: ['Estruturação do processo comercial', 'Treinamento da equipe de vendas', 'Abordagem e cadências de follow-up', 'Acompanhamento de indicadores comerciais', 'Reuniões periódicas de performance', 'Suporte contínuo para evolução dos resultados'] }
+        beneficios: ['Estruturação do processo comercial', 'Treinamento da equipe de vendas', 'Abordagem e cadências de follow-up', 'Agente de IA no atendimento do WhatsApp', 'Acompanhamento de indicadores comerciais', 'Reuniões periódicas de performance', 'Suporte contínuo para evolução dos resultados'] }
     ],
     rodape: [
       { t: 'Verba de anúncios separada', d: 'O investimento em mídia não entra no fee de gestão: é pago direto às plataformas.' },
       { t: 'Relatório mensal', d: 'Acompanhamento completo de resultados e indicadores.' },
       { t: 'Escopo padrão', d: 'Volume padrão de oportunidades, usuários e complexidade.' },
-      { t: 'Projetos especiais', d: 'Alto volume, várias unidades ou equipes comerciais maiores são avaliados à parte.' }
+      { t: 'Projetos especiais', d: 'Alto volume, várias unidades ou equipes comerciais maiores são avaliados à parte.' },
+      { t: 'Tokens da IA à parte', d: 'No plano completo, o consumo do modelo de IA é pago pelo cliente direto ao provedor.' }
     ],
     nota: 'Contrato *sem fidelidade*: só 30 dias de aviso prévio.',
     implantacao: ''
@@ -3425,12 +3463,26 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         </div>
       </div>`,
 
-    valores: () => `
+    // com "planos" nos itens (índices dos planos que cobrem a função), vira a tabela funções × planos
+    valores: () => list('valores.itens').some(v => Array.isArray(v.planos)) && list('planos.itens').length ? B.valoresPlanos() : `
       ${T('valores.kicker', 'div', 'kicker reveal')}
       ${T('valores.titulo', 'h2', 'h2 reveal')}
       <div class="vstack reveal">${list('valores.itens').map((v, i) => `<div class="vrow">${T('valores.itens.' + i + '.nome', 'span', 'vn')}<span class="vv">${T('valores.itens.' + i + '.valor')}${v.fonte ? `<i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(v.fonte)}">i</i>` : ''}</span></div>`).join('')}
         <div class="vrow tot"><span class="vn">${T('valores.totalRotulo')} <span class="tag-est">Estimativa</span></span>${T('valores.total', 'span', 'vv')}</div></div>
       ${T('valores.nota', 'div', 'note reveal')}`,
+
+    valoresPlanos: () => {
+      const vs = list('valores.itens'), ps = list('planos.itens'), hi = p => p.destaque ? ' class="hi"' : '';
+      return `
+      ${T('valores.kicker', 'div', 'kicker reveal')}
+      ${T('valores.titulo', 'h2', 'h2 reveal')}
+      ${raw('valores.sub') ? T('valores.sub', 'p', 'sub reveal') : ''}
+      <table class="pt-tab vm-tab reveal" id="vmTab"><thead><tr><th>${T('valores.funcaoRotulo')}</th><th class="vm-c">${T('valores.custoRotulo')}</th>${ps.map((p, i) => `<th${hi(p)}>${T('planos.itens.' + i + '.nome', 'div', 'ptn')}</th>`).join('')}</tr></thead>
+        <tbody>${vs.map((v, k) => `<tr><td>${T('valores.itens.' + k + '.nome')}${v.fonte ? `<i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(v.fonte)}">i</i>` : ''}</td><td class="vm-c">${T('valores.itens.' + k + '.valor')}</td>${ps.map((p, i) => `<td${hi(p)}>${(v.planos || []).includes(i) ? '<span class="vm-ok" aria-label="incluso">✓</span>' : '<span class="vm-no" aria-label="não incluso">–</span>'}</td>`).join('')}</tr>`).join('')}</tbody>
+        <tfoot><tr class="vm-sep"><td colspan="2">${T('valores.separadoRotulo')} <span class="tag-est">Estimativa</span></td>${ps.map((p, i) => `<td${hi(p)} id="vmS${i}">--</td>`).join('')}</tr>
+          <tr class="vm-pl"><td colspan="2">${T('valores.planoRotulo')}<span class="vm-fx" id="vmFaixa"></span></td>${ps.map((p, i) => `<td${hi(p)} id="vmP${i}">--</td>`).join('')}</tr></tfoot></table>
+      ${T('valores.nota', 'div', 'note reveal')}`;
+    },
 
     planos: () => {
       const ps = list('planos.itens');
@@ -3457,7 +3509,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       ${raw('planos.tabelaSub') ? T('planos.tabelaSub', 'p', 'sub reveal') : ''}
       <table class="pt-tab reveal"><thead><tr><th>${T('planos.faixaRotulo')}</th>${ps.map((p, i) => `<th class="${p.destaque ? 'hi' : ''}">${T('planos.itens.' + i + '.nome', 'div', 'ptn')}${T('planos.itens.' + i + '.detalhe', 'div', 'ptd')}</th>`).join('')}</tr></thead>
         <tbody>${fs.map((f, fi) => `<tr data-faixa="${fi}" id="ptRow${fi}"><td>${T('planos.faixas.' + fi + '.t')}<span class="pt-voce">verba de vocês</span></td>${ps.map((p, i) => `<td class="${p.destaque ? 'hi' : ''}" id="ptc${fi}_${i}">--</td>`).join('')}</tr>`).join('')}</tbody></table>
-      <div class="pl-rod reveal">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
+      <div class="pl-rod reveal" style="--n:${list('planos.rodape').length}">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
       <aside class="notas"><div class="label">Notas do apresentador · N esconde</div><div class="nt" id="plNota2"></div></aside>`;
     },
 
@@ -3474,7 +3526,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           ${raw(b + '.inclui') ? T(b + '.inclui', 'div', 'pinc') : ''}
           <ul>${(p.beneficios || []).map((x, j) => T(b + '.beneficios.' + j, 'li')).join('')}</ul></div>`;
       }).join('')}</div>
-      <div class="pl-rod reveal">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
+      <div class="pl-rod reveal" style="--n:${list('planos.rodape').length}">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
       ${T('planos.nota', 'div', 'note reveal')}
       <aside class="notas"><div class="label">Notas do apresentador · N esconde</div><div class="nt" id="plNota"></div></aside>`,
 
@@ -3878,6 +3930,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           set('ptc' + fi + '_' + i, base > 0 ? brl(margemPlano(base, i).final) : esc(plain((p.precos || [])[fi] || '--')));
         });
       });
+    }
+
+    // ---- valores de mercado × planos: soma das funções que cada plano cobre e o preço do plano ----
+    if($('#vmTab')){
+      const vs = list('valores.itens'), fa = faixaAtual();
+      list('planos.itens').forEach((p, i) => {
+        const sep = vs.reduce((s, v, k) => s + ((v.planos || []).includes(i) ? (valorBRL(raw('valores.itens.' + k + '.valor')) || 0) : 0), 0);
+        set('vmS' + i, sep > 0 ? brl(sep) + '<small>/mês</small>' : '--');
+        const tx = fa ? (p.precos || [])[fa.i] : raw('planos.itens.' + i + '.preco'), base = valorBRL(tx);
+        set('vmP' + i, base > 0 ? brl(margemPlano(base, i).final) + '<small>/mês</small>' : esc(plain(tx || '--')));
+      });
+      set('vmFaixa', fa ? esc('Faixa de verba: ' + plain(raw('planos.faixas.' + fa.i + '.t'))) : '');
     }
 
     // ---- salvar ----

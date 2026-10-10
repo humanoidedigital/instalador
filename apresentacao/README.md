@@ -130,7 +130,13 @@ conflito de interesse, a oferta sai sem social mídia:
 - Social mídia não aparece em nenhum slide: "Vendas Ribeker" começa no tráfego pago (Tráfego pago → CRM / IA → Venda),
   o slide de marcas fica sem "Rede social" e o case IsenteJá + Isentoo mostra só site, tráfego, CRM, automação e IA
   (`casos` no arquivo do parceiro ajusta campos de um case pelo id, sem mexer no `marca.js`).
-- Marketing vira "Tudo que o tráfego faz por você"; valores de mercado sem social mídia (total R$ 12.537/mês).
+- Marketing vira "Tudo que o tráfego faz por você".
+- **Valores de mercado cruzados com os planos:** uma tabela com cada função (gestor de tráfego, T.I. de tracking e
+  dados, especialista em B.I., CRM, RevOps, automação e IA), o custo de mercado de cada uma e um ✓ nos planos que
+  a cobrem. Embaixo, "Contratando separado" soma as funções de cada plano e "No plano Ribeker" mostra o preço do
+  plano na faixa de verba do cliente, já com a margem. Fontes no "i" de cada linha.
+- **IA no plano completo** (Tráfego + CRM + Performance comercial): agente de IA no atendimento do WhatsApp.
+  Os tokens do modelo de IA são pagos pelo cliente direto ao provedor (aparece no rodapé dos planos e na nota dos valores).
 - Planos em dois slides:
   1. **"Planos de tráfego pago"**: a tabela de parceiros inteira (Tráfego pago · Tráfego + CRM · Tráfego + CRM +
      Performance comercial × 6 faixas de verba), já com a margem somada, com a faixa do cliente em destaque e o
@@ -204,6 +210,18 @@ Para usar isso em outro nicho: `projecao.margem: { campo: 'margem', referencia: 
 | Especialista em RevOps (orienta o time de vendas) | R$ 9.150/mês | Glassdoor, RevOps Specialist, jun/2026 |
 | CRM com WhatsApp e IA, 3 usuários | R$ 387/mês | Kommo Avançado, R$ 129 por usuário (anual), 2026 |
 | **Total** | **R$ 15.537/mês** | salários sem encargos e sem verba de anúncio |
+
+Com parceiro de social mídia, a tabela vira funções × planos (`valores.itens[].planos` = planos que cobrem a função):
+
+| Função | Valor | Planos | Fonte |
+|---|---|---|---|
+| Gestor de tráfego pago | R$ 3.000/mês | todos | Glassdoor, abr/2026 |
+| T.I. de tracking e dados | R$ 4.120/mês | todos | Catho, Analista de Web Analytics, out/2026 |
+| Especialista em B.I. | R$ 5.760/mês | Tráfego + CRM e completo | Novo CAGED (set/2025 a ago/2026), via Salario.com.br |
+| CRM com WhatsApp e IA, 3 usuários | R$ 387/mês | Tráfego + CRM e completo | Kommo Avançado, 2026 |
+| Especialista em RevOps | R$ 9.150/mês | completo | Glassdoor, jun/2026 |
+| Analista de automação e IA | R$ 6.086/mês | completo | Novo CAGED (CBO 2124-15), via Salario.com.br |
+| **Contratando separado** | | **R$ 7.120 · R$ 13.267 · R$ 28.503** | salários sem encargos e sem verba de anúncio |
 
 ## Editar sem programar (modo edição)
 

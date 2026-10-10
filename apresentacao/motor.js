@@ -685,12 +685,26 @@
         </div>
       </div>`,
 
-    valores: () => `
+    // com "planos" nos itens (índices dos planos que cobrem a função), vira a tabela funções × planos
+    valores: () => list('valores.itens').some(v => Array.isArray(v.planos)) && list('planos.itens').length ? B.valoresPlanos() : `
       ${T('valores.kicker', 'div', 'kicker reveal')}
       ${T('valores.titulo', 'h2', 'h2 reveal')}
       <div class="vstack reveal">${list('valores.itens').map((v, i) => `<div class="vrow">${T('valores.itens.' + i + '.nome', 'span', 'vn')}<span class="vv">${T('valores.itens.' + i + '.valor')}${v.fonte ? `<i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(v.fonte)}">i</i>` : ''}</span></div>`).join('')}
         <div class="vrow tot"><span class="vn">${T('valores.totalRotulo')} <span class="tag-est">Estimativa</span></span>${T('valores.total', 'span', 'vv')}</div></div>
       ${T('valores.nota', 'div', 'note reveal')}`,
+
+    valoresPlanos: () => {
+      const vs = list('valores.itens'), ps = list('planos.itens'), hi = p => p.destaque ? ' class="hi"' : '';
+      return `
+      ${T('valores.kicker', 'div', 'kicker reveal')}
+      ${T('valores.titulo', 'h2', 'h2 reveal')}
+      ${raw('valores.sub') ? T('valores.sub', 'p', 'sub reveal') : ''}
+      <table class="pt-tab vm-tab reveal" id="vmTab"><thead><tr><th>${T('valores.funcaoRotulo')}</th><th class="vm-c">${T('valores.custoRotulo')}</th>${ps.map((p, i) => `<th${hi(p)}>${T('planos.itens.' + i + '.nome', 'div', 'ptn')}</th>`).join('')}</tr></thead>
+        <tbody>${vs.map((v, k) => `<tr><td>${T('valores.itens.' + k + '.nome')}${v.fonte ? `<i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(v.fonte)}">i</i>` : ''}</td><td class="vm-c">${T('valores.itens.' + k + '.valor')}</td>${ps.map((p, i) => `<td${hi(p)}>${(v.planos || []).includes(i) ? '<span class="vm-ok" aria-label="incluso">✓</span>' : '<span class="vm-no" aria-label="não incluso">–</span>'}</td>`).join('')}</tr>`).join('')}</tbody>
+        <tfoot><tr class="vm-sep"><td colspan="2">${T('valores.separadoRotulo')} <span class="tag-est">Estimativa</span></td>${ps.map((p, i) => `<td${hi(p)} id="vmS${i}">--</td>`).join('')}</tr>
+          <tr class="vm-pl"><td colspan="2">${T('valores.planoRotulo')}<span class="vm-fx" id="vmFaixa"></span></td>${ps.map((p, i) => `<td${hi(p)} id="vmP${i}">--</td>`).join('')}</tr></tfoot></table>
+      ${T('valores.nota', 'div', 'note reveal')}`;
+    },
 
     planos: () => {
       const ps = list('planos.itens');
@@ -717,7 +731,7 @@
       ${raw('planos.tabelaSub') ? T('planos.tabelaSub', 'p', 'sub reveal') : ''}
       <table class="pt-tab reveal"><thead><tr><th>${T('planos.faixaRotulo')}</th>${ps.map((p, i) => `<th class="${p.destaque ? 'hi' : ''}">${T('planos.itens.' + i + '.nome', 'div', 'ptn')}${T('planos.itens.' + i + '.detalhe', 'div', 'ptd')}</th>`).join('')}</tr></thead>
         <tbody>${fs.map((f, fi) => `<tr data-faixa="${fi}" id="ptRow${fi}"><td>${T('planos.faixas.' + fi + '.t')}<span class="pt-voce">verba de vocês</span></td>${ps.map((p, i) => `<td class="${p.destaque ? 'hi' : ''}" id="ptc${fi}_${i}">--</td>`).join('')}</tr>`).join('')}</tbody></table>
-      <div class="pl-rod reveal">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
+      <div class="pl-rod reveal" style="--n:${list('planos.rodape').length}">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
       <aside class="notas"><div class="label">Notas do apresentador · N esconde</div><div class="nt" id="plNota2"></div></aside>`;
     },
 
@@ -734,7 +748,7 @@
           ${raw(b + '.inclui') ? T(b + '.inclui', 'div', 'pinc') : ''}
           <ul>${(p.beneficios || []).map((x, j) => T(b + '.beneficios.' + j, 'li')).join('')}</ul></div>`;
       }).join('')}</div>
-      <div class="pl-rod reveal">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
+      <div class="pl-rod reveal" style="--n:${list('planos.rodape').length}">${list('planos.rodape').map((r, i) => `<div>${T('planos.rodape.' + i + '.t', 'b')}${T('planos.rodape.' + i + '.d', 'span')}</div>`).join('')}</div>
       ${T('planos.nota', 'div', 'note reveal')}
       <aside class="notas"><div class="label">Notas do apresentador · N esconde</div><div class="nt" id="plNota"></div></aside>`,
 
@@ -1138,6 +1152,18 @@
           set('ptc' + fi + '_' + i, base > 0 ? brl(margemPlano(base, i).final) : esc(plain((p.precos || [])[fi] || '--')));
         });
       });
+    }
+
+    // ---- valores de mercado × planos: soma das funções que cada plano cobre e o preço do plano ----
+    if($('#vmTab')){
+      const vs = list('valores.itens'), fa = faixaAtual();
+      list('planos.itens').forEach((p, i) => {
+        const sep = vs.reduce((s, v, k) => s + ((v.planos || []).includes(i) ? (valorBRL(raw('valores.itens.' + k + '.valor')) || 0) : 0), 0);
+        set('vmS' + i, sep > 0 ? brl(sep) + '<small>/mês</small>' : '--');
+        const tx = fa ? (p.precos || [])[fa.i] : raw('planos.itens.' + i + '.preco'), base = valorBRL(tx);
+        set('vmP' + i, base > 0 ? brl(margemPlano(base, i).final) + '<small>/mês</small>' : esc(plain(tx || '--')));
+      });
+      set('vmFaixa', fa ? esc('Faixa de verba: ' + plain(raw('planos.faixas.' + fa.i + '.t'))) : '');
     }
 
     // ---- salvar ----

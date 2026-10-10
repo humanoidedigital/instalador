@@ -436,7 +436,25 @@ s{opacity:.6}
 .pt-tab tr.on td:first-child{color:#fff;box-shadow:inset 3px 0 0 var(--acc)}
 .pt-voce{display:none;margin-left:.6em;padding:.15em .55em;border-radius:999px;background:var(--acc);color:#fff;font:700 clamp(7.5px,.6cqw,10px)/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;vertical-align:middle}
 .pt-tab tr.on .pt-voce{display:inline-block}
-.pl-rod{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1cqw;width:100%}
+.pl-rod{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:1cqw;width:100%}
+/* valores de mercado × planos */
+.vm-tab td{cursor:default;padding:.5cqw 1.1cqw}
+.vm-tab td:first-child{white-space:normal}
+.vm-tab td:first-child .tip{margin-left:.5em;font-size:.75em}
+.vm-tab th.vm-c,.vm-tab td.vm-c{text-align:right;white-space:nowrap;color:var(--mut)}
+.vm-tab th.vm-c{font:700 clamp(8.5px,.72cqw,11.5px)/1.3 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--mut2)}
+.vm-tab thead th:nth-child(n+3){width:16%}
+.vm-tab tfoot td{white-space:nowrap}
+.vm-tab td.vm-c{font:600 clamp(10px,.9cqw,14.5px)/1.2 var(--f-body)}
+.vm-ok{color:var(--ok,#3ecf8e);font-size:1.1em}
+.vm-no{color:var(--mut2);opacity:.6}
+.vm-tab tfoot td{border-bottom:0;border-top:1px solid var(--line)}
+.vm-tab tfoot td:first-child{color:var(--tx);font-weight:700}
+.vm-tab tfoot small{font-size:.6em;color:var(--mut2);font-weight:600;margin-left:.15em}
+.vm-sep td{color:var(--mut)}
+.vm-pl td{font-size:clamp(13px,1.35cqw,22px);background:rgba(59,142,243,.08)}
+.vm-pl td.hi{color:var(--acc)}
+.vm-fx{display:block;font:600 clamp(8.5px,.7cqw,11px)/1.3 var(--f-body);color:var(--mut2);margin-top:.2cqw}
 .pl-rod div{display:flex;flex-direction:column;gap:.2cqw;font-size:clamp(8.5px,.72cqw,11.5px);color:var(--mut2);line-height:1.4}
 .pl-rod b{color:var(--mut);font-size:1.05em}
 .note b{color:var(--tx)}
@@ -609,6 +627,12 @@ s{opacity:.6}
   .plans.tres,.pl-rod,.fn-grid{grid-template-columns:minmax(0,1fr)}
   .pt-tab th,.pt-tab td{padding:6px 5px}
   .pt-tab .ptd{display:none}
+  .vm-tab th,.vm-tab td{padding:5px 3px;font-size:10px}
+  .vm-tab thead th:nth-child(n+3){width:auto}
+  .vm-tab .ptn{font-size:10px}
+  .vm-tab td.vm-c,.vm-tab tfoot td{white-space:normal}
+  .vm-tab small,.vm-tab .tag-est,.vm-tab .tip{display:none}
+  .vm-pl td{font-size:11.5px}
   .fn-et{grid-template-columns:minmax(0,1fr) 6em 8em}
   .nicho-chip .parc-chip{display:none}
   .md-box{width:100%;padding:16px}

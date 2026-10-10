@@ -50,17 +50,30 @@ PARCEIRO({
     ]
   },
 
+  // valores de mercado cruzados com os planos: cada função com um profissional dedicado (salário médio, sem encargos)
+  // e os planos que cobrem essa função ("planos": índices de planos.itens, 0 = Tráfego pago).
+  // A tabela soma o custo separado de cada plano e mostra o preço do plano na faixa de verba do cliente (com a margem).
   valores: {
+    sub: 'O que cada plano cobre e quanto custaria ter um profissional dedicado a cada função.',
+    funcaoRotulo: 'Função',
+    custoRotulo: 'Mercado',
     itens: [
-      { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês',
+      { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês', planos: [0, 1, 2],
         fonte: 'Salário médio de Gestor de Tráfego Pago no Brasil: R$ 3.000 por mês. Glassdoor, abril de 2026.' },
-      { nome: 'Especialista em RevOps (orienta o time de vendas)', valor: 'R$ 9.150/mês',
+      { nome: 'T.I. de tracking e dados (pixels, conversões, integrações)', valor: 'R$ 4.120/mês', planos: [0, 1, 2],
+        fonte: 'Média salarial de Analista de Web Analytics (tags, tracking e dados de conversão) no Brasil: R$ 4.120,46 por mês. Catho, consultado em outubro de 2026.' },
+      { nome: 'Especialista em B.I. (relatórios e painéis)', valor: 'R$ 5.760/mês', planos: [1, 2],
+        fonte: 'Média salarial de Analista de BI no Brasil: R$ 5.760,03 por mês (mediana R$ 4.293), salário base CLT. Novo CAGED, set/2025 a ago/2026, via Salario.com.br (atualizado em 08/10/2026).' },
+      { nome: 'CRM com WhatsApp e IA (3 usuários)', valor: 'R$ 387/mês', planos: [1, 2],
+        fonte: 'Kommo, plano Avançado (automações, Salesbot e agente de IA): R$ 129 por usuário por mês no plano anual. 3 usuários = R$ 387. Tabela de 2026.' },
+      { nome: 'Especialista em RevOps (processo e treinamento comercial)', valor: 'R$ 9.150/mês', planos: [2],
         fonte: 'Salário médio de RevOps Specialist no Brasil: R$ 9.150 por mês (faixa comum de R$ 5.375 a R$ 14.600). Glassdoor, junho de 2026.' },
-      { nome: 'CRM com WhatsApp e IA (3 usuários)', valor: 'R$ 387/mês',
-        fonte: 'Kommo, plano Avançado (automações, Salesbot e agente de IA): R$ 129 por usuário por mês no plano anual. 3 usuários = R$ 387. Tabela de 2026.' }
+      { nome: 'Analista de automação e IA (agente no WhatsApp)', valor: 'R$ 6.086/mês', planos: [2],
+        fonte: 'Média salarial de Analista de Sistemas de Automação (CBO 2124-15) no Brasil: R$ 6.086,24 por mês (mediana R$ 5.000), salário base CLT. Novo CAGED, set/2025 a ago/2026, via Salario.com.br (atualizado em 08/10/2026).' }
     ],
-    total: 'R$ 12.537/mês',
-    nota: 'Salários médios, sem encargos e sem a verba de anúncio.'
+    separadoRotulo: 'Contratando separado',
+    planoRotulo: 'No plano Ribeker',
+    nota: 'Salários médios, sem encargos e sem a verba de anúncio. Os tokens da IA são pagos pelo cliente direto ao provedor do modelo.'
   },
 
   // tabela exclusiva de parceiros: o preço depende da verba mensal de anúncios.
@@ -90,16 +103,17 @@ PARCEIRO({
       { nome: 'Tráfego + CRM', detalhe: 'Do anúncio à oportunidade', per: '/mês', inclui: 'Tudo do Tráfego pago, mais:',
         precos: ['R$ 2.500', 'R$ 3.250', 'R$ 4.750', 'R$ 6.000', 'R$ 8.000', 'Sob consulta'],
         beneficios: ['Implantação e organização do CRM', 'Estruturação do funil de vendas', 'Automações essenciais', 'Distribuição e acompanhamento das oportunidades', 'Indicadores de conversão até vendas', 'Relatório integrado (tráfego + comercial)'] },
-      { nome: 'Tráfego + CRM + Performance comercial', detalhe: 'Da oportunidade à venda', per: '/mês', inclui: 'Tudo dos planos anteriores, mais:',
+      { nome: 'Tráfego + CRM + Performance comercial', detalhe: 'Da oportunidade à venda, com IA', per: '/mês', inclui: 'Tudo dos planos anteriores, mais:',
         selo: 'Mais completo', destaque: true,
         precos: ['R$ 3.500', 'R$ 4.250', 'R$ 6.000', 'R$ 7.500', 'R$ 10.000', 'Sob consulta'],
-        beneficios: ['Estruturação do processo comercial', 'Treinamento da equipe de vendas', 'Abordagem e cadências de follow-up', 'Acompanhamento de indicadores comerciais', 'Reuniões periódicas de performance', 'Suporte contínuo para evolução dos resultados'] }
+        beneficios: ['Estruturação do processo comercial', 'Treinamento da equipe de vendas', 'Abordagem e cadências de follow-up', 'Agente de IA no atendimento do WhatsApp', 'Acompanhamento de indicadores comerciais', 'Reuniões periódicas de performance', 'Suporte contínuo para evolução dos resultados'] }
     ],
     rodape: [
       { t: 'Verba de anúncios separada', d: 'O investimento em mídia não entra no fee de gestão: é pago direto às plataformas.' },
       { t: 'Relatório mensal', d: 'Acompanhamento completo de resultados e indicadores.' },
       { t: 'Escopo padrão', d: 'Volume padrão de oportunidades, usuários e complexidade.' },
-      { t: 'Projetos especiais', d: 'Alto volume, várias unidades ou equipes comerciais maiores são avaliados à parte.' }
+      { t: 'Projetos especiais', d: 'Alto volume, várias unidades ou equipes comerciais maiores são avaliados à parte.' },
+      { t: 'Tokens da IA à parte', d: 'No plano completo, o consumo do modelo de IA é pago pelo cliente direto ao provedor.' }
     ],
     nota: 'Contrato *sem fidelidade*: só 30 dias de aviso prévio.',
     implantacao: ''
