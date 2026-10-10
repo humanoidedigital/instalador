@@ -216,7 +216,7 @@ NICHO({
       sub: 'As últimas respostas viram o comparativo da próxima tela.',
       campos: [
         { id: 'meses', rotulo: 'Há quantos meses vocês tentam ajustar o comercial?', suf: 'meses', unidade: 'meses' },
-        { id: 'custo', rotulo: 'Custo operacional mensal (Comercial)', sub: 'Colaborador · Gestor · Tráfego/anúncio · Ferramentas · Social mídia', pre: 'R$', suf: 'R$ / mês' },
+        { id: 'custo', rotulo: 'Custo operacional mensal (Comercial)', sub: 'Colaborador · Gestor · Tráfego/anúncio · Ferramentas · Agências', pre: 'R$', suf: 'R$ / mês' },
         { id: 'receitaIni', rotulo: 'Há {meses}, a receita mensal era de?', pre: 'R$', suf: 'R$ / mês, no início' },
         { id: 'receitaHoje', rotulo: 'Hoje a receita mensal está em?', pre: 'R$', suf: 'R$ / mês, hoje' }
       ]

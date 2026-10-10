@@ -67,7 +67,7 @@ window.MARCA = {
   },
 
   antes: {
-    kicker: 'Antes de tudo',
+    kicker: 'Agora, a sua {empresa}',
     titulo: 'Vamos te entender *melhor*',
     etapas: ['Comercial', 'Marketing e Tráfego Pago'],
     sub: 'Algumas perguntas rápidas pra entender exatamente onde vocês estão hoje. Vamos marcando juntos.'

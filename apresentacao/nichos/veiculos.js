@@ -213,7 +213,7 @@ NICHO({
       sub: 'Faturamento é o que o dono sabe de cabeça. A conta tira o lucro com a margem da tela anterior.',
       campos: [
         { id: 'meses', rotulo: 'Há quantos meses vocês tentam ajustar o comercial?', suf: 'meses', unidade: 'meses' },
-        { id: 'custo', rotulo: 'Custo operacional mensal (Comercial)', sub: 'Vendedores · Gerente · Anúncios e portais · Ferramentas · Social mídia', pre: 'R$', suf: 'R$ / mês' },
+        { id: 'custo', rotulo: 'Custo operacional mensal (Comercial)', sub: 'Vendedores · Gerente · Anúncios e portais · Ferramentas · Agências', pre: 'R$', suf: 'R$ / mês' },
         { id: 'receitaIni', rotulo: 'Há {meses}, a loja faturava por mês?', pre: 'R$', suf: 'R$ / mês, no início' },
         { id: 'receitaHoje', rotulo: 'Hoje a loja fatura por mês?', pre: 'R$', suf: 'R$ / mês, hoje' }
       ]

@@ -85,9 +85,16 @@
     for(let i = 0; i < ks.length - 1; i++){ if(o == null) return false; o = o[ks[i]]; if(Array.isArray(o)) return true; }
     return false;
   }
+  // parceiro.casos: { <id do case>: { campo: valor } } ajusta só aqueles campos do case
+  function casoParceiro(path){
+    const m = PA && PA.casos && /^cases\.lista\.(\d+)\.(.+)$/.exec(path); if(!m) return undefined;
+    const c = list('cases.lista')[+m[1]], aj = c && c.id && PA.casos[c.id];
+    return aj ? getPath(aj, m[2]) : undefined;
+  }
   function resolve(path){
     if(PA){
       if(Object.prototype.hasOwnProperty.call(ED.parceiro, path)) return { sc:'parceiro', v:ED.parceiro[path] };
+      const pc = casoParceiro(path); if(pc !== undefined) return { sc:'parceiro', v:pc };
       const v = getPath(PA, path);
       if(v !== undefined || dentroDeLista(PA, path)) return { sc:'parceiro', v };
     }
@@ -121,11 +128,24 @@
     if(k !== low && t[low] != null) return t[low].charAt(0).toUpperCase() + t[low].slice(1);
     return null;
   }
+  // nicho com {empresa} masculino (termos.generoEmpresa: 'm', ex.: escritório): "sua {empresa}" vira "seu escritório",
+  // "para a sua {empresa}" vira "para o seu escritório", "numa {empresa}" vira "num escritório"
+  const FEM_MASC = { a:'o', 'à':'ao', da:'do', na:'no', pela:'pelo', numa:'num', uma:'um', esta:'este', desta:'deste', nesta:'neste',
+    essa:'esse', dessa:'desse', nessa:'nesse', sua:'seu', minha:'meu', nossa:'nosso', 'própria':'próprio', toda:'todo' };
+  function concorda(s){
+    if(termo('generoEmpresa') !== 'm') return s;
+    const tr = w => { const m = w && FEM_MASC[w.toLowerCase()]; return m == null ? null : w[0] !== w[0].toLowerCase() ? m.charAt(0).toUpperCase() + m.slice(1) : m; };
+    return s.replace(/(?:(\p{L}+)(\s+))?(\p{L}+)(\s+)\{([Ee]mpresa)\}/gu, (all, w1, s1, w2, s2, k) => {
+      const t2 = tr(w2); if(t2 == null) return all;
+      const t1 = tr(w1);
+      return (w1 ? (t1 != null ? t1 : w1) + s1 : '') + t2 + s2 + '{' + k + '}';
+    });
+  }
   const LIVE = ['meses', 'fator12'];
   function esc(s){ return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c])); }
   function fmt(s){
     if(s == null) return '';
-    let h = esc(s);
+    let h = concorda(esc(s));
     h = h.replace(/\{(\w+)\}/g, (m, k) => {
       if(LIVE.includes(k)) return `<span class="live" data-live="${k}"></span>`;
       const v = termo(k);
@@ -139,7 +159,7 @@
   // texto puro (resumo, PDF): troca termos e tokens extras, tira marcações
   function plain(s, extra){
     if(s == null) return '';
-    return String(s).replace(/\{(\w+)\}/g, (m, k) => {
+    return concorda(String(s)).replace(/\{(\w+)\}/g, (m, k) => {
       if(extra && extra[k] != null) return extra[k];
       const v = termo(k); if(v != null) return v;
       if(k === 'meses'){ const M = Math.round(num('meses')); return M > 0 ? (M === 1 ? '1 mês' : M + ' meses') : 'alguns meses'; }
@@ -594,7 +614,7 @@
       <div class="cs-grid${tb ? ' com-tabela' : ''} reveal">
         <div class="card">${T('cases.antesRotulo', 'div', 'label')}${T(cp('antes'), 'p', 'small')}</div>
         <div class="card">${T('cases.viradaRotulo', 'div', 'label')}${T(cp('virada'), 'p', 'small')}
-          <div class="cs-frentes">${(c.frentes || []).map((x, k) => T(cp('frentes.' + k), 'span', 'chip')).join('')}</div></div>
+          <div class="cs-frentes">${(raw(cp('frentes')) || []).map((x, k) => T(cp('frentes.' + k), 'span', 'chip')).join('')}</div></div>
         ${res}
       </div>
       ${T(cp('moral'), 'div', 'insight reveal')}
@@ -760,6 +780,9 @@
       { id:'capa', html:B.capa, cls:'centro' },
       { id:'especialista', html:B.especialista, cls: raw('especialista.retrato') ? 'esp' : '' },
       { id:'quem-somos', html:B.quemSomos },
+      // storytelling: quem é a Ribeker → prova (marcas e cases) → os números do cliente
+      { id:'marcas', html:B.marcas },
+      ...casosVisiveis().map((x, pos, arr) => ({ id:'case-' + (x.c.id || x.ci + 1), html:() => B.caso(x.ci, pos, arr.length), cls:'cs', nota:'cases.lista.' + x.ci + '.fala' })),
       { id:'antes', html:B.antes }
     ];
     secoes().forEach((s, si) => d.push({ id:'rx-' + s.id, html:() => B.secao(s, si) }));
@@ -768,8 +791,6 @@
       { id:'painel', html:B.painel, nota:'painel.nota' },
       { id:'resolvemos', html:B.resolvemos },
       { id:'perfis', html:B.perfis },
-      { id:'marcas', html:B.marcas },
-      ...casosVisiveis().map((x, pos, arr) => ({ id:'case-' + (x.c.id || x.ci + 1), html:() => B.caso(x.ci, pos, arr.length), cls:'cs', nota:'cases.lista.' + x.ci + '.fala' })),
       { id:'ponte', html:B.ponte, nota:'ponte.fala' },
       { id:'mkt', html:B.mkt },
       { id:'ferramenta', html:B.ferramenta },
@@ -992,13 +1013,13 @@
       setGauge(gg, g.aprov, anima);
       if(g.aprov == null){ const p = $('#gPct'); delete p.dataset.to; p.textContent = '--'; } else setVal('gPct', g.aprov, 'pct');
       tEl.className = 'tier ' + t;
-      const emp = termo('empresa'), Emp = termo('Empresa');
+      const aEmp = plain('A {empresa}'), Emp = termo('Empresa');
       const piores = g.st.filter(x => x.s.dor > 0.34).sort((a, b) => b.s.dor - a.s.dor).slice(0, 2).map(x => nomeArea(x.a));
       let txt;
-      if(g.aprov == null){ tEl.textContent = 'Sem dados'; txt = 'Preencha o raio-x pra ver o placar geral da ' + emp + ' aqui.'; }
-      else if(t === 'red'){ tEl.textContent = Emp + ' no vermelho'; txt = 'A ' + emp + ' está aproveitando só ' + g.aprov + '% do potencial comercial hoje' + (piores.length ? '. O maior ponto de dor agora é ' + piores.join(' e ') + '.' : '.'); }
-      else if(t === 'yellow'){ tEl.textContent = 'Dá pra melhorar muito'; txt = 'A ' + emp + ' está aproveitando ' + g.aprov + '% do potencial comercial' + (piores.length ? ', com atenção em ' + piores.join(' e ') + '.' : '.'); }
-      else { tEl.textContent = 'No caminho certo'; txt = 'A ' + emp + ' já aproveita ' + g.aprov + '% do potencial comercial. Ainda dá pra destravar o resto.'; }
+      if(g.aprov == null){ tEl.textContent = 'Sem dados'; txt = plain('Preencha o raio-x pra ver o placar geral da {empresa} aqui.'); }
+      else if(t === 'red'){ tEl.textContent = Emp + ' no vermelho'; txt = aEmp + ' está aproveitando só ' + g.aprov + '% do potencial comercial hoje' + (piores.length ? '. O maior ponto de dor agora é ' + piores.join(' e ') + '.' : '.'); }
+      else if(t === 'yellow'){ tEl.textContent = 'Dá pra melhorar muito'; txt = aEmp + ' está aproveitando ' + g.aprov + '% do potencial comercial' + (piores.length ? ', com atenção em ' + piores.join(' e ') + '.' : '.'); }
+      else { tEl.textContent = 'No caminho certo'; txt = aEmp + ' já aproveita ' + g.aprov + '% do potencial comercial. Ainda dá pra destravar o resto.'; }
       set('gTxt', esc(txt));
       const ar = $('#dAreas'), aps = areasQuePontuam();
       ar.innerHTML = aps.map((a, i) => `<div class="area">${gaugeHtml('gA' + i, true)}<div class="an">${esc(nomeArea(a))}</div><div class="ac" id="gAc${i}"></div><div class="tier" id="gAt${i}"></div></div>`).join('');
@@ -1847,7 +1868,7 @@
     });
     const cs = camposInformados();
     if(cs.length){
-      add(`<div class="rp-h">Números informados pela ${esc(termo('empresa'))}</div>`, t1);
+      add(`<div class="rp-h">${esc(plain('Números informados pela {empresa}'))}</div>`, t1);
       add(`<div class="rp-grid">${cs.map(c => `<div class="rp-kpi"><div class="k">${esc(c[0])}</div><div class="v">${esc(c[1])}</div></div>`).join('')}</div>`, t1);
     }
     add(`<div class="rp-box">${fmtRel(raw('relatorio.legenda'))}</div>`, t1);
@@ -1918,11 +1939,11 @@
   }
   function leitura(aprov, piores){
     if(aprov == null) return 'Diagnóstico ainda sem respostas suficientes para leitura.';
-    const emp = termo('empresa');
+    const aEmp = plain('A {empresa}');
     let t;
-    if(aprov < 34) t = 'A ' + emp + ' opera hoje com ' + aprov + '% do potencial comercial que já tem instalado. A maior parte do resultado depende de esforço individual, não de processo.';
-    else if(aprov < 66) t = 'A ' + emp + ' opera hoje com ' + aprov + '% do potencial comercial que já tem instalado. Parte do processo existe, mas convive com etapas que dependem de memória e improviso.';
-    else t = 'A ' + emp + ' opera hoje com ' + aprov + '% do potencial comercial que já tem instalado, com processo presente na maior parte das áreas.';
+    if(aprov < 34) t = aEmp + ' opera hoje com ' + aprov + '% do potencial comercial que já tem instalado. A maior parte do resultado depende de esforço individual, não de processo.';
+    else if(aprov < 66) t = aEmp + ' opera hoje com ' + aprov + '% do potencial comercial que já tem instalado. Parte do processo existe, mas convive com etapas que dependem de memória e improviso.';
+    else t = aEmp + ' opera hoje com ' + aprov + '% do potencial comercial que já tem instalado, com processo presente na maior parte das áreas.';
     if(piores.length) t += ' As áreas com mais pontos de atenção são ' + piores.join(' e ') + '.';
     return t;
   }
@@ -2013,7 +2034,7 @@
     });
     const cs = camposInformados();
     if(cs.length){
-      titulo('Números informados pela ' + termo('empresa'), t1);
+      titulo(plain('Números informados pela {empresa}'), t1);
       const cols = 3, gap = 4, cw = (CW - gap * (cols - 1)) / cols;
       for(let i = 0; i < cs.length; i += cols){
         const lin = cs.slice(i, i + cols);

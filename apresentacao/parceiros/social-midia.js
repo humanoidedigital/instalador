@@ -3,7 +3,8 @@
    (sem conflito de interesse com o parceiro):
    - as perguntas do raio-x com tema 'social' saem: não pontuam e não vão para o relatório,
      para o diagnóstico não julgar o trabalho do parceiro na frente do cliente
-   - social mídia aparece como a parte do parceiro no fluxo, não como serviço da Ribeker
+   - social mídia não aparece em nenhum slide: o fluxo "O que resolvemos" começa no tráfego pago e o case
+     IsenteJá + Isentoo mostra só o que a Ribeker vende nesta reunião (casos: ajustes por id do case)
    - valores de mercado sem social mídia
    - planos: tabela exclusiva de parceiros, por faixa de verba de anúncios
 
@@ -21,12 +22,18 @@ PARCEIRO({
 
   resolvemos: {
     etapas: [
-      { nome: 'Social mídia', texto: 'Com {parceiro}: atenção e permanência do seu lead' },
       { nome: 'Tráfego pago', texto: 'Atrai o lead para nível de convivência e cadastro' },
       { nome: 'CRM / IA', texto: 'Organiza e atende' },
       { nome: 'Venda', texto: 'Lead organizado e acompanhado até o fechamento' }
-    ],
-    fecho: 'O conteúdo segue com {parceiro}. A Ribeker cuida do resto: sua {empresa} nunca mais perde lead por falta de processo, do primeiro clique até {fimJornada}.'
+    ]
+  },
+
+  // ajustes nos cases, pelo id do case (só os campos listados mudam)
+  casos: {
+    zero: {
+      virada: 'A operação de receita: site, tráfego pago, CRM, automação e agentes de IA no WhatsApp e por ligação. O negócio foi construído junto com a máquina de vendas.',
+      frentes: ['Site', 'Tráfego pago', 'CRM', 'Automação', 'IA no WhatsApp e ligação']
+    }
   },
 
   marcas: { frentes: ['Tráfego pago', 'CRM', 'Vendas', 'Analytics'] },
@@ -53,7 +60,7 @@ PARCEIRO({
         fonte: 'Kommo, plano Avançado (automações, Salesbot e agente de IA): R$ 129 por usuário por mês no plano anual. 3 usuários = R$ 387. Tabela de 2026.' }
     ],
     total: 'R$ 12.537/mês',
-    nota: 'Salários médios, sem encargos e sem a verba de anúncio. Social mídia fica com {parceiro}.'
+    nota: 'Salários médios, sem encargos e sem a verba de anúncio.'
   },
 
   // tabela exclusiva de parceiros: o preço depende da verba mensal de anúncios.

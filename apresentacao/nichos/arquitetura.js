@@ -13,7 +13,7 @@ NICHO({
   descricao: 'Arquitetura residencial, interiores e projetos comerciais. Do contato ao contrato assinado.',
 
   termos: {
-    empresa: 'escritório', empresas: 'escritórios',
+    empresa: 'escritório', empresas: 'escritórios', generoEmpresa: 'm',   // masculino: "seu escritório", "num escritório"
     cliente: 'cliente', clientes: 'clientes',
     venda: 'contrato', vendas: 'contratos',
     ticket: 'ticket médio por projeto',

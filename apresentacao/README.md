@@ -17,16 +17,20 @@ com a identidade da Ribeker. Um só motor e um arquivo por nicho.
 
 ## Roteiro (30 a 32 slides, conforme o nicho)
 
+A história: quem é a Ribeker → a prova (marcas e cases) → os números do cliente → a solução e o investimento.
+
 1. Capa · Especialista · Quem somos
-2. Antes de tudo: nome, WhatsApp do lead e data (com a anotação "Venda direta" ou "Indicação · parceiro")
-3. Raio-X em 7 telas: Vendas e Prospecção · Marketing e Tráfego Pago · Geração de Leads e Marketing · Ferramentas ·
+2. Um método, vários segmentos (marcas em destaque) · 5 cases (Dua, Pata Negra, Multi Mármore, Isentei,
+   IsenteJá + Isentoo)
+3. "Agora, a sua {empresa}": nome, WhatsApp do lead e data (com a anotação "Venda direta" ou "Indicação · parceiro")
+4. Raio-X em 7 telas: Vendas e Prospecção · Marketing e Tráfego Pago · Geração de Leads e Marketing · Ferramentas ·
    Atendimento e Follow-up · Resultados · Tempo, investimento e resultado
-4. O que o diagnóstico mostrou: custo de esperar, "o que você empilhou sozinho" x estimativa da Ribeker, placar
-5. Vendas Ribeker · No seu segmento · Um método, vários segmentos (marcas em destaque) ·
-   5 cases (Dua, Pata Negra, Multi Mármore, Isentei, IsenteJá + Isentoo) · Ponte para a {empresa} · Mkt · Ferramenta · Time
-6. Resultado empilhado em 6 e 12 meses
-7. Valores de mercado · Planos (sem fidelidade) · Fechamento
-8. Salvar o raio-X: placar, respostas por área, custo de esperar, PDF e resumo
+5. O que o diagnóstico mostrou: custo de esperar, "o que você empilhou sozinho" x estimativa da Ribeker, placar
+6. Vendas Ribeker · No seu segmento · Ponte "dos cases para a sua {empresa}" (1 venda a mais paga a operação,
+   com o ticket do raio-x) · Mkt · Ferramenta · Time
+7. Resultado empilhado em 6 e 12 meses
+8. Valores de mercado · Planos (sem fidelidade) · Fechamento
+9. Salvar o raio-X: placar, respostas por área, custo de esperar, PDF e resumo
 
 ## Durante a reunião
 
@@ -114,7 +118,7 @@ No seletor (botão Nicho), escolha o nicho e, em **Parceiros**, se o cliente vei
 então trocar de nicho, mesmo para um nicho que já tinha diagnóstico, mantém o parceiro. Ele fica guardado também no
 diagnóstico; o selo aparece ao lado do nicho, no rodapé.
 
-**Conferência no slide "Antes de tudo":** abaixo dos dados do lead aparece, bem pequeno, **"Venda direta"** (cinza) ou
+**Conferência no slide dos dados do lead ("Agora, a sua {empresa}"):** abaixo dos dados do lead aparece, bem pequeno, **"Venda direta"** (cinza) ou
 **"Indicação · Parceiro de social mídia (nome)"** (âmbar). Não é para escolher ali, é para conferir: se estiver errado,
 clique na anotação e o seletor abre para corrigir.
 
@@ -123,7 +127,9 @@ conflito de interesse, a oferta sai sem social mídia:
 
 - As perguntas de redes sociais saem do raio-x (`tema: 'social'`): não pontuam e não vão para o relatório, para o
   diagnóstico não julgar o trabalho do parceiro na frente do cliente.
-- "Vendas Ribeker" mostra social mídia como a parte do parceiro ("Com {parceiro}: atenção e permanência do seu lead").
+- Social mídia não aparece em nenhum slide: "Vendas Ribeker" começa no tráfego pago (Tráfego pago → CRM / IA → Venda),
+  o slide de marcas fica sem "Rede social" e o case IsenteJá + Isentoo mostra só site, tráfego, CRM, automação e IA
+  (`casos` no arquivo do parceiro ajusta campos de um case pelo id, sem mexer no `marca.js`).
 - Marketing vira "Tudo que o tráfego faz por você"; valores de mercado sem social mídia (total R$ 12.537/mês).
 - Planos em dois slides:
   1. **"Planos de tráfego pago"**: a tabela de parceiros inteira (Tráfego pago · Tráfego + CRM · Tráfego + CRM +
@@ -222,7 +228,7 @@ Peça assim:
 
 | Campo do nicho | Para que serve |
 |---|---|
-| `termos` | Palavras usadas nos textos da marca (`receita: 'lucro'` em veículos, por exemplo) |
+| `termos` | Palavras usadas nos textos da marca (`receita: 'lucro'` em veículos, por exemplo). Se `empresa` for masculino, use `generoEmpresa: 'm'` ("sua {empresa}" vira "seu escritório") |
 | `capa.tagline`, `publico`, `perfis.itens`, `case` | Conteúdo dos slides deste nicho |
 | `areas` | Áreas do placar. Só as que têm pergunta com peso entram na nota (Marketing e Tráfego Pago é informativo, como no original) |
 | `raiox` | As telas do raio-x, com `campos` (números) e `perguntas` (com `dor` 0 / 0,5 / 1 e `acao` para o plano) |
