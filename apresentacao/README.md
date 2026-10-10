@@ -217,11 +217,11 @@ Com parceiro de social mídia, a tabela vira funções × planos (`valores.itens
 |---|---|---|---|
 | Gestor de tráfego pago | R$ 3.000/mês | todos | Glassdoor, abr/2026 |
 | T.I. de tracking e dados | R$ 4.120/mês | todos | Catho, Analista de Web Analytics, out/2026 |
-| Especialista em B.I. | R$ 5.760/mês | Tráfego + CRM e completo | Novo CAGED (set/2025 a ago/2026), via Salario.com.br |
+| Especialista em B.I. | R$ 5.760/mês | todos | Novo CAGED (set/2025 a ago/2026), via Salario.com.br |
 | CRM com WhatsApp e IA, 3 usuários | R$ 387/mês | Tráfego + CRM e completo | Kommo Avançado, 2026 |
 | Especialista em RevOps | R$ 9.150/mês | completo | Glassdoor, jun/2026 |
 | Analista de automação e IA | R$ 6.086/mês | completo | Novo CAGED (CBO 2124-15), via Salario.com.br |
-| **Contratando separado** | | **R$ 7.120 · R$ 13.267 · R$ 28.503** | salários sem encargos e sem verba de anúncio |
+| **Contratando separado** | | **R$ 12.880 · R$ 13.267 · R$ 28.503** | salários sem encargos e sem verba de anúncio |
 
 ## Editar sem programar (modo edição)
 
