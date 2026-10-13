@@ -328,36 +328,99 @@ window.MARCA = {
     explicacao: 'o dobro das {hoje} que você faz hoje'
   },
 
+  // valores de mercado cruzados com os planos: cada função com um profissional dedicado (salário médio, sem encargos)
+  // e os planos que cobrem essa função ("planos": índices de planos.itens, 0 = Tráfego pago; "adicional": true =
+  // coberta pelo pacote de social mídia). A tabela soma o custo separado de cada plano e mostra o preço do plano
+  // na faixa de verba do cliente. O "i" de cada linha mostra a fonte.
   valores: {
     kicker: 'Valores de mercado',
     titulo: 'Contratando cada peça separada',
-    // salário médio no Brasil (Glassdoor, 2026) e preço de tabela do CRM; o "i" mostra a fonte
+    sub: 'O que cada plano cobre e quanto custaria ter um profissional dedicado a cada função.',
+    funcaoRotulo: 'Função',
+    custoRotulo: 'Mercado',
     itens: [
-      { nome: 'Social mídia', valor: 'R$ 3.000/mês',
-        fonte: 'Salário médio de Social Media no Brasil: R$ 3.000 por mês (faixa comum de R$ 2.150 a R$ 4.022). Glassdoor, 2026.' },
-      { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês',
+      { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês', planos: [0, 1, 2],
         fonte: 'Salário médio de Gestor de Tráfego Pago no Brasil: R$ 3.000 por mês. Glassdoor, abril de 2026.' },
-      { nome: 'Especialista em RevOps (orienta o time de vendas)', valor: 'R$ 9.150/mês',
+      { nome: 'T.I. de tracking e dados (pixels, conversões, integrações)', valor: 'R$ 4.120/mês', planos: [0, 1, 2],
+        fonte: 'Média salarial de Analista de Web Analytics (tags, tracking e dados de conversão) no Brasil: R$ 4.120,46 por mês. Catho, consultado em outubro de 2026.' },
+      { nome: 'Especialista em B.I. (relatórios e painéis)', valor: 'R$ 5.760/mês', planos: [0, 1, 2],
+        fonte: 'Média salarial de Analista de BI no Brasil: R$ 5.760,03 por mês (mediana R$ 4.293), salário base CLT. Novo CAGED, set/2025 a ago/2026, via Salario.com.br (atualizado em 08/10/2026).' },
+      { nome: 'CRM com WhatsApp e IA (3 usuários)', valor: 'R$ 387/mês', planos: [1, 2],
+        fonte: 'Kommo, plano Avançado (automações, Salesbot e agente de IA): R$ 129 por usuário por mês no plano anual. 3 usuários = R$ 387. Tabela de 2026.' },
+      { nome: 'Especialista em RevOps (processo e treinamento comercial)', valor: 'R$ 9.150/mês', planos: [2],
         fonte: 'Salário médio de RevOps Specialist no Brasil: R$ 9.150 por mês (faixa comum de R$ 5.375 a R$ 14.600). Glassdoor, junho de 2026.' },
-      { nome: 'CRM com WhatsApp e IA (3 usuários)', valor: 'R$ 387/mês',
-        fonte: 'Kommo, plano Avançado (automações, Salesbot e agente de IA): R$ 129 por usuário por mês no plano anual. 3 usuários = R$ 387. Tabela de 2026.' }
+      { nome: 'Analista de automação e IA (agente no WhatsApp)', valor: 'R$ 6.086/mês', planos: [2],
+        fonte: 'Média salarial de Analista de Sistemas de Automação (CBO 2124-15) no Brasil: R$ 6.086,24 por mês (mediana R$ 5.000), salário base CLT. Novo CAGED, set/2025 a ago/2026, via Salario.com.br (atualizado em 08/10/2026).' },
+      { nome: 'Social mídia', valor: 'R$ 3.000/mês', adicional: true,
+        fonte: 'Salário médio de Social Media no Brasil: R$ 3.000 por mês (faixa comum de R$ 2.150 a R$ 4.022). Glassdoor, 2026.' }
     ],
-    totalRotulo: 'Total separado',
-    total: 'R$ 15.537/mês',
-    nota: 'Salários médios, sem encargos e sem a verba de anúncio.'
+    separadoRotulo: 'Contratando separado',
+    planoRotulo: 'No plano Ribeker',
+    nota: 'Salários médios, sem encargos e sem a verba de anúncio. Os tokens da IA são pagos pelo cliente direto ao provedor do modelo.'
   },
 
+  // planos por faixa de verba mensal de anúncios (a mesma tabela dos parceiros) + social mídia como adicional.
+  // A faixa vem da resposta "Quanto investe por mês em anúncio?" do raio-x; dá para trocar clicando na faixa.
   planos: {
-    kicker: 'Seu investimento',
-    titulo: 'Hoje qual plano faz sentido pra você',
-    itens: [
-      { nome: 'Tráfego + CRM', preco: 'R$ 2.989', per: ',00/mês', detalhe: 'Sem redes sociais',
-        beneficios: ['Tráfego pago', 'CRM com a ferramenta inclusa durante o contrato', '1 conexão de WhatsApp e 1 de Instagram', '3 usuários'] },
-      { nome: 'Completo', selo: 'Mais completo', destaque: true, preco: 'R$ 3.489', per: ',00/mês', detalhe: 'Redes sociais + tráfego + CRM',
-        beneficios: ['Tudo do plano Tráfego + CRM', 'Redes sociais: até 8 posts por mês'] }
+    // 1º slide: a tabela completa (faixas × planos)
+    tabelaKicker: 'Seu investimento',
+    tabelaTitulo: 'Planos *Ribeker*',
+    tabelaSub: 'O valor acompanha a verba mensal de anúncios. Social mídia entra como adicional, em qualquer plano.',
+    // 2º slide: o que entra em cada plano, na faixa de verba do cliente
+    kicker: 'Seu investimento · o que entra',
+    titulo: 'O que entra em *cada plano*',
+    sub: 'Valores da faixa de verba de vocês. Troque a faixa ou some social mídia para comparar.',
+    faixaRotulo: 'Verba mensal de anúncios',
+    faixas: [
+      { t: 'Até R$ 5 mil', ate: 5000 },
+      { t: 'R$ 5 a 10 mil', ate: 10000 },
+      { t: 'R$ 10 a 20 mil', ate: 20000 },
+      { t: 'R$ 20 a 30 mil', ate: 30000 },
+      { t: 'R$ 30 a 50 mil', ate: 50000 },
+      { t: 'Acima de R$ 50 mil' }
     ],
-    nota: 'Contrato *sem fidelidade*: só 30 dias de aviso prévio. Conexões e usuários extras: valor sob consulta.',
-    implantacao: ''                     // ex.: 'Implementação: ~~R$ 0.000,00~~ *R$ 000,00*'
+    itens: [
+      { nome: 'Tráfego pago', detalhe: 'Gestão de anúncios', per: '/mês',
+        precos: ['R$ 1.500', 'R$ 2.250', 'R$ 3.500', 'R$ 4.500', 'R$ 6.000', 'Sob consulta'],
+        beneficios: ['Gestão de até 2 plataformas (Meta, Google etc.)', 'Planejamento e estratégia das campanhas', 'Configuração, acompanhamento e otimizações', 'Tracking de conversões', 'Relatório mensal de performance'] },
+      { nome: 'Tráfego + CRM', detalhe: 'Do anúncio à oportunidade', per: '/mês', inclui: 'Tudo do Tráfego pago, mais:',
+        precos: ['R$ 2.500', 'R$ 3.250', 'R$ 4.750', 'R$ 6.000', 'R$ 8.000', 'Sob consulta'],
+        beneficios: ['Ferramenta de CRM inclusa (1 WhatsApp, 1 Instagram, 3 usuários)', 'Implantação e organização do CRM', 'Estruturação do funil de vendas', 'Automações essenciais', 'Distribuição e acompanhamento das oportunidades', 'Indicadores de conversão até vendas', 'Relatório integrado (tráfego + comercial)'] },
+      { nome: 'Tráfego + CRM + Performance comercial', detalhe: 'Da oportunidade à venda, com IA', per: '/mês', inclui: 'Tudo dos planos anteriores, mais:',
+        selo: 'Mais completo', destaque: true,
+        precos: ['R$ 3.500', 'R$ 4.250', 'R$ 6.000', 'R$ 7.500', 'R$ 10.000', 'Sob consulta'],
+        beneficios: ['Estruturação do processo comercial', 'Treinamento da equipe de vendas', 'Abordagem e cadências de follow-up', 'Agente de IA no atendimento do WhatsApp', 'Acompanhamento de indicadores comerciais', 'Reuniões periódicas de performance', 'Suporte contínuo para evolução dos resultados'] }
+    ],
+    rodape: [
+      { t: 'Verba de anúncios separada', d: 'O investimento em mídia não entra no fee de gestão: é pago direto às plataformas.' },
+      { t: 'Relatório mensal', d: 'Acompanhamento completo de resultados e indicadores.' },
+      { t: 'Escopo padrão', d: 'Volume padrão de oportunidades, usuários e complexidade. Conexões e usuários extras: sob consulta.' },
+      { t: 'Projetos especiais', d: 'Alto volume, várias unidades ou equipes comerciais maiores são avaliados à parte.' },
+      { t: 'Tokens da IA à parte', d: 'No plano completo, o consumo do modelo de IA é pago pelo cliente direto ao provedor.' }
+    ],
+    nota: 'Contrato *sem fidelidade*: só 30 dias de aviso prévio.',
+    implantacao: '',                    // ex.: 'Implementação: ~~R$ 0.000,00~~ *R$ 000,00*'
+
+    // social mídia: pacote adicional que soma em qualquer plano (some com o parceiro de social mídia).
+    // Slide próprio depois da tabela; nos cards, os botões "Social mídia" somam o pacote ao preço de cada plano.
+    adicional: {
+      kicker: 'Seu investimento · social mídia',
+      titulo: 'Some *social mídia* ao seu plano',
+      sub: 'O mesmo time cuida do conteúdo e do anúncio: o post e a campanha falam a mesma língua. Vale para qualquer plano.',
+      rotulo: 'Social mídia',
+      semRotulo: 'Sem',
+      opcoes: [
+        { nome: 'Essencial', preco: 'R$ 1.200', per: '/mês', detalhe: 'Presença constante',
+          itens: ['1 rede (Instagram)', '8 posts no feed por mês, com arte e legenda', 'Stories 2 vezes por semana', 'Planejamento mensal de pauta', 'Relatório mensal'] },
+        { nome: 'Profissional', preco: 'R$ 2.200', per: '/mês', detalhe: 'Conteúdo que gera conversa', destaque: true,
+          itens: ['2 redes (Instagram e Facebook)', '12 posts no feed por mês', '4 reels por mês, com roteiro e edição', 'Stories 3 a 5 vezes por semana', 'Comentários e directs em horário comercial', 'Relatório quinzenal'] },
+        { nome: 'Premium', preco: 'R$ 3.500', per: '/mês', detalhe: 'Marca ativa todo dia',
+          itens: ['Até 3 redes (Instagram, Facebook, TikTok ou LinkedIn)', '16 posts no feed por mês', '8 reels por mês, com roteiro e edição', 'Stories diários', 'Gestão completa da comunidade', 'Reunião mensal de planejamento'] }
+      ],
+      nota: 'Reels editados a partir dos vídeos de vocês. Captação presencial: sob consulta.',
+      // notas do apresentador (tecla N): referência de mercado dos pacotes
+      fala: 'Referência de mercado (Jamile Fernandes, "Precificação para social media em 2026", atualizado em ago/2026): básico de R$ 800 a R$ 1.500 (8 a 12 posts, 1 rede); intermediário de R$ 1.500 a R$ 3.500 (12 a 16 posts, 4 a 8 reels, stories 3 a 5 vezes por semana, comunidade); premium de R$ 3.500 a R$ 10.000 (16 a 20 posts, 8 a 12 reels, stories diários, 2 a 3 redes). Um social media dedicado custa em média R$ 3.000 por mês (Glassdoor, 2026).'
+    }
   },
 
   garantia: {

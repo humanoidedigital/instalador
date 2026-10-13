@@ -29,7 +29,8 @@ A história: quem é a Ribeker → a prova (marcas e cases) → os números do c
 6. Vendas Ribeker · No seu segmento · Ponte "dos cases para a sua {empresa}" (1 venda a mais paga a operação,
    com o ticket do raio-x) · Mkt · Ferramenta · Time
 7. Resultado empilhado em 6 e 12 meses
-8. Valores de mercado · Planos (sem fidelidade) · Fechamento
+8. Valores de mercado (funções × planos) · Tabela de planos por verba · Social mídia (só na venda direta) ·
+   O que entra em cada plano (sem fidelidade) · Fechamento
 9. Salvar o raio-X: placar, respostas por área, custo de esperar, PDF e resumo
 
 ## Durante a reunião
@@ -131,20 +132,10 @@ conflito de interesse, a oferta sai sem social mídia:
   o slide de marcas fica sem "Rede social" e o case IsenteJá + Isentoo mostra só site, tráfego, CRM, automação e IA
   (`casos` no arquivo do parceiro ajusta campos de um case pelo id, sem mexer no `marca.js`).
 - Marketing vira "Tudo que o tráfego faz por você".
-- **Valores de mercado cruzados com os planos:** uma tabela com cada função (gestor de tráfego, T.I. de tracking e
-  dados, especialista em B.I., CRM, RevOps, automação e IA), o custo de mercado de cada uma e um ✓ nos planos que
-  a cobrem. Embaixo, "Contratando separado" soma as funções de cada plano e "No plano Ribeker" mostra o preço do
-  plano na faixa de verba do cliente, já com a margem. Fontes no "i" de cada linha.
-- **IA no plano completo** (Tráfego + CRM + Performance comercial): agente de IA no atendimento do WhatsApp.
-  Os tokens do modelo de IA são pagos pelo cliente direto ao provedor (aparece no rodapé dos planos e na nota dos valores).
-- Planos em dois slides:
-  1. **"Planos de tráfego pago"**: a tabela de parceiros inteira (Tráfego pago · Tráfego + CRM · Tráfego + CRM +
-     Performance comercial × 6 faixas de verba), já com a margem somada, com a faixa do cliente em destaque e o
-     rodapé (verba de anúncios separada, relatório mensal, escopo padrão, projetos especiais) e a nota de contrato sem
-     fidelidade. Acima de R$ 50 mil: sob consulta.
-  2. **"O que entra em cada plano"**: os 3 cards da faixa do cliente, com o que cada plano inclui. Dá para trocar
-     a faixa clicando nela.
-  A faixa vem da verba informada no raio-x. A conta da ponte usa o plano mais completo da faixa.
+- **Valores de mercado** (funções × planos, abaixo) sem a linha e a coluna de social mídia; "No plano Ribeker" já
+  com a margem.
+- Planos: a tabela exclusiva de parceiros (a da imagem), sem o slide e os botões de social mídia. Título "Planos de
+  tráfego pago" e "Condição de parceria" no subtítulo. A margem entra em todos os preços.
 - **Dados do parceiro e margem** (botão no seletor, com o parceiro ligado): nome do parceiro e a margem dele,
   em **% sobre o plano** ou **R$ fixo por plano**. O cliente vê só o preço final (tabela de parceiros + margem,
   arredondado para a dezena); a conta aparece só na janela e nas notas do slide de planos (tecla N).
@@ -201,17 +192,21 @@ pergunta **faturamento**. A apresentação converte em lucro com a margem: lucro
 de esperar usa faturamento × margem (o texto mostra a margem usada e se ela é a média de mercado).
 Para usar isso em outro nicho: `projecao.margem: { campo: 'margem', referencia: 11 }`.
 
-### Valores de mercado (slide "Contratando cada peça separada")
+### Planos e investimento
 
-| Peça | Valor | Fonte |
-|---|---|---|
-| Social mídia | R$ 3.000/mês | Glassdoor, salário médio no Brasil, 2026 |
-| Gestor de tráfego pago | R$ 3.000/mês | Glassdoor, abr/2026 |
-| Especialista em RevOps (orienta o time de vendas) | R$ 9.150/mês | Glassdoor, RevOps Specialist, jun/2026 |
-| CRM com WhatsApp e IA, 3 usuários | R$ 387/mês | Kommo Avançado, R$ 129 por usuário (anual), 2026 |
-| **Total** | **R$ 15.537/mês** | salários sem encargos e sem verba de anúncio |
-
-Com parceiro de social mídia, a tabela vira funções × planos (`valores.itens[].planos` = planos que cobrem a função):
+1. **Valores de mercado** ("Contratando cada peça separada"): cada função com o custo de um profissional dedicado e
+   um ✓ nos planos que a cobrem (`valores.itens[].planos`; `adicional: true` = coberta pelo pacote de social mídia).
+   Embaixo, "Contratando separado" soma as funções de cada plano e "No plano Ribeker" mostra o preço do plano na
+   faixa de verba do cliente. Fontes no "i" de cada linha.
+2. **Planos Ribeker**: a tabela por faixa de verba de anúncios (Tráfego pago · Tráfego + CRM · Tráfego + CRM +
+   Performance comercial × 6 faixas), com a faixa do cliente em destaque. Acima de R$ 50 mil: sob consulta. Na venda
+   direta o Tráfego + CRM inclui a ferramenta de CRM (1 WhatsApp, 1 Instagram, 3 usuários; extras sob consulta).
+   O plano completo inclui agente de IA no WhatsApp; os tokens do modelo são pagos pelo cliente direto ao provedor.
+3. **Social mídia** (só venda direta): 3 pacotes que somam a qualquer plano. Clicar num pacote escolhe; clicar de
+   novo tira. A referência de mercado está nas notas do slide (tecla N).
+4. **O que entra em cada plano**: os 3 cards da faixa do cliente. Os botões "Social mídia" somam o pacote ao preço
+   de cada card ("Plano R$ 3.250 + social Essencial R$ 1.200"). A conta da ponte usa o plano mais completo da faixa
+   (mais o pacote de social mídia, se escolhido).
 
 | Função | Valor | Planos | Fonte |
 |---|---|---|---|
@@ -221,7 +216,18 @@ Com parceiro de social mídia, a tabela vira funções × planos (`valores.itens
 | CRM com WhatsApp e IA, 3 usuários | R$ 387/mês | Tráfego + CRM e completo | Kommo Avançado, 2026 |
 | Especialista em RevOps | R$ 9.150/mês | completo | Glassdoor, jun/2026 |
 | Analista de automação e IA | R$ 6.086/mês | completo | Novo CAGED (CBO 2124-15), via Salario.com.br |
-| **Contratando separado** | | **R$ 12.880 · R$ 13.267 · R$ 28.503** | salários sem encargos e sem verba de anúncio |
+| Social mídia (só venda direta) | R$ 3.000/mês | pacote adicional | Glassdoor, 2026 |
+| **Contratando separado** | | **R$ 12.880 · R$ 13.267 · R$ 28.503** (social: R$ 3.000) | salários sem encargos e sem verba de anúncio |
+
+| Pacote de social mídia | Preço | Escopo |
+|---|---|---|
+| Essencial | + R$ 1.200/mês | 1 rede, 8 posts, stories 2x por semana, pauta mensal, relatório mensal |
+| Profissional | + R$ 2.200/mês | 2 redes, 12 posts, 4 reels, stories 3 a 5x por semana, comentários e directs, relatório quinzenal |
+| Premium | + R$ 3.500/mês | até 3 redes, 16 posts, 8 reels, stories diários, comunidade completa, reunião mensal |
+
+Referência dos pacotes: Jamile Fernandes, "Precificação para social media em 2026" (básico R$ 800 a 1.500;
+intermediário R$ 1.500 a 3.500; premium a partir de R$ 3.500). Reels editados a partir dos vídeos do cliente;
+captação presencial sob consulta.
 
 ## Editar sem programar (modo edição)
 

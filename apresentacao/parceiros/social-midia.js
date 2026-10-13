@@ -50,13 +50,9 @@ PARCEIRO({
     ]
   },
 
-  // valores de mercado cruzados com os planos: cada função com um profissional dedicado (salário médio, sem encargos)
-  // e os planos que cobrem essa função ("planos": índices de planos.itens, 0 = Tráfego pago).
-  // A tabela soma o custo separado de cada plano e mostra o preço do plano na faixa de verba do cliente (com a margem).
+  // valores de mercado × planos (modelo em marca.js), sem a linha de social mídia.
+  // O preço do plano aparece na faixa de verba do cliente, já com a margem do parceiro.
   valores: {
-    sub: 'O que cada plano cobre e quanto custaria ter um profissional dedicado a cada função.',
-    funcaoRotulo: 'Função',
-    custoRotulo: 'Mercado',
     itens: [
       { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês', planos: [0, 1, 2],
         fonte: 'Salário médio de Gestor de Tráfego Pago no Brasil: R$ 3.000 por mês. Glassdoor, abril de 2026.' },
@@ -70,10 +66,7 @@ PARCEIRO({
         fonte: 'Salário médio de RevOps Specialist no Brasil: R$ 9.150 por mês (faixa comum de R$ 5.375 a R$ 14.600). Glassdoor, junho de 2026.' },
       { nome: 'Analista de automação e IA (agente no WhatsApp)', valor: 'R$ 6.086/mês', planos: [2],
         fonte: 'Média salarial de Analista de Sistemas de Automação (CBO 2124-15) no Brasil: R$ 6.086,24 por mês (mediana R$ 5.000), salário base CLT. Novo CAGED, set/2025 a ago/2026, via Salario.com.br (atualizado em 08/10/2026).' }
-    ],
-    separadoRotulo: 'Contratando separado',
-    planoRotulo: 'No plano Ribeker',
-    nota: 'Salários médios, sem encargos e sem a verba de anúncio. Os tokens da IA são pagos pelo cliente direto ao provedor do modelo.'
+    ]
   },
 
   // tabela exclusiva de parceiros: o preço depende da verba mensal de anúncios.
@@ -116,6 +109,7 @@ PARCEIRO({
       { t: 'Tokens da IA à parte', d: 'No plano completo, o consumo do modelo de IA é pago pelo cliente direto ao provedor.' }
     ],
     nota: 'Contrato *sem fidelidade*: só 30 dias de aviso prévio.',
-    implantacao: ''
+    implantacao: '',
+    adicional: null                     // sem o pacote de social mídia da venda direta
   }
 });

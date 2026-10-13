@@ -406,9 +406,16 @@
     return { final, add:final - base, v, tipo:m.tipo };
   }
   function precoMaisCompleto(){
-    const fa = faixaAtual();
+    const fa = faixaAtual(), so = socialEscolhido();
     const vals = list('planos.itens').map((p, i) => fa ? margemPlano(valorBRL((p.precos || [])[fa.i]), i).final : valorBRL(p.preco)).filter(v => v > 0);
-    return vals.length ? Math.max.apply(null, vals) : 0;
+    return vals.length ? Math.max.apply(null, vals) + (so ? so.preco : 0) : 0;
+  }
+  // pacote adicional (social mídia na venda direta). null quando a camada de cima tira (parceiro de social mídia).
+  function adicional(){ const a = raw('planos.adicional'); return a && Array.isArray(a.opcoes) && a.opcoes.length ? a : null; }
+  const precoAdicional = j => valorBRL(raw('planos.adicional.opcoes.' + j + '.preco')) || 0;
+  function socialEscolhido(){
+    const a = adicional(), j = dx.social;
+    return a && j != null && a.opcoes[j] ? { j, nome:plain(raw('planos.adicional.opcoes.' + j + '.nome')), preco:precoAdicional(j) } : null;
   }
 
   // ============ proteção de concorrente ============
@@ -694,15 +701,18 @@
       ${T('valores.nota', 'div', 'note reveal')}`,
 
     valoresPlanos: () => {
-      const vs = list('valores.itens'), ps = list('planos.itens'), hi = p => p.destaque ? ' class="hi"' : '';
+      const ps = list('planos.itens'), hi = p => p.destaque ? ' class="hi"' : '';
+      const ad = adicional(), vs = list('valores.itens').map((v, k) => ({ v, k })).filter(x => ad || !x.v.adicional);
+      const ok = '<span class="vm-ok" aria-label="incluso">✓</span>', no = '<span class="vm-no" aria-label="não incluso">–</span>';
+      const comAd = !!ad && vs.some(x => x.v.adicional);
       return `
       ${T('valores.kicker', 'div', 'kicker reveal')}
       ${T('valores.titulo', 'h2', 'h2 reveal')}
       ${raw('valores.sub') ? T('valores.sub', 'p', 'sub reveal') : ''}
-      <table class="pt-tab vm-tab reveal" id="vmTab"><thead><tr><th>${T('valores.funcaoRotulo')}</th><th class="vm-c">${T('valores.custoRotulo')}</th>${ps.map((p, i) => `<th${hi(p)}>${T('planos.itens.' + i + '.nome', 'div', 'ptn')}</th>`).join('')}</tr></thead>
-        <tbody>${vs.map((v, k) => `<tr><td>${T('valores.itens.' + k + '.nome')}${v.fonte ? `<i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(v.fonte)}">i</i>` : ''}</td><td class="vm-c">${T('valores.itens.' + k + '.valor')}</td>${ps.map((p, i) => `<td${hi(p)}>${(v.planos || []).includes(i) ? '<span class="vm-ok" aria-label="incluso">✓</span>' : '<span class="vm-no" aria-label="não incluso">–</span>'}</td>`).join('')}</tr>`).join('')}</tbody>
-        <tfoot><tr class="vm-sep"><td colspan="2">${T('valores.separadoRotulo')} <span class="tag-est">Estimativa</span></td>${ps.map((p, i) => `<td${hi(p)} id="vmS${i}">--</td>`).join('')}</tr>
-          <tr class="vm-pl"><td colspan="2">${T('valores.planoRotulo')}<span class="vm-fx" id="vmFaixa"></span></td>${ps.map((p, i) => `<td${hi(p)} id="vmP${i}">--</td>`).join('')}</tr></tfoot></table>
+      <table class="pt-tab vm-tab${comAd ? ' com-ad' : ''} reveal" id="vmTab"><thead><tr><th>${T('valores.funcaoRotulo')}</th><th class="vm-c">${T('valores.custoRotulo')}</th>${ps.map((p, i) => `<th${hi(p)}>${T('planos.itens.' + i + '.nome', 'div', 'ptn')}</th>`).join('')}${comAd ? `<th class="vm-ad">${T('planos.adicional.rotulo', 'div', 'ptn')}<div class="ptd">adicional</div></th>` : ''}</tr></thead>
+        <tbody>${vs.map(({ v, k }) => `<tr><td>${T('valores.itens.' + k + '.nome')}${v.fonte ? `<i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(v.fonte)}">i</i>` : ''}</td><td class="vm-c">${T('valores.itens.' + k + '.valor')}</td>${ps.map((p, i) => `<td${hi(p)}>${!v.adicional && (v.planos || []).includes(i) ? ok : no}</td>`).join('')}${comAd ? `<td class="vm-ad">${v.adicional ? ok : no}</td>` : ''}</tr>`).join('')}</tbody>
+        <tfoot><tr class="vm-sep"><td colspan="2">${T('valores.separadoRotulo')} <span class="tag-est">Estimativa</span></td>${ps.map((p, i) => `<td${hi(p)} id="vmS${i}">--</td>`).join('')}${comAd ? '<td class="vm-ad" id="vmSA">--</td>' : ''}</tr>
+          <tr class="vm-pl"><td colspan="2">${T('valores.planoRotulo')}<span class="vm-fx" id="vmFaixa"></span></td>${ps.map((p, i) => `<td${hi(p)} id="vmP${i}">--</td>`).join('')}${comAd ? '<td class="vm-ad" id="vmPA">--</td>' : ''}</tr></tfoot></table>
       ${T('valores.nota', 'div', 'note reveal')}`;
     },
 
@@ -735,16 +745,33 @@
       <aside class="notas"><div class="label">Notas do apresentador · N esconde</div><div class="nt" id="plNota2"></div></aside>`;
     },
 
-    // tabela por faixa de verba de anúncios (ex.: parceiro de social mídia). O preço muda ao vivo com a faixa.
+    // pacotes de social mídia (adicional da venda direta): clicar escolhe o pacote, que soma no preço dos planos
+    planosSocial: () => {
+      const a = adicional(), b = 'planos.adicional';
+      return `
+      ${T(b + '.kicker', 'div', 'kicker reveal')}
+      ${T(b + '.titulo', 'h2', 'h2 reveal')}
+      ${raw(b + '.sub') ? T(b + '.sub', 'p', 'sub reveal') : ''}
+      <div class="plans tres reveal" style="--n:${a.opcoes.length}">${a.opcoes.map((o, j) => {
+        const c = b + '.opcoes.' + j;
+        return `<div class="plan soc${o.destaque ? ' hi' : ''}" data-social="${j}" role="button" tabindex="0">${T(c + '.nome', 'div', 'pn')}
+          <div class="pv"><span class="pplus">+</span>${T(c + '.preco')}<small>${T(c + '.per')}</small></div>${T(c + '.detalhe', 'div', 'pd')}
+          <ul>${(o.itens || []).map((x, k) => T(c + '.itens.' + k, 'li')).join('')}</ul><div class="soc-pick"></div></div>`;
+      }).join('')}</div>
+      ${raw(b + '.nota') ? T(b + '.nota', 'div', 'note reveal') : ''}`;
+    },
+
+    // tabela por faixa de verba de anúncios. O preço muda ao vivo com a faixa (e com o pacote de social mídia).
     planosFaixa: ps => `
       ${T('planos.kicker', 'div', 'kicker reveal')}
       ${T('planos.titulo', 'h2', 'h2 reveal')}
       ${raw('planos.sub') ? T('planos.sub', 'p', 'sub reveal') : ''}
       <div class="faixas reveal" id="plFaixas">${T('planos.faixaRotulo', 'span', 'label')}${list('planos.faixas').map((f, i) => `<button class="fx-chip" type="button" data-faixa="${i}">${T('planos.faixas.' + i + '.t')}</button>`).join('')}<span class="fx-hint" id="plFaixaHint"></span></div>
+      ${adicional() ? `<div class="faixas reveal" id="plSocial">${T('planos.adicional.rotulo', 'span', 'label')}<button class="fx-chip" type="button" data-social="-1">${T('planos.adicional.semRotulo')}</button>${adicional().opcoes.map((o, j) => `<button class="fx-chip" type="button" data-social="${j}">${T('planos.adicional.opcoes.' + j + '.nome')} +${T('planos.adicional.opcoes.' + j + '.preco')}</button>`).join('')}</div>` : ''}
       <div class="plans tres reveal" style="--n:${ps.length}">${ps.map((p, i) => {
         const b = 'planos.itens.' + i;
         return `<div class="plan${p.destaque ? ' hi' : ''}">${raw(b + '.selo') ? T(b + '.selo', 'div', 'badge') : ''}${T(b + '.nome', 'div', 'pn')}
-          <div class="pv"><span id="plP${i}">--</span><small id="plPer${i}">${esc(plain(raw(b + '.per') || ''))}</small></div>${T(b + '.detalhe', 'div', 'pd')}
+          <div class="pv"><span id="plP${i}">--</span><small id="plPer${i}">${esc(plain(raw(b + '.per') || ''))}</small></div><div class="psoc" id="plSoc${i}"></div>${T(b + '.detalhe', 'div', 'pd')}
           ${raw(b + '.inclui') ? T(b + '.inclui', 'div', 'pinc') : ''}
           <ul>${(p.beneficios || []).map((x, j) => T(b + '.beneficios.' + j, 'li')).join('')}</ul></div>`;
       }).join('')}</div>
@@ -813,6 +840,7 @@
       { id:'empilhamento-12', html:() => B.empilhamento(12), nota:notaEmp },
       { id:'valores', html:B.valores },
       ...(list('planos.faixas').length ? [{ id:'planos-tabela', html:B.planosTabela }] : []),
+      ...(adicional() ? [{ id:'planos-social', html:B.planosSocial, nota:'planos.adicional.fala' }] : []),
       { id:'planos', html:B.planos },
       { id:'garantia', html:B.garantia },
       { id:'fechamento', html:B.fechamento, cls:'centro' },
@@ -1133,13 +1161,17 @@
     if($('#plFaixas')){
       const fa = faixaAtual();
       $$('#plFaixas [data-faixa]').forEach(b => b.classList.toggle('on', +b.dataset.faixa === fa.i));
-      const contas = [];
+      const contas = [], so = socialEscolhido();
       list('planos.itens').forEach((p, i) => {
         const v = plain((p.precos || [])[fa.i] || ''), base = valorBRL(v), mg = margemPlano(base, i);
-        set('plP' + i, esc(base > 0 ? brl(mg.final) : (v || '--')));
+        set('plP' + i, esc(base > 0 ? brl(mg.final + (so ? so.preco : 0)) : (v || '--')));
+        set('plSoc' + i, so && base > 0 ? esc('Plano ' + brl(mg.final) + ' + social ' + so.nome + ' ' + brl(so.preco)) : '');
         const per = document.getElementById('plPer' + i); if(per) per.hidden = !(base > 0);
         if(base > 0) contas.push(plain(p.nome) + ': tabela ' + brl(base) + (mg.add ? ' + margem ' + brl(mg.add) + (mg.tipo === 'pct' ? ' (' + nf1.format(mg.v) + '%)' : '') : '') + ' = ' + brl(mg.final));
       });
+      if(so) contas.push('Social mídia ' + so.nome + ': + ' + brl(so.preco) + ' em qualquer plano');
+      $$('[data-social]').forEach(b => b.classList.toggle('on', +b.dataset.social === (so ? so.j : -1)));
+      $$('.plan.soc .soc-pick').forEach(d => { d.textContent = so && +d.parentNode.dataset.social === so.j ? '✓ Somado ao plano' : 'Clique para somar ao plano'; });
       set('plFaixaHint', fa.semVerba ? 'Sem verba no raio-x: clique na faixa' : fa.auto ? 'Pela verba informada no raio-x' : '');
       const notaM = esc(PA && dx.margem ? 'Margem de ' + (dx.parceiroNome || 'parceiro') + ' (não aparece para o cliente). ' : 'Sem margem de parceiro: o cliente vê a tabela de parceiros. ') +
         esc(contas.join(' · ')) + (contas.length ? '' : esc('Faixa sob consulta.'));
@@ -1164,6 +1196,12 @@
         set('vmP' + i, base > 0 ? brl(margemPlano(base, i).final) + '<small>/mês</small>' : esc(plain(tx || '--')));
       });
       set('vmFaixa', fa ? esc('Faixa de verba: ' + plain(raw('planos.faixas.' + fa.i + '.t'))) : '');
+      if($('#vmSA')){
+        const sepA = vs.reduce((s, v, k) => s + (v.adicional ? (valorBRL(raw('valores.itens.' + k + '.valor')) || 0) : 0), 0);
+        const ps = (adicional() || { opcoes:[] }).opcoes.map((o, j) => precoAdicional(j)).filter(v => v > 0);
+        set('vmSA', sepA > 0 ? brl(sepA) + '<small>/mês</small>' : '--');
+        set('vmPA', ps.length ? '<small>a partir de</small> ' + brl(Math.min.apply(null, ps)) + '<small>/mês</small>' : '--');
+      }
     }
 
     // ---- salvar ----
@@ -1201,6 +1239,8 @@
     if(!editing && e.target.closest('#origemLead')){ abrirPicker(); return; }
     const fx = !editing && e.target.closest('[data-faixa]');
     if(fx){ dx.faixa = +fx.dataset.faixa; salvarDx(); computar(); return; }
+    const sc = !editing && e.target.closest('[data-social]');
+    if(sc){ const j = +sc.dataset.social; if(j < 0 || dx.social === j) delete dx.social; else dx.social = j; salvarDx(); computar(); return; }
     const act = e.target.closest('[data-act]');
     if(act){ acao(act.dataset.act, act); return; }
     const acc = e.target.closest('[data-acc]');
