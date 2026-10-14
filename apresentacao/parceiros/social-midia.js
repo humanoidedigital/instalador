@@ -50,21 +50,20 @@ PARCEIRO({
     ]
   },
 
-  // valores de mercado × planos (modelo em marca.js), sem a linha de social mídia.
-  // O preço do plano aparece na faixa de verba do cliente, já com a margem do parceiro.
+  // valores de mercado (modelo em marca.js), sem a linha de social mídia
   valores: {
     itens: [
-      { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês', planos: [0, 1, 2],
+      { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês',
         fonte: 'Salário médio de Gestor de Tráfego Pago no Brasil: R$ 3.000 por mês. Glassdoor, abril de 2026.' },
-      { nome: 'T.I. de tracking e dados (pixels, conversões, integrações)', valor: 'R$ 4.120/mês', planos: [0, 1, 2],
+      { nome: 'T.I. de tracking e dados (pixels, conversões, integrações)', valor: 'R$ 4.120/mês',
         fonte: 'Média salarial de Analista de Web Analytics (tags, tracking e dados de conversão) no Brasil: R$ 4.120,46 por mês. Catho, consultado em outubro de 2026.' },
-      { nome: 'Especialista em B.I. (relatórios e painéis)', valor: 'R$ 5.760/mês', planos: [0, 1, 2],
+      { nome: 'Especialista em B.I. (relatórios e painéis)', valor: 'R$ 5.760/mês',
         fonte: 'Média salarial de Analista de BI no Brasil: R$ 5.760,03 por mês (mediana R$ 4.293), salário base CLT. Novo CAGED, set/2025 a ago/2026, via Salario.com.br (atualizado em 08/10/2026).' },
-      { nome: 'CRM com WhatsApp e IA (3 usuários)', valor: 'R$ 387/mês', planos: [1, 2],
+      { nome: 'CRM com WhatsApp e IA (3 usuários)', valor: 'R$ 387/mês',
         fonte: 'Kommo, plano Avançado (automações, Salesbot e agente de IA): R$ 129 por usuário por mês no plano anual. 3 usuários = R$ 387. Tabela de 2026.' },
-      { nome: 'Especialista em RevOps (processo e treinamento comercial)', valor: 'R$ 9.150/mês', planos: [2],
+      { nome: 'Especialista em RevOps (processo e treinamento comercial)', valor: 'R$ 9.150/mês',
         fonte: 'Salário médio de RevOps Specialist no Brasil: R$ 9.150 por mês (faixa comum de R$ 5.375 a R$ 14.600). Glassdoor, junho de 2026.' },
-      { nome: 'Analista de automação e IA (agente no WhatsApp)', valor: 'R$ 6.086/mês', planos: [2],
+      { nome: 'Analista de automação e IA (agente no WhatsApp)', valor: 'R$ 6.086/mês',
         fonte: 'Média salarial de Analista de Sistemas de Automação (CBO 2124-15) no Brasil: R$ 6.086,24 por mês (mediana R$ 5.000), salário base CLT. Novo CAGED, set/2025 a ago/2026, via Salario.com.br (atualizado em 08/10/2026).' }
     ]
   },

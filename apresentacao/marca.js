@@ -294,7 +294,8 @@ window.MARCA = {
       'Automação de entrada de leads, disparo de mensagens, follow-up e confirmação',
       'Implementação completa, sem trabalho técnico pra você'
     ],
-    imagem: ''                          // ex.: assets/crm-pipeline.jpg
+    imagem: 'assets/crm-kanban.webp',   // print do funil no CRM (nomes dos clientes borrados)
+    legenda: 'Funil de vendas no CRM: cada negociação com etapa, valor e próximo passo, do atendimento ao fechamento.'
   },
 
   time: {
@@ -328,35 +329,32 @@ window.MARCA = {
     explicacao: 'o dobro das {hoje} que você faz hoje'
   },
 
-  // valores de mercado cruzados com os planos: cada função com um profissional dedicado (salário médio, sem encargos)
-  // e os planos que cobrem essa função ("planos": índices de planos.itens, 0 = Tráfego pago; "adicional": true =
-  // coberta pelo pacote de social mídia). A tabela soma o custo separado de cada plano e mostra o preço do plano
-  // na faixa de verba do cliente. O "i" de cada linha mostra a fonte.
+  // valores de mercado: quanto custaria montar o time internamente, um profissional dedicado a cada função
+  // (salário médio, sem encargos). O total soma as linhas ao vivo. O "i" de cada linha mostra a fonte.
+  // Os preços da Ribeker ficam nos slides seguintes.
   valores: {
     kicker: 'Valores de mercado',
     titulo: 'Contratando cada peça separada',
-    sub: 'O que cada plano cobre e quanto custaria ter um profissional dedicado a cada função.',
-    funcaoRotulo: 'Função',
-    custoRotulo: 'Mercado',
+    sub: 'Quanto custaria montar esse time dentro de casa, com um profissional dedicado a cada função.',
     itens: [
-      { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês', planos: [0, 1, 2],
+      { nome: 'Gestor de tráfego pago', valor: 'R$ 3.000/mês',
         fonte: 'Salário médio de Gestor de Tráfego Pago no Brasil: R$ 3.000 por mês. Glassdoor, abril de 2026.' },
-      { nome: 'T.I. de tracking e dados (pixels, conversões, integrações)', valor: 'R$ 4.120/mês', planos: [0, 1, 2],
+      { nome: 'T.I. de tracking e dados (pixels, conversões, integrações)', valor: 'R$ 4.120/mês',
         fonte: 'Média salarial de Analista de Web Analytics (tags, tracking e dados de conversão) no Brasil: R$ 4.120,46 por mês. Catho, consultado em outubro de 2026.' },
-      { nome: 'Especialista em B.I. (relatórios e painéis)', valor: 'R$ 5.760/mês', planos: [0, 1, 2],
+      { nome: 'Especialista em B.I. (relatórios e painéis)', valor: 'R$ 5.760/mês',
         fonte: 'Média salarial de Analista de BI no Brasil: R$ 5.760,03 por mês (mediana R$ 4.293), salário base CLT. Novo CAGED, set/2025 a ago/2026, via Salario.com.br (atualizado em 08/10/2026).' },
-      { nome: 'CRM com WhatsApp e IA (3 usuários)', valor: 'R$ 387/mês', planos: [1, 2],
+      { nome: 'CRM com WhatsApp e IA (3 usuários)', valor: 'R$ 387/mês',
         fonte: 'Kommo, plano Avançado (automações, Salesbot e agente de IA): R$ 129 por usuário por mês no plano anual. 3 usuários = R$ 387. Tabela de 2026.' },
-      { nome: 'Especialista em RevOps (processo e treinamento comercial)', valor: 'R$ 9.150/mês', planos: [2],
+      { nome: 'Especialista em RevOps (processo e treinamento comercial)', valor: 'R$ 9.150/mês',
         fonte: 'Salário médio de RevOps Specialist no Brasil: R$ 9.150 por mês (faixa comum de R$ 5.375 a R$ 14.600). Glassdoor, junho de 2026.' },
-      { nome: 'Analista de automação e IA (agente no WhatsApp)', valor: 'R$ 6.086/mês', planos: [2],
+      { nome: 'Analista de automação e IA (agente no WhatsApp)', valor: 'R$ 6.086/mês',
         fonte: 'Média salarial de Analista de Sistemas de Automação (CBO 2124-15) no Brasil: R$ 6.086,24 por mês (mediana R$ 5.000), salário base CLT. Novo CAGED, set/2025 a ago/2026, via Salario.com.br (atualizado em 08/10/2026).' },
-      { nome: 'Social mídia', valor: 'R$ 3.000/mês', adicional: true,
+      { nome: 'Social mídia', valor: 'R$ 3.000/mês',
         fonte: 'Salário médio de Social Media no Brasil: R$ 3.000 por mês (faixa comum de R$ 2.150 a R$ 4.022). Glassdoor, 2026.' }
     ],
-    separadoRotulo: 'Contratando separado',
-    planoRotulo: 'No plano Ribeker',
-    nota: 'Salários médios, sem encargos e sem a verba de anúncio. Os tokens da IA são pagos pelo cliente direto ao provedor do modelo.'
+    totalRotulo: 'Contratando separado',
+    total: '',                          // vazio: soma as linhas ao vivo
+    nota: 'Salários médios, sem encargos e sem a verba de anúncio.'
   },
 
   // planos por faixa de verba mensal de anúncios (a mesma tabela dos parceiros) + social mídia como adicional.
@@ -421,6 +419,22 @@ window.MARCA = {
       // notas do apresentador (tecla N): referência de mercado dos pacotes
       fala: 'Referência de mercado (Jamile Fernandes, "Precificação para social media em 2026", atualizado em ago/2026): básico de R$ 800 a R$ 1.500 (8 a 12 posts, 1 rede); intermediário de R$ 1.500 a R$ 3.500 (12 a 16 posts, 4 a 8 reels, stories 3 a 5 vezes por semana, comunidade); premium de R$ 3.500 a R$ 10.000 (16 a 20 posts, 8 a 12 reels, stories diários, 2 a 3 redes). Um social media dedicado custa em média R$ 3.000 por mês (Glassdoor, 2026).'
     }
+  },
+
+  // projetos pontuais (pagamento único), fora da mensalidade: slide depois dos planos
+  avulsos: {
+    kicker: 'Projetos pontuais',
+    titulo: 'Precisa só de *um projeto*?',
+    sub: 'Para quem quer começar pela presença digital. Pagamento único, sem mensalidade.',
+    itens: [
+      { nome: 'Site', preco: 'R$ 3.500', per: 'pagamento único', detalhe: 'Site institucional',
+        itens: ['Até 5 páginas, adaptado para celular', 'Botão de WhatsApp e formulário de contato', 'Pixel do Meta e Google Analytics instalados', 'SEO básico: títulos, descrições e velocidade'] },
+      { nome: 'Site + Google Meu Negócio', preco: 'R$ 4.300', per: 'pagamento único', detalhe: 'Para ser encontrado no Google e no Maps', destaque: true,
+        itens: ['Tudo do Site', 'Criação ou revisão do Perfil da Empresa no Google', 'Categorias, horários, fotos e serviços preenchidos', 'Link para o site e para o WhatsApp', 'Orientação para pedir e responder avaliações'] }
+    ],
+    nota: 'Domínio e hospedagem ficam no nome de vocês (custo à parte, pago direto ao provedor).',
+    // notas do apresentador (tecla N): referência de mercado
+    fala: 'Referência de mercado: criar um site no Brasil custa de R$ 400 a R$ 10.000 na maioria dos projetos (InfinitePay, 2026); para pequenas empresas, com poucas páginas, de R$ 2.000 a R$ 8.000 (Jivochat). O Perfil da Empresa no Google é gratuito: o que se cobra é a configuração.'
   },
 
   garantia: {

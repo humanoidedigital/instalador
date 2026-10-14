@@ -29,8 +29,8 @@ A história: quem é a Ribeker → a prova (marcas e cases) → os números do c
 6. Vendas Ribeker · No seu segmento · Ponte "dos cases para a sua {empresa}" (1 venda a mais paga a operação,
    com o ticket do raio-x) · Mkt · Ferramenta · Time
 7. Resultado empilhado em 6 e 12 meses
-8. Valores de mercado (funções × planos) · Tabela de planos por verba · Social mídia (só na venda direta) ·
-   O que entra em cada plano (sem fidelidade) · Fechamento
+8. Valores de mercado (custo de cada profissional) · Tabela de planos por verba · Social mídia (só na venda direta) ·
+   O que entra em cada plano (sem fidelidade) · Projetos pontuais (site, site + Google Meu Negócio) · Fechamento
 9. Salvar o raio-X: placar, respostas por área, custo de esperar, PDF e resumo
 
 ## Durante a reunião
@@ -132,8 +132,7 @@ conflito de interesse, a oferta sai sem social mídia:
   o slide de marcas fica sem "Rede social" e o case IsenteJá + Isentoo mostra só site, tráfego, CRM, automação e IA
   (`casos` no arquivo do parceiro ajusta campos de um case pelo id, sem mexer no `marca.js`).
 - Marketing vira "Tudo que o tráfego faz por você".
-- **Valores de mercado** (funções × planos, abaixo) sem a linha e a coluna de social mídia; "No plano Ribeker" já
-  com a margem.
+- **Valores de mercado** sem a linha de social mídia.
 - Planos: a tabela exclusiva de parceiros (a da imagem), sem o slide e os botões de social mídia. Título "Planos de
   tráfego pago" e "Condição de parceria" no subtítulo. A margem entra em todos os preços.
 - **Dados do parceiro e margem** (botão no seletor, com o parceiro ligado): nome do parceiro e a margem dele,
@@ -194,30 +193,31 @@ Para usar isso em outro nicho: `projecao.margem: { campo: 'margem', referencia: 
 
 ### Planos e investimento
 
-1. **Valores de mercado** ("Contratando cada peça separada"): cada função com o custo de um profissional dedicado e
-   um ✓ nos planos que a cobrem (`valores.itens[].planos`; `adicional: true` = coberta pelo pacote de social mídia).
-   Embaixo, "Contratando separado" soma as funções de cada plano e "No plano Ribeker" mostra o preço do plano na
-   faixa de verba do cliente. Fontes no "i" de cada linha.
+1. **Valores de mercado** ("Contratando cada peça separada"): cada função com o custo de um profissional dedicado
+   e o total "Contratando separado", somado ao vivo (inclusive com edições). Sem os preços da Ribeker: eles vêm
+   nos slides seguintes. Fontes no "i" de cada linha.
 2. **Planos Ribeker**: a tabela por faixa de verba de anúncios (Tráfego pago · Tráfego + CRM · Tráfego + CRM +
    Performance comercial × 6 faixas), com a faixa do cliente em destaque. Acima de R$ 50 mil: sob consulta. Na venda
    direta o Tráfego + CRM inclui a ferramenta de CRM (1 WhatsApp, 1 Instagram, 3 usuários; extras sob consulta).
    O plano completo inclui agente de IA no WhatsApp; os tokens do modelo são pagos pelo cliente direto ao provedor.
 3. **Social mídia** (só venda direta): 3 pacotes que somam a qualquer plano. Clicar num pacote escolhe; clicar de
    novo tira. A referência de mercado está nas notas do slide (tecla N).
+5. **Projetos pontuais** (pagamento único, nos dois modos): Site (R$ 3.500) e Site + Google Meu Negócio (R$ 4.300),
+   em `avulsos` no `marca.js`. Referência de mercado nas notas do slide.
 4. **O que entra em cada plano**: os 3 cards da faixa do cliente. Os botões "Social mídia" somam o pacote ao preço
    de cada card ("Plano R$ 3.250 + social Essencial R$ 1.200"). A conta da ponte usa o plano mais completo da faixa
    (mais o pacote de social mídia, se escolhido).
 
-| Função | Valor | Planos | Fonte |
-|---|---|---|---|
-| Gestor de tráfego pago | R$ 3.000/mês | todos | Glassdoor, abr/2026 |
-| T.I. de tracking e dados | R$ 4.120/mês | todos | Catho, Analista de Web Analytics, out/2026 |
-| Especialista em B.I. | R$ 5.760/mês | todos | Novo CAGED (set/2025 a ago/2026), via Salario.com.br |
-| CRM com WhatsApp e IA, 3 usuários | R$ 387/mês | Tráfego + CRM e completo | Kommo Avançado, 2026 |
-| Especialista em RevOps | R$ 9.150/mês | completo | Glassdoor, jun/2026 |
-| Analista de automação e IA | R$ 6.086/mês | completo | Novo CAGED (CBO 2124-15), via Salario.com.br |
-| Social mídia (só venda direta) | R$ 3.000/mês | pacote adicional | Glassdoor, 2026 |
-| **Contratando separado** | | **R$ 12.880 · R$ 13.267 · R$ 28.503** (social: R$ 3.000) | salários sem encargos e sem verba de anúncio |
+| Função | Valor | Fonte |
+|---|---|---|
+| Gestor de tráfego pago | R$ 3.000/mês | Glassdoor, abr/2026 |
+| T.I. de tracking e dados | R$ 4.120/mês | Catho, Analista de Web Analytics, out/2026 |
+| Especialista em B.I. | R$ 5.760/mês | Novo CAGED (set/2025 a ago/2026), via Salario.com.br |
+| CRM com WhatsApp e IA, 3 usuários | R$ 387/mês | Kommo Avançado, 2026 |
+| Especialista em RevOps | R$ 9.150/mês | Glassdoor, jun/2026 |
+| Analista de automação e IA | R$ 6.086/mês | Novo CAGED (CBO 2124-15), via Salario.com.br |
+| Social mídia (só venda direta) | R$ 3.000/mês | Glassdoor, 2026 |
+| **Contratando separado** | **R$ 31.503/mês** (com parceiro: R$ 28.503) | salários sem encargos e sem verba de anúncio |
 
 | Pacote de social mídia | Preço | Escopo |
 |---|---|---|
@@ -292,7 +292,7 @@ Ainda opcional:
 
 - O slide do acordo com bônus ("Vamos pro tudo") fica oculto (`ocultar: ['garantia']`), porque não faz parte da operação.
 - Logos das marcas: já estão em `assets/marcas/`. Para trocar ou incluir, informe em `marcas.lista[].logo` (sem logo aparece o nome).
-- Prints: `mkt.imagem` (Instagram de cliente) e `ferramenta.imagem` (pipeline no CRM), opcionais.
+- Prints: `ferramenta.imagem` já tem o funil do CRM (`assets/crm-kanban.webp`, nomes borrados). `mkt.imagem` (Instagram de cliente) segue opcional.
 
 ## Arquivos
 

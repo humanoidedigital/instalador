@@ -663,9 +663,9 @@
     ferramenta: () => `
       ${T('ferramenta.kicker', 'div', 'kicker reveal')}
       ${T('ferramenta.titulo', 'h2', 'h2 reveal')}
-      <div class="split empilha reveal">
+      <div class="split ${raw('ferramenta.imagem') ? 'ferr' : 'empilha'} reveal">
         <ul class="blist">${list('ferramenta.itens').map((x, i) => T('ferramenta.itens.' + i, 'li')).join('')}</ul>
-        ${shot('ferramenta.imagem', '', 'Espaço para o print do pipeline no CRM.')}
+        ${shot('ferramenta.imagem', 'ferramenta.legenda', 'Espaço para o print do pipeline no CRM.')}
       </div>`,
 
     time: () => {
@@ -692,28 +692,28 @@
         </div>
       </div>`,
 
-    // com "planos" nos itens (índices dos planos que cobrem a função), vira a tabela funções × planos
-    valores: () => list('valores.itens').some(v => Array.isArray(v.planos)) && list('planos.itens').length ? B.valoresPlanos() : `
-      ${T('valores.kicker', 'div', 'kicker reveal')}
-      ${T('valores.titulo', 'h2', 'h2 reveal')}
-      <div class="vstack reveal">${list('valores.itens').map((v, i) => `<div class="vrow">${T('valores.itens.' + i + '.nome', 'span', 'vn')}<span class="vv">${T('valores.itens.' + i + '.valor')}${v.fonte ? `<i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(v.fonte)}">i</i>` : ''}</span></div>`).join('')}
-        <div class="vrow tot"><span class="vn">${T('valores.totalRotulo')} <span class="tag-est">Estimativa</span></span>${T('valores.total', 'span', 'vv')}</div></div>
-      ${T('valores.nota', 'div', 'note reveal')}`,
-
-    valoresPlanos: () => {
-      const ps = list('planos.itens'), hi = p => p.destaque ? ' class="hi"' : '';
-      const ad = adicional(), vs = list('valores.itens').map((v, k) => ({ v, k })).filter(x => ad || !x.v.adicional);
-      const ok = '<span class="vm-ok" aria-label="incluso">✓</span>', no = '<span class="vm-no" aria-label="não incluso">–</span>';
-      const comAd = !!ad && vs.some(x => x.v.adicional);
-      return `
+    valores: () => `
       ${T('valores.kicker', 'div', 'kicker reveal')}
       ${T('valores.titulo', 'h2', 'h2 reveal')}
       ${raw('valores.sub') ? T('valores.sub', 'p', 'sub reveal') : ''}
-      <table class="pt-tab vm-tab${comAd ? ' com-ad' : ''} reveal" id="vmTab"><thead><tr><th>${T('valores.funcaoRotulo')}</th><th class="vm-c">${T('valores.custoRotulo')}</th>${ps.map((p, i) => `<th${hi(p)}>${T('planos.itens.' + i + '.nome', 'div', 'ptn')}</th>`).join('')}${comAd ? `<th class="vm-ad">${T('planos.adicional.rotulo', 'div', 'ptn')}<div class="ptd">adicional</div></th>` : ''}</tr></thead>
-        <tbody>${vs.map(({ v, k }) => `<tr><td>${T('valores.itens.' + k + '.nome')}${v.fonte ? `<i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(v.fonte)}">i</i>` : ''}</td><td class="vm-c">${T('valores.itens.' + k + '.valor')}</td>${ps.map((p, i) => `<td${hi(p)}>${!v.adicional && (v.planos || []).includes(i) ? ok : no}</td>`).join('')}${comAd ? `<td class="vm-ad">${v.adicional ? ok : no}</td>` : ''}</tr>`).join('')}</tbody>
-        <tfoot><tr class="vm-sep"><td colspan="2">${T('valores.separadoRotulo')} <span class="tag-est">Estimativa</span></td>${ps.map((p, i) => `<td${hi(p)} id="vmS${i}">--</td>`).join('')}${comAd ? '<td class="vm-ad" id="vmSA">--</td>' : ''}</tr>
-          <tr class="vm-pl"><td colspan="2">${T('valores.planoRotulo')}<span class="vm-fx" id="vmFaixa"></span></td>${ps.map((p, i) => `<td${hi(p)} id="vmP${i}">--</td>`).join('')}${comAd ? '<td class="vm-ad" id="vmPA">--</td>' : ''}</tr></tfoot></table>
-      ${T('valores.nota', 'div', 'note reveal')}`;
+      <div class="vstack reveal">${list('valores.itens').map((v, i) => `<div class="vrow">${T('valores.itens.' + i + '.nome', 'span', 'vn')}<span class="vv">${T('valores.itens.' + i + '.valor')}${v.fonte ? `<i class="tip" tabindex="0" aria-label="Fonte" data-tip="${esc(v.fonte)}">i</i>` : ''}</span></div>`).join('')}
+        <div class="vrow tot"><span class="vn">${T('valores.totalRotulo')} <span class="tag-est">Estimativa</span></span>${raw('valores.total') ? T('valores.total', 'span', 'vv') : '<span class="vv" id="vlTot">--</span>'}</div></div>
+      ${T('valores.nota', 'div', 'note reveal')}`,
+
+    // projetos pontuais (pagamento único)
+    avulsos: () => {
+      const its = list('avulsos.itens');
+      return `
+      ${T('avulsos.kicker', 'div', 'kicker reveal')}
+      ${T('avulsos.titulo', 'h2', 'h2 reveal')}
+      ${raw('avulsos.sub') ? T('avulsos.sub', 'p', 'sub reveal') : ''}
+      <div class="plans reveal" style="--n:${its.length}">${its.map((p, i) => {
+        const b = 'avulsos.itens.' + i;
+        return `<div class="plan${p.destaque ? ' hi' : ''}">${T(b + '.nome', 'div', 'pn')}
+          <div class="pv">${T(b + '.preco')}</div>${T(b + '.per', 'div', 'pper')}${T(b + '.detalhe', 'div', 'pd')}
+          <ul>${(p.itens || []).map((x, j) => T(b + '.itens.' + j, 'li')).join('')}</ul></div>`;
+      }).join('')}</div>
+      ${raw('avulsos.nota') ? T('avulsos.nota', 'div', 'note reveal') : ''}`;
     },
 
     planos: () => {
@@ -842,6 +842,7 @@
       ...(list('planos.faixas').length ? [{ id:'planos-tabela', html:B.planosTabela }] : []),
       ...(adicional() ? [{ id:'planos-social', html:B.planosSocial, nota:'planos.adicional.fala' }] : []),
       { id:'planos', html:B.planos },
+      ...(list('avulsos.itens').length ? [{ id:'avulsos', html:B.avulsos, nota:'avulsos.fala' }] : []),
       { id:'garantia', html:B.garantia },
       { id:'fechamento', html:B.fechamento, cls:'centro' },
       { id:'salvar', html:B.salvar }
@@ -1186,22 +1187,10 @@
       });
     }
 
-    // ---- valores de mercado × planos: soma das funções que cada plano cobre e o preço do plano ----
-    if($('#vmTab')){
-      const vs = list('valores.itens'), fa = faixaAtual();
-      list('planos.itens').forEach((p, i) => {
-        const sep = vs.reduce((s, v, k) => s + ((v.planos || []).includes(i) ? (valorBRL(raw('valores.itens.' + k + '.valor')) || 0) : 0), 0);
-        set('vmS' + i, sep > 0 ? brl(sep) + '<small>/mês</small>' : '--');
-        const tx = fa ? (p.precos || [])[fa.i] : raw('planos.itens.' + i + '.preco'), base = valorBRL(tx);
-        set('vmP' + i, base > 0 ? brl(margemPlano(base, i).final) + '<small>/mês</small>' : esc(plain(tx || '--')));
-      });
-      set('vmFaixa', fa ? esc('Faixa de verba: ' + plain(raw('planos.faixas.' + fa.i + '.t'))) : '');
-      if($('#vmSA')){
-        const sepA = vs.reduce((s, v, k) => s + (v.adicional ? (valorBRL(raw('valores.itens.' + k + '.valor')) || 0) : 0), 0);
-        const ps = (adicional() || { opcoes:[] }).opcoes.map((o, j) => precoAdicional(j)).filter(v => v > 0);
-        set('vmSA', sepA > 0 ? brl(sepA) + '<small>/mês</small>' : '--');
-        set('vmPA', ps.length ? '<small>a partir de</small> ' + brl(Math.min.apply(null, ps)) + '<small>/mês</small>' : '--');
-      }
+    // ---- valores de mercado: total das funções (com as edições) ----
+    if($('#vlTot')){
+      const tot = list('valores.itens').reduce((t, v, k) => t + (valorBRL(raw('valores.itens.' + k + '.valor')) || 0), 0);
+      set('vlTot', tot > 0 ? brl(tot) + '/mês' : '--');
     }
 
     // ---- salvar ----
