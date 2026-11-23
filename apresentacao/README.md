@@ -205,7 +205,7 @@ Para usar isso em outro nicho: `projecao.margem: { campo: 'margem', referencia: 
 5. **Projetos pontuais** (pagamento único, nos dois modos): Site (R$ 3.500) e Site + Google Meu Negócio (R$ 4.300),
    em `avulsos` no `marca.js`. Referência de mercado nas notas do slide.
 4. **O que entra em cada plano**: os 3 cards da faixa do cliente. Os botões "Social mídia" somam o pacote ao preço
-   de cada card ("Plano R$ 3.250 + social Essencial R$ 1.200"). A conta da ponte usa o plano mais completo da faixa
+   de cada card ("Plano R$ 3.750 + social Essencial R$ 1.200"). A conta da ponte usa o plano mais completo da faixa
    (mais o pacote de social mídia, se escolhido).
 
 | Função | Valor | Fonte |
